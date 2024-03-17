@@ -1,0 +1,11 @@
+
+let x = 4 + 5
+
+def loop() {
+    print("loop")
+}
+
+def setup() {
+    print("setup")
+    print(4 * 5 + 6)
+}
