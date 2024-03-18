@@ -1,4 +1,4 @@
-package internal
+package tokens
 
 type TokenType int
 
@@ -31,23 +31,27 @@ const (
 	EQUAL_EQUAL
 	BANG
 	BANG_EQUAL
-	AND
-	OR
-	IF
-	ELSE
-	FOR
 	PAREN_OPEN
 	PAREN_CLOSE
 	BRACE_OPEN
 	BRACE_CLOSE
 	COMMA
+	SEMICOLON
 
 	EOF
 
 	// Keywords
+	TRUE
+	FALSE
 	PRINT
 	LET
 	DEF
+	AND
+	OR
+	NOT
+	IF
+	ELSE
+	FOR
 )
 
 func (t TokenType) String() string {
@@ -90,6 +94,8 @@ func (t TokenType) String() string {
 		return "AND"
 	case OR:
 		return "OR"
+	case NOT:
+		return "NOT"
 	case IF:
 		return "IF"
 	case ELSE:
@@ -106,6 +112,8 @@ func (t TokenType) String() string {
 		return "BRACE_CLOSE"
 	case COMMA:
 		return "COMMA"
+	case SEMICOLON:
+		return "SEMICOLON"
 	case EOF:
 		return "EOF"
 	case PRINT:
@@ -114,12 +122,16 @@ func (t TokenType) String() string {
 		return "LET"
 	case DEF:
 		return "DEF"
+	case TRUE:
+		return "TRUE"
+	case FALSE:
+		return "FALSE"
 	default:
 		return "UNKNOWN"
 	}
 }
 
-var keywords = map[string]TokenType{
+var Keywords = map[string]TokenType{
 	"print": PRINT,
 	"let":   LET,
 	"def":   DEF,
@@ -128,4 +140,7 @@ var keywords = map[string]TokenType{
 	"for":   FOR,
 	"and":   AND,
 	"or":    OR,
+	"not":   NOT,
+	"true":  TRUE,
+	"false": FALSE,
 }

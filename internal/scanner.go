@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"strconv"
 	"strings"
 	"unicode"
@@ -12,7 +13,7 @@ type Scanner struct {
 	source   string
 	start    int
 	current  int
-	tokens   []Token
+	tokens   []tokens.Token
 	line     int
 }
 
@@ -25,9 +26,9 @@ func (s *Scanner) error(line int, message string) {
 	s.report(line, "", message)
 }
 
-func (s *Scanner) Scan(source string) []Token {
+func (s *Scanner) Scan(source string) []tokens.Token {
 	s.source = source
-	s.tokens = []Token{}
+	s.tokens = []tokens.Token{}
 	for !s.isAtEnd() {
 		s.start = s.current
 		s.scanToken()
@@ -44,25 +45,27 @@ func (s *Scanner) scanToken() {
 
 	switch c {
 	case '(':
-		s.addToken(PAREN_OPEN)
+		s.addToken(tokens.PAREN_OPEN)
 	case ')':
-		s.addToken(PAREN_CLOSE)
+		s.addToken(tokens.PAREN_CLOSE)
 	case '{':
-		s.addToken(BRACE_OPEN)
+		s.addToken(tokens.BRACE_OPEN)
 	case '}':
-		s.addToken(BRACE_CLOSE)
+		s.addToken(tokens.BRACE_CLOSE)
 	case ',':
-		s.addToken(COMMA)
+		s.addToken(tokens.COMMA)
+	case ';':
+		s.addToken(tokens.SEMICOLON)
 	case '-':
-		s.addToken(MINUS)
+		s.addToken(tokens.MINUS)
 	case '+':
-		s.addToken(PLUS)
+		s.addToken(tokens.PLUS)
 	case '*':
-		s.addToken(STAR)
+		s.addToken(tokens.STAR)
 	case '/':
-		s.addToken(SLASH)
+		s.addToken(tokens.SLASH)
 	case '%':
-		s.addToken(PERCENT)
+		s.addToken(tokens.PERCENT)
 	case '#':
 		s.scanComment()
 	case '\n':
@@ -76,24 +79,24 @@ func (s *Scanner) scanToken() {
 		break
 	case '=':
 		if s.match('=') {
-			s.addToken(EQUAL_EQUAL)
+			s.addToken(tokens.EQUAL_EQUAL)
 		}
-		s.addToken(EQUAL)
+		s.addToken(tokens.EQUAL)
 	case '<':
 		if s.match('=') {
-			s.addToken(LESS_EQUAL)
+			s.addToken(tokens.LESS_EQUAL)
 		}
-		s.addToken(LESS)
+		s.addToken(tokens.LESS)
 	case '>':
 		if s.match('=') {
-			s.addToken(GREATER_EQUAL)
+			s.addToken(tokens.GREATER_EQUAL)
 		}
-		s.addToken(GREATER)
+		s.addToken(tokens.GREATER)
 	case '!':
 		if s.match('=') {
-			s.addToken(BANG_EQUAL)
+			s.addToken(tokens.BANG_EQUAL)
 		}
-		s.addToken(BANG)
+		s.addToken(tokens.BANG)
 	case '"':
 		s.scanString()
 	default:
@@ -141,13 +144,13 @@ func (s *Scanner) advance() byte {
 	return s.source[s.current-1]
 }
 
-func (s *Scanner) addToken(tokenType TokenType) {
+func (s *Scanner) addToken(tokenType tokens.TokenType) {
 	s.addTokenWithLiteral(tokenType, "")
 }
 
-func (s *Scanner) addTokenWithLiteral(tokenType TokenType, literal interface{}) {
+func (s *Scanner) addTokenWithLiteral(tokenType tokens.TokenType, literal interface{}) {
 	text := s.source[s.start:s.current]
-	s.tokens = append(s.tokens, Token{tokenType, text, literal, s.line})
+	s.tokens = append(s.tokens, tokens.Token{tokenType, text, literal, s.line})
 }
 
 func (s *Scanner) scanString() {
@@ -162,13 +165,14 @@ func (s *Scanner) scanString() {
 	}
 	s.advance()
 	literal := s.source[s.start+1 : s.current-1]
-	s.addTokenWithLiteral(STRING, s.replaceEscapeSequences(literal))
+	s.addTokenWithLiteral(tokens.STRING, s.replaceEscapeSequences(literal))
 }
 
 func (s *Scanner) scanComment() {
 	for s.peek() != '\n' && !s.isAtEnd() {
 		s.advance()
 	}
+	s.line++
 }
 
 func (s *Scanner) scanNumber() {
@@ -181,10 +185,12 @@ func (s *Scanner) scanNumber() {
 			s.advance()
 		}
 		ffloat, _ := strconv.ParseFloat(s.source[s.start:s.current], 64)
-		s.addTokenWithLiteral(NUMBER, ffloat)
+		s.addTokenWithLiteral(tokens.NUMBER, ffloat)
+	} else if unicode.IsLetter(rune(s.peek())) {
+		s.error(s.line+1, "Unexpected character: "+string(s.peek()))
 	} else {
 		iint, _ := strconv.Atoi(s.source[s.start:s.current])
-		s.addTokenWithLiteral(NUMBER, iint)
+		s.addTokenWithLiteral(tokens.NUMBER, iint)
 	}
 
 }
@@ -226,9 +232,9 @@ func (s *Scanner) scanIdentifier() {
 	}
 	text := s.source[s.start:s.current]
 
-	if tokenType, ok := keywords[text]; ok {
+	if tokenType, ok := tokens.Keywords[text]; ok {
 		s.addToken(tokenType)
 	} else {
-		s.addTokenWithLiteral(IDENTIFIER, text)
+		s.addTokenWithLiteral(tokens.IDENTIFIER, text)
 	}
 }

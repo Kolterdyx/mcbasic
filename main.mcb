@@ -1,11 +1,15 @@
+let d = 1;
+let g = 45 + 7.34 * d;
 
-let x = 4 + 5
+let f;
 
-def loop() {
-    print("loop")
+def loop(e) {
+    let x = 0;
 }
 
 def setup() {
-    print("setup")
-    print(4 * 5 + 6)
+    let f = 6.2;
+    f = 2;
+    let n = loop(f);
+    let a = -loop(f +3.5) -f;
 }

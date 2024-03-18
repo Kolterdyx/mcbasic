@@ -4,15 +4,18 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/Kolterdyx/mcbasic/internal"
+	"github.com/Kolterdyx/mcbasic/internal/parser"
 	"os"
 )
 
 func main() {
-
 	// Read the config file
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: mcbasic <config>")
+	}
 	projectFile := os.Args[1]
 	if projectFile == "" {
-		fmt.Println("Usage: mcbasic <config-file>")
+		fmt.Println("Usage: mcbasic <config>")
 		return
 	}
 
@@ -28,12 +31,14 @@ func main() {
 	if scanner.HadError {
 		os.Exit(65)
 	}
-	for _, token := range tokens {
-		var literal string = ""
-		if token.Literal != nil {
-			literal = fmt.Sprintf("%v", token.Literal)
-		}
-		fmt.Printf("%-15s %-20s %d\n", token.Type, literal, token.Line)
+	parser_ := parser.Parser{Tokens: tokens}
+	stmts := parser_.Parse()
+	if parser_.HadError {
+		os.Exit(65)
+	}
+	debugVisitor := internal.DebugVisitor{}
+	for _, stmt := range stmts {
+		stmt.Accept(debugVisitor)
 	}
 
 }
