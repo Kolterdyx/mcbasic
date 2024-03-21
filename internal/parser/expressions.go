@@ -12,7 +12,7 @@ func (p *Parser) expression() expressions.Expr {
 func (p *Parser) equality() expressions.Expr {
 	expr := p.comparison()
 
-	for p.match(tokens.BANG_EQUAL, tokens.EQUAL_EQUAL) {
+	for p.match(tokens.BangEqual, tokens.EqualEqual) {
 		operator := p.previous()
 		right := p.comparison()
 		expr = expressions.BinaryExpr{Left: expr, Operator: operator, Right: right}
@@ -24,7 +24,7 @@ func (p *Parser) equality() expressions.Expr {
 func (p *Parser) comparison() expressions.Expr {
 	expr := p.term()
 
-	for p.match(tokens.GREATER, tokens.GREATER_EQUAL, tokens.LESS, tokens.LESS_EQUAL) {
+	for p.match(tokens.Greater, tokens.GreaterEqual, tokens.Less, tokens.LessEqual) {
 		operator := p.previous()
 		right := p.term()
 		expr = expressions.BinaryExpr{Left: expr, Operator: operator, Right: right}
@@ -36,7 +36,7 @@ func (p *Parser) comparison() expressions.Expr {
 func (p *Parser) term() expressions.Expr {
 	expr := p.factor()
 
-	for p.match(tokens.MINUS, tokens.PLUS) {
+	for p.match(tokens.Minus, tokens.Plus) {
 		operator := p.previous()
 		right := p.factor()
 		expr = expressions.BinaryExpr{Left: expr, Operator: operator, Right: right}
@@ -48,7 +48,7 @@ func (p *Parser) term() expressions.Expr {
 func (p *Parser) factor() expressions.Expr {
 	expr := p.unary()
 
-	for p.match(tokens.SLASH, tokens.STAR) {
+	for p.match(tokens.Slash, tokens.Star) {
 		operator := p.previous()
 		right := p.unary()
 		expr = expressions.BinaryExpr{Left: expr, Operator: operator, Right: right}
@@ -58,7 +58,7 @@ func (p *Parser) factor() expressions.Expr {
 }
 
 func (p *Parser) unary() expressions.Expr {
-	if p.match(tokens.BANG, tokens.MINUS) {
+	if p.match(tokens.Bang, tokens.Minus) {
 		operator := p.previous()
 		right := p.unary()
 		return expressions.UnaryExpr{Operator: operator, Expression: right}
@@ -68,23 +68,23 @@ func (p *Parser) unary() expressions.Expr {
 }
 
 func (p *Parser) primary() expressions.Expr {
-	if p.match(tokens.FALSE) {
+	if p.match(tokens.False) {
 		return expressions.LiteralExpr{Value: false}
 	}
-	if p.match(tokens.TRUE) {
+	if p.match(tokens.True) {
 		return expressions.LiteralExpr{Value: true}
 	}
-	if p.match(tokens.NUMBER, tokens.STRING) {
+	if p.match(tokens.Number, tokens.String) {
 		return expressions.LiteralExpr{Value: p.previous().Literal}
 	}
-	if p.match(tokens.PAREN_OPEN) {
+	if p.match(tokens.ParenOpen) {
 		expr := p.expression()
-		p.consume(tokens.PAREN_CLOSE, "Expected ')' after expression.")
+		p.consume(tokens.ParenClose, "Expected ')' after expression.")
 		return expressions.GroupingExpr{Expression: expr}
 	}
-	if p.match(tokens.IDENTIFIER) {
+	if p.match(tokens.Identifier) {
 		identifier := p.previous()
-		if p.match(tokens.PAREN_OPEN) {
+		if p.match(tokens.ParenOpen) {
 			return p.functionCall(identifier)
 		} else {
 			return expressions.VariableExpr{Name: identifier}

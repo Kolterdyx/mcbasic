@@ -45,27 +45,27 @@ func (s *Scanner) scanToken() {
 
 	switch c {
 	case '(':
-		s.addToken(tokens.PAREN_OPEN)
+		s.addToken(tokens.ParenOpen)
 	case ')':
-		s.addToken(tokens.PAREN_CLOSE)
+		s.addToken(tokens.ParenClose)
 	case '{':
-		s.addToken(tokens.BRACE_OPEN)
+		s.addToken(tokens.BraceOpen)
 	case '}':
-		s.addToken(tokens.BRACE_CLOSE)
+		s.addToken(tokens.BraceClose)
 	case ',':
-		s.addToken(tokens.COMMA)
+		s.addToken(tokens.Comma)
 	case ';':
-		s.addToken(tokens.SEMICOLON)
+		s.addToken(tokens.Semicolon)
 	case '-':
-		s.addToken(tokens.MINUS)
+		s.addToken(tokens.Minus)
 	case '+':
-		s.addToken(tokens.PLUS)
+		s.addToken(tokens.Plus)
 	case '*':
-		s.addToken(tokens.STAR)
+		s.addToken(tokens.Star)
 	case '/':
-		s.addToken(tokens.SLASH)
+		s.addToken(tokens.Slash)
 	case '%':
-		s.addToken(tokens.PERCENT)
+		s.addToken(tokens.Percent)
 	case '#':
 		s.scanComment()
 	case '\n':
@@ -79,28 +79,28 @@ func (s *Scanner) scanToken() {
 		break
 	case '=':
 		if s.match('=') {
-			s.addToken(tokens.EQUAL_EQUAL)
+			s.addToken(tokens.EqualEqual)
 			break
 		}
-		s.addToken(tokens.EQUAL)
+		s.addToken(tokens.Equal)
 	case '<':
 		if s.match('=') {
-			s.addToken(tokens.LESS_EQUAL)
+			s.addToken(tokens.LessEqual)
 			break
 		}
-		s.addToken(tokens.LESS)
+		s.addToken(tokens.Less)
 	case '>':
 		if s.match('=') {
-			s.addToken(tokens.GREATER_EQUAL)
+			s.addToken(tokens.GreaterEqual)
 			break
 		}
-		s.addToken(tokens.GREATER)
+		s.addToken(tokens.Greater)
 	case '!':
 		if s.match('=') {
-			s.addToken(tokens.BANG_EQUAL)
+			s.addToken(tokens.BangEqual)
 			break
 		}
-		s.addToken(tokens.BANG)
+		s.addToken(tokens.Bang)
 	case '"':
 		s.scanString()
 	default:
@@ -154,7 +154,7 @@ func (s *Scanner) addToken(tokenType tokens.TokenType) {
 
 func (s *Scanner) addTokenWithLiteral(tokenType tokens.TokenType, literal interface{}) {
 	text := s.source[s.start:s.current]
-	s.tokens = append(s.tokens, tokens.Token{tokenType, text, literal, s.line})
+	s.tokens = append(s.tokens, tokens.Token{Type: tokenType, Lexeme: text, Literal: literal, Line: s.line})
 }
 
 func (s *Scanner) scanString() {
@@ -169,7 +169,7 @@ func (s *Scanner) scanString() {
 	}
 	s.advance()
 	literal := s.source[s.start+1 : s.current-1]
-	s.addTokenWithLiteral(tokens.STRING, s.replaceEscapeSequences(literal))
+	s.addTokenWithLiteral(tokens.String, s.replaceEscapeSequences(literal))
 }
 
 func (s *Scanner) scanComment() {
@@ -189,12 +189,12 @@ func (s *Scanner) scanNumber() {
 			s.advance()
 		}
 		ffloat, _ := strconv.ParseFloat(s.source[s.start:s.current], 64)
-		s.addTokenWithLiteral(tokens.NUMBER, ffloat)
+		s.addTokenWithLiteral(tokens.Number, ffloat)
 	} else if unicode.IsLetter(rune(s.peek())) {
 		s.error(s.line+1, "Unexpected character: "+string(s.peek()))
 	} else {
 		iint, _ := strconv.Atoi(s.source[s.start:s.current])
-		s.addTokenWithLiteral(tokens.NUMBER, iint)
+		s.addTokenWithLiteral(tokens.Number, iint)
 	}
 
 }
@@ -239,6 +239,6 @@ func (s *Scanner) scanIdentifier() {
 	if tokenType, ok := tokens.Keywords[text]; ok {
 		s.addToken(tokenType)
 	} else {
-		s.addTokenWithLiteral(tokens.IDENTIFIER, text)
+		s.addTokenWithLiteral(tokens.Identifier, text)
 	}
 }

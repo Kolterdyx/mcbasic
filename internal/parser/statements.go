@@ -7,11 +7,11 @@ import (
 )
 
 func (p *Parser) statement() statements.Stmt {
-	if p.match(tokens.LET) {
+	if p.match(tokens.Let) {
 		return p.letDeclaration()
-	} else if p.match(tokens.DEF) {
+	} else if p.match(tokens.Def) {
 		return p.functionDeclaration()
-	} else if p.match(tokens.IDENTIFIER) && p.check(tokens.EQUAL) {
+	} else if p.match(tokens.Identifier) && p.check(tokens.Equal) {
 		return p.variableAssignment()
 	}
 	return p.expressionStatement()
@@ -19,75 +19,75 @@ func (p *Parser) statement() statements.Stmt {
 
 func (p *Parser) expressionStatement() statements.Stmt {
 	value := p.expression()
-	p.consume(tokens.SEMICOLON, "Expected ';' after value.")
+	p.consume(tokens.Semicolon, "Expected ';' after value.")
 	return statements.ExpressionStmt{Expression: value}
 }
 
 func (p *Parser) letDeclaration() statements.Stmt {
-	name := p.consume(tokens.IDENTIFIER, "Expected variable name.")
+	name := p.consume(tokens.Identifier, "Expected variable name.")
 	var initializer expressions.Expr
-	if p.match(tokens.EQUAL) {
+	if p.match(tokens.Equal) {
 		initializer = p.expression()
 	}
-	p.consume(tokens.SEMICOLON, "Expected ';' after variable declaration.")
+	p.consume(tokens.Semicolon, "Expected ';' after variable declaration.")
 	return statements.VariableDeclarationStmt{Name: name, Initializer: initializer}
 }
 
 func (p *Parser) variableAssignment() statements.Stmt {
 	name := p.previous()
-	p.consume(tokens.EQUAL, "Expected '=' after variable name.")
+	p.consume(tokens.Equal, "Expected '=' after variable name.")
 	value := p.expression()
-	p.consume(tokens.SEMICOLON, "Expected ';' after value.")
+	p.consume(tokens.Semicolon, "Expected ';' after value.")
 	return statements.VariableAssignmentStmt{Name: name, Value: value}
 }
 
 func (p *Parser) functionDeclaration() statements.Stmt {
-	name := p.consume(tokens.IDENTIFIER, "Expected function name.")
-	p.consume(tokens.PAREN_OPEN, "Expected '(' after function name.")
+	name := p.consume(tokens.Identifier, "Expected function name.")
+	p.consume(tokens.ParenOpen, "Expected '(' after function name.")
 	parameters := make([]tokens.Token, 0)
-	if !p.check(tokens.PAREN_CLOSE) {
+	if !p.check(tokens.ParenClose) {
 		for {
 			if len(parameters) >= 255 {
 				p.error(p.peek(), "Cannot have more than 255 parameters.")
 			}
-			parameters = append(parameters, p.consume(tokens.IDENTIFIER, "Expected parameter name."))
-			if !p.match(tokens.COMMA) {
+			parameters = append(parameters, p.consume(tokens.Identifier, "Expected parameter name."))
+			if !p.match(tokens.Comma) {
 				break
 			}
 		}
 	}
-	p.consume(tokens.PAREN_CLOSE, "Expected ')' after parameters.")
+	p.consume(tokens.ParenClose, "Expected ')' after parameters.")
 	body := p.block()
 	return statements.FunctionDeclarationStmt{Name: name, Parameters: parameters, Body: body}
 }
 
 func (p *Parser) functionCall(name tokens.Token) expressions.Expr {
 	args := make([]expressions.Expr, 0)
-	if !p.check(tokens.PAREN_CLOSE) {
+	if !p.check(tokens.ParenClose) {
 		for {
 			args = append(args, p.expression())
 			if len(args) >= 255 {
 				p.error(p.peek(), "Cannot have more than 255 arguments.")
 			}
-			if !p.match(tokens.COMMA) {
+			if !p.match(tokens.Comma) {
 				break
 			}
 		}
 	}
-	p.consume(tokens.PAREN_CLOSE, "Expected ')' after arguments.")
+	p.consume(tokens.ParenClose, "Expected ')' after arguments.")
 	return expressions.FunctionCallExpr{Callee: name, Arguments: args}
 }
 
 func (p *Parser) block(checkBraces ...bool) statements.BlockStmt {
 	stmts := make([]statements.Stmt, 0)
 	if len(checkBraces) == 0 || checkBraces[0] {
-		p.consume(tokens.BRACE_OPEN, "Expected '{' before block.")
+		p.consume(tokens.BraceOpen, "Expected '{' before block.")
 	}
-	for !p.check(tokens.BRACE_CLOSE) && !p.IsAtEnd() {
+	for !p.check(tokens.BraceClose) && !p.IsAtEnd() {
 		stmts = append(stmts, p.statement())
 	}
 	if len(checkBraces) == 0 || checkBraces[0] {
-		p.consume(tokens.BRACE_CLOSE, "Expected '}' after block.")
+		p.consume(tokens.BraceClose, "Expected '}' after block.")
 	}
 	return statements.BlockStmt{Statements: stmts}
 }

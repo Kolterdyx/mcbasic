@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 )
 
@@ -50,7 +49,7 @@ func (p *Parser) previous() tokens.Token {
 }
 
 func (p *Parser) error(token tokens.Token, message string) {
-	if token.Type == tokens.EOF {
+	if token.Type == tokens.Eof {
 		p.report(token.Line, " at end", message)
 	} else {
 		p.report(token.Line, " at '"+token.Lexeme+"'", message)
@@ -74,24 +73,15 @@ func (p *Parser) synchronize() {
 	p.advance()
 
 	for !p.IsAtEnd() {
-		if p.previous().Type == tokens.SEMICOLON {
+		if p.previous().Type == tokens.Semicolon {
 			return
 		}
 
 		switch p.peek().Type {
-		case tokens.LET, tokens.DEF, tokens.IF, tokens.FOR:
+		case tokens.Let, tokens.Def, tokens.If, tokens.For:
 			return
 		default:
 			p.advance()
 		}
 	}
-}
-
-func contains(types []expressions.ExprType, of expressions.ExprType) bool {
-	for _, t := range types {
-		if t == of {
-			return true
-		}
-	}
-	return false
 }

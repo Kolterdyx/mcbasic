@@ -14,133 +14,132 @@ func (t Token) String() string {
 }
 
 const (
-	UNDEFINED TokenType = iota
-	IDENTIFIER
-	NUMBER
-	STRING
-	PLUS
-	MINUS
-	STAR
-	SLASH
-	PERCENT
-	LESS
-	LESS_EQUAL
-	GREATER
-	GREATER_EQUAL
-	EQUAL
-	EQUAL_EQUAL
-	BANG
-	BANG_EQUAL
-	PAREN_OPEN
-	PAREN_CLOSE
-	BRACE_OPEN
-	BRACE_CLOSE
-	COMMA
-	SEMICOLON
+	Undefined TokenType = iota
+	Identifier
+	Number
+	String
+	Plus
+	Minus
+	Star
+	Slash
+	Percent
+	Less
+	LessEqual
+	Greater
+	GreaterEqual
+	Equal
+	EqualEqual
+	Bang
+	BangEqual
+	ParenOpen
+	ParenClose
+	BraceOpen
+	BraceClose
+	Comma
+	Semicolon
 
-	EOF
+	Eof
 
-	// Keywords
-	TRUE
-	FALSE
-	PRINT
-	LET
-	DEF
-	AND
-	OR
-	NOT
-	IF
-	ELSE
-	FOR
+	True
+	False
+	Print
+	Let
+	Def
+	And
+	Or
+	Not
+	If
+	Else
+	For
 )
 
 func (t TokenType) String() string {
 	switch t {
-	case UNDEFINED:
-		return "UNDEFINED"
-	case IDENTIFIER:
-		return "IDENTIFIER"
-	case NUMBER:
-		return "NUMBER"
-	case STRING:
-		return "STRING"
-	case PLUS:
-		return "PLUS"
-	case MINUS:
-		return "MINUS"
-	case STAR:
-		return "STAR"
-	case SLASH:
-		return "SLASH"
-	case PERCENT:
-		return "PERCENT"
-	case LESS:
-		return "LESS"
-	case LESS_EQUAL:
-		return "LESS_EQUAL"
-	case GREATER:
-		return "GREATER"
-	case GREATER_EQUAL:
-		return "GREATER_EQUAL"
-	case EQUAL:
-		return "EQUAL"
-	case EQUAL_EQUAL:
-		return "EQUAL_EQUAL"
-	case BANG:
-		return "BANG"
-	case BANG_EQUAL:
-		return "BANG_EQUAL"
-	case AND:
-		return "AND"
-	case OR:
-		return "OR"
-	case NOT:
-		return "NOT"
-	case IF:
-		return "IF"
-	case ELSE:
-		return "ELSE"
-	case FOR:
-		return "FOR"
-	case PAREN_OPEN:
-		return "PAREN_OPEN"
-	case PAREN_CLOSE:
-		return "PAREN_CLOSE"
-	case BRACE_OPEN:
-		return "BRACE_OPEN"
-	case BRACE_CLOSE:
-		return "BRACE_CLOSE"
-	case COMMA:
-		return "COMMA"
-	case SEMICOLON:
-		return "SEMICOLON"
-	case EOF:
-		return "EOF"
-	case PRINT:
-		return "PRINT"
-	case LET:
-		return "LET"
-	case DEF:
-		return "DEF"
-	case TRUE:
-		return "TRUE"
-	case FALSE:
-		return "FALSE"
+	case Undefined:
+		return "Undefined"
+	case Identifier:
+		return "Identifier"
+	case Number:
+		return "Number"
+	case String:
+		return "String"
+	case Plus:
+		return "Plus"
+	case Minus:
+		return "Minus"
+	case Star:
+		return "Star"
+	case Slash:
+		return "Slash"
+	case Percent:
+		return "Percent"
+	case Less:
+		return "Less"
+	case LessEqual:
+		return "LessEqual"
+	case Greater:
+		return "Greater"
+	case GreaterEqual:
+		return "GreaterEqual"
+	case Equal:
+		return "Equal"
+	case EqualEqual:
+		return "EqualEqual"
+	case Bang:
+		return "Bang"
+	case BangEqual:
+		return "BangEqual"
+	case And:
+		return "And"
+	case Or:
+		return "Or"
+	case Not:
+		return "Not"
+	case If:
+		return "If"
+	case Else:
+		return "Else"
+	case For:
+		return "For"
+	case ParenOpen:
+		return "ParenOpen"
+	case ParenClose:
+		return "ParenClose"
+	case BraceOpen:
+		return "BraceOpen"
+	case BraceClose:
+		return "BraceClose"
+	case Comma:
+		return "Comma"
+	case Semicolon:
+		return "Semicolon"
+	case Eof:
+		return "Eof"
+	case Print:
+		return "Print"
+	case Let:
+		return "Let"
+	case Def:
+		return "Def"
+	case True:
+		return "True"
+	case False:
+		return "False"
 	default:
-		return "UNKNOWN"
+		return "Unknown"
 	}
 }
 
 var Keywords = map[string]TokenType{
-	"print": PRINT,
-	"let":   LET,
-	"def":   DEF,
-	"if":    IF,
-	"else":  ELSE,
-	"for":   FOR,
-	"and":   AND,
-	"or":    OR,
-	"not":   NOT,
-	"true":  TRUE,
-	"false": FALSE,
+	"print": Print,
+	"let":   Let,
+	"def":   Def,
+	"if":    If,
+	"else":  Else,
+	"for":   For,
+	"and":   And,
+	"or":    Or,
+	"not":   Not,
+	"true":  True,
+	"false": False,
 }
