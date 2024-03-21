@@ -1,15 +1,14 @@
 package statements
 
-type StmtType int
+type StmtType string
 
 const (
-	_ StmtType = iota
-	ExpressionStmtType
-	PrintStmtType
-	VariableDeclarationStmtType
-	FunctionDeclarationStmtType
-	VariableAssignmentStmtType
-	BlockStmtType
+	ExpressionStmtType          StmtType = "Expression"
+	PrintStmtType               StmtType = "Print"
+	VariableDeclarationStmtType StmtType = "VariableDeclaration"
+	FunctionDeclarationStmtType StmtType = "FunctionDeclaration"
+	VariableAssignmentStmtType  StmtType = "VariableAssignment"
+	BlockStmtType               StmtType = "Block"
 )
 
 type StmtVisitor interface {

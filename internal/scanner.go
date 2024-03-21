@@ -80,21 +80,25 @@ func (s *Scanner) scanToken() {
 	case '=':
 		if s.match('=') {
 			s.addToken(tokens.EQUAL_EQUAL)
+			break
 		}
 		s.addToken(tokens.EQUAL)
 	case '<':
 		if s.match('=') {
 			s.addToken(tokens.LESS_EQUAL)
+			break
 		}
 		s.addToken(tokens.LESS)
 	case '>':
 		if s.match('=') {
 			s.addToken(tokens.GREATER_EQUAL)
+			break
 		}
 		s.addToken(tokens.GREATER)
 	case '!':
 		if s.match('=') {
 			s.addToken(tokens.BANG_EQUAL)
+			break
 		}
 		s.addToken(tokens.BANG)
 	case '"':

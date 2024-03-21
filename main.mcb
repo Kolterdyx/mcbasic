@@ -1,7 +1,6 @@
 let d = 1;
 let g = 45 + 7.34 * d;
-
-let f;
+let f = 2 >= 3;
 
 def loop(e) {
     let a = 3;
