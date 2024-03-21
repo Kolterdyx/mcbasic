@@ -7,13 +7,13 @@ type FunctionDeclarationStmt struct {
 
 	Name       tokens.Token
 	Parameters []tokens.Token
-	Body       []Stmt
+	Body       BlockStmt
 }
 
-func (f FunctionDeclarationStmt) Accept(visitor StmtVisitor) {
-	visitor.VisitFunctionDeclaration(f)
+func (f FunctionDeclarationStmt) Accept(visitor StmtVisitor) interface{} {
+	return visitor.VisitFunctionDeclaration(f)
 }
 
-func (f FunctionDeclarationStmt) Type() StatementType {
-	return FUNCTION_DECLARATION
+func (f FunctionDeclarationStmt) Type() StmtType {
+	return FunctionDeclarationStmtType
 }

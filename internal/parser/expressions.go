@@ -83,7 +83,12 @@ func (p *Parser) primary() expressions.Expr {
 		return expressions.GroupingExpr{Expression: expr}
 	}
 	if p.match(tokens.IDENTIFIER) {
-		return expressions.VariableExpr{Name: p.previous()}
+		identifier := p.previous()
+		if p.match(tokens.PAREN_OPEN) {
+			return p.functionCall(identifier)
+		} else {
+			return expressions.VariableExpr{Name: identifier}
+		}
 	}
 
 	p.error(p.peek(), "Expected expression.")

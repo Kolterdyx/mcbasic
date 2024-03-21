@@ -12,6 +12,6 @@ func (p PrintStmt) Accept(visitor StmtVisitor) {
 	visitor.VisitPrint(p)
 }
 
-func (p PrintStmt) Type() StatementType {
-	return PRINT
+func (p PrintStmt) Type() StmtType {
+	return PrintStmtType
 }

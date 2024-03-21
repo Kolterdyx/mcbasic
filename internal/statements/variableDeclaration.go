@@ -12,10 +12,10 @@ type VariableDeclarationStmt struct {
 	Initializer expressions.Expr
 }
 
-func (v VariableDeclarationStmt) Accept(visitor StmtVisitor) {
-	visitor.VisitVariableDeclaration(v)
+func (v VariableDeclarationStmt) Accept(visitor StmtVisitor) interface{} {
+	return visitor.VisitVariableDeclaration(v)
 }
 
-func (v VariableDeclarationStmt) Type() StatementType {
-	return VARIABLE_DECLARATION
+func (v VariableDeclarationStmt) Type() StmtType {
+	return VariableDeclarationStmtType
 }

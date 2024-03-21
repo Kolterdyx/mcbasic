@@ -1,23 +1,27 @@
 package statements
 
-type StatementType int
+type StmtType int
 
 const (
-	UNDEFINED StatementType = iota
-	EXPRESSION
-	PRINT
-	VARIABLE_DECLARATION
-	FUNCTION_DECLARATION
+	_ StmtType = iota
+	ExpressionStmtType
+	PrintStmtType
+	VariableDeclarationStmtType
+	FunctionDeclarationStmtType
+	VariableAssignmentStmtType
+	BlockStmtType
 )
 
 type StmtVisitor interface {
-	VisitExpression(ExpressionStmt)
-	VisitPrint(PrintStmt)
-	VisitVariableDeclaration(VariableDeclarationStmt)
-	VisitFunctionDeclaration(FunctionDeclarationStmt)
+	VisitExpression(ExpressionStmt) interface{}
+	VisitPrint(PrintStmt) interface{}
+	VisitVariableDeclaration(VariableDeclarationStmt) interface{}
+	VisitFunctionDeclaration(FunctionDeclarationStmt) interface{}
+	VisitVariableAssignment(VariableAssignmentStmt) interface{}
+	VisitBlock(BlockStmt) interface{}
 }
 
 type Stmt interface {
-	Accept(StmtVisitor)
-	Type() StatementType
+	Accept(StmtVisitor) interface{}
+	Type() StmtType
 }

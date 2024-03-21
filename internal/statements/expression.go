@@ -8,10 +8,10 @@ type ExpressionStmt struct {
 	Expression expressions.Expr
 }
 
-func (e ExpressionStmt) Accept(visitor StmtVisitor) {
-	visitor.VisitExpression(e)
+func (e ExpressionStmt) Accept(visitor StmtVisitor) interface{} {
+	return visitor.VisitExpression(e)
 }
 
-func (e ExpressionStmt) Type() StatementType {
-	return EXPRESSION
+func (e ExpressionStmt) Type() StmtType {
+	return ExpressionStmtType
 }

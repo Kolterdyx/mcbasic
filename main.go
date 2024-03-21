@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/Kolterdyx/mcbasic/internal"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
+	"github.com/Kolterdyx/mcbasic/internal/visitors"
 	"os"
 )
 
@@ -32,15 +34,18 @@ func main() {
 		os.Exit(65)
 	}
 	parser_ := parser.Parser{Tokens: tokens}
-	stmts := parser_.Parse()
+	block := parser_.Parse()
 	if parser_.HadError {
 		os.Exit(65)
 	}
-	debugVisitor := internal.DebugVisitor{}
-	for _, stmt := range stmts {
-		stmt.Accept(debugVisitor)
-	}
+	visitor := visitors.DebugVisitor{}
+	fmt.Println(block.Accept(visitor))
 
+	visitorJson := visitors.JsonVisitor{}
+	res := block.Accept(visitorJson)
+	b, _ := json.MarshalIndent(res, "", "  ")
+	// Write the json to a file
+	_ = os.WriteFile("output.json", b, 0644)
 }
 
 func loadProject(file string) internal.ProjectConfig {

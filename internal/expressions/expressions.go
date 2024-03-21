@@ -17,6 +17,7 @@ type ExprVisitor interface {
 	VisitLiteral(l LiteralExpr) interface{}
 	VisitUnary(l UnaryExpr) interface{}
 	VisitVariable(l VariableExpr) interface{}
+	VisitFunctionCall(l FunctionCallExpr) interface{}
 }
 
 type Expr interface {

@@ -11,10 +11,6 @@ type Parser struct {
 	Tokens   []tokens.Token
 }
 
-func (p *Parser) Parse() []statements.Stmt {
-	stmts := make([]statements.Stmt, 0)
-	for !p.IsAtEnd() {
-		stmts = append(stmts, p.statement())
-	}
-	return stmts
+func (p *Parser) Parse() statements.Stmt {
+	return p.block(false)
 }
