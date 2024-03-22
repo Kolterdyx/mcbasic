@@ -50,10 +50,11 @@ func (p *Parser) previous() tokens.Token {
 
 func (p *Parser) error(token tokens.Token, message string) {
 	if token.Type == tokens.Eof {
-		p.report(token.Line, " at end", message)
+		p.report(token.Line+1, " at end", message)
 	} else {
-		p.report(token.Line, " at '"+token.Lexeme+"'", message)
+		p.report(token.Line+1, " at '"+token.Lexeme+"'", message)
 	}
+	p.synchronize()
 }
 
 func (p *Parser) report(line int, s string, message string) {
@@ -73,15 +74,9 @@ func (p *Parser) synchronize() {
 	p.advance()
 
 	for !p.IsAtEnd() {
-		if p.previous().Type == tokens.Semicolon {
+		if p.match(tokens.Semicolon, tokens.BraceClose) {
 			return
 		}
-
-		switch p.peek().Type {
-		case tokens.Let, tokens.Def, tokens.If, tokens.For:
-			return
-		default:
-			p.advance()
-		}
+		p.advance()
 	}
 }

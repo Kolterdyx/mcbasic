@@ -11,4 +11,7 @@ def setup() {
     f = 2;
     let n = loop(f);
     let a = -loop(3.5, -5) -f;
+    while (true) {
+        let a = 3;
+    }
 }

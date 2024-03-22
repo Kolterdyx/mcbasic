@@ -9,6 +9,7 @@ const (
 	FunctionDeclarationStmtType StmtType = "FunctionDeclaration"
 	VariableAssignmentStmtType  StmtType = "VariableAssignment"
 	BlockStmtType               StmtType = "Block"
+	WhileStmtType               StmtType = "While"
 )
 
 type StmtVisitor interface {
@@ -18,6 +19,7 @@ type StmtVisitor interface {
 	VisitFunctionDeclaration(FunctionDeclarationStmt) interface{}
 	VisitVariableAssignment(VariableAssignmentStmt) interface{}
 	VisitBlock(BlockStmt) interface{}
+	VisitWhile(WhileStmt) interface{}
 }
 
 type Stmt interface {

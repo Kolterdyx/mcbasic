@@ -23,7 +23,7 @@ func (s *Scanner) report(line int, where string, message string) {
 }
 
 func (s *Scanner) error(line int, message string) {
-	s.report(line, "", message)
+	s.report(line+1, "", message)
 }
 
 func (s *Scanner) Scan(source string) []tokens.Token {
@@ -113,9 +113,9 @@ func (s *Scanner) scanToken() {
 			break
 		}
 		if c < 32 || c > 126 {
-			s.error(s.line+1, "Unexpected character: "+fmt.Sprintf("'%d'", c))
+			s.error(s.line, "Unexpected character: "+fmt.Sprintf("'%d'", c))
 		} else {
-			s.error(s.line+1, "Unexpected character: "+string(c))
+			s.error(s.line, "Unexpected character: "+string(c))
 		}
 	}
 
@@ -164,7 +164,7 @@ func (s *Scanner) scanString() {
 		s.advance()
 	}
 	if s.isAtEnd() || s.peek() == '\n' {
-		s.error(s.line+1, "Unterminated string at line "+fmt.Sprintf("%d", stringStartLine+1))
+		s.error(s.line, "Unterminated string at line "+fmt.Sprintf("%d", stringStartLine+1))
 		return
 	}
 	s.advance()
@@ -191,7 +191,7 @@ func (s *Scanner) scanNumber() {
 		ffloat, _ := strconv.ParseFloat(s.source[s.start:s.current], 64)
 		s.addTokenWithLiteral(tokens.Number, ffloat)
 	} else if unicode.IsLetter(rune(s.peek())) {
-		s.error(s.line+1, "Unexpected character: "+string(s.peek()))
+		s.error(s.line, "Unexpected character: "+string(s.peek()))
 	} else {
 		iint, _ := strconv.Atoi(s.source[s.start:s.current])
 		s.addTokenWithLiteral(tokens.Number, iint)

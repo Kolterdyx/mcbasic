@@ -14,6 +14,7 @@ func main() {
 	// Read the config file
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: mcbasic <config>")
+		return
 	}
 	projectFile := os.Args[1]
 	if projectFile == "" {

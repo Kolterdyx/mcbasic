@@ -11,6 +11,8 @@ func (p *Parser) statement() statements.Stmt {
 		return p.letDeclaration()
 	} else if p.match(tokens.Def) {
 		return p.functionDeclaration()
+	} else if p.match(tokens.While) {
+		return p.whileStatement()
 	} else if p.match(tokens.Identifier) && p.check(tokens.Equal) {
 		return p.variableAssignment()
 	}
@@ -90,4 +92,12 @@ func (p *Parser) block(checkBraces ...bool) statements.BlockStmt {
 		p.consume(tokens.BraceClose, "Expected '}' after block.")
 	}
 	return statements.BlockStmt{Statements: stmts}
+}
+
+func (p *Parser) whileStatement() statements.Stmt {
+	p.consume(tokens.ParenOpen, "Expected '(' after 'while'.")
+	condition := p.expression()
+	p.consume(tokens.ParenClose, "Expected ')' after condition.")
+	body := p.block()
+	return statements.WhileStmt{Condition: condition, Body: body}
 }

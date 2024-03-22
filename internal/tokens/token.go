@@ -50,7 +50,7 @@ const (
 	Not
 	If
 	Else
-	For
+	While
 )
 
 func (t TokenType) String() string {
@@ -99,8 +99,8 @@ func (t TokenType) String() string {
 		return "If"
 	case Else:
 		return "Else"
-	case For:
-		return "For"
+	case While:
+		return "While"
 	case ParenOpen:
 		return "ParenOpen"
 	case ParenClose:
@@ -136,10 +136,10 @@ var Keywords = map[string]TokenType{
 	"def":   Def,
 	"if":    If,
 	"else":  Else,
-	"for":   For,
 	"and":   And,
 	"or":    Or,
 	"not":   Not,
 	"true":  True,
 	"false": False,
+	"while": While,
 }

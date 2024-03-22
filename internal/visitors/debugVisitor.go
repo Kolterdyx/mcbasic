@@ -83,3 +83,7 @@ func (d DebugVisitor) VisitBlock(b statements.BlockStmt) interface{} {
 	res += "}"
 	return res
 }
+
+func (d DebugVisitor) VisitWhile(w statements.WhileStmt) interface{} {
+	return fmt.Sprintf("while (%v) %v", w.Condition.Accept(d), w.Body.Accept(d))
+}

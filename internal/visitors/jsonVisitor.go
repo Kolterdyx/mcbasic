@@ -115,3 +115,11 @@ func (j JsonVisitor) VisitBlock(b statements.BlockStmt) interface{} {
 		"statements": stmts,
 	}
 }
+
+func (j JsonVisitor) VisitWhile(w statements.WhileStmt) interface{} {
+	return map[string]interface{}{
+		"type":      w.Type(),
+		"condition": w.Condition.Accept(j),
+		"body":      w.Body.Accept(j),
+	}
+}
