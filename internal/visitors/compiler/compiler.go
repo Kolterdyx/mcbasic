@@ -37,7 +37,10 @@ func (c *Compiler) Compile(b parser.Program) {
 		f.Accept(c)
 	}
 
-	cp.Copy(c.DatapackRoot, "/home/kolterdyx/.minecraft/saves/Test/datapacks/"+c.Config.Project.Name)
+	err = cp.Copy(c.DatapackRoot, "/home/kolterdyx/.minecraft/saves/Test/datapacks/"+c.Config.Project.Name)
+	if err != nil {
+		return
+	}
 }
 
 func (c *Compiler) createDirectoryTree() error {
