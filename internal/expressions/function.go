@@ -5,7 +5,7 @@ import "github.com/Kolterdyx/mcbasic/internal/tokens"
 type FunctionCallExpr struct {
 	Expr
 
-	Callee    tokens.Token
+	Name      tokens.Token
 	Arguments []Expr
 }
 

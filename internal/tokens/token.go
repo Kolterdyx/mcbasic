@@ -5,8 +5,9 @@ type TokenType int
 type Token struct {
 	Type    TokenType
 	Lexeme  string
-	Literal interface{}
+	Literal string
 	Line    int
+	Pos     int
 }
 
 func (t Token) String() string {

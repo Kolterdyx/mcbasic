@@ -13,6 +13,8 @@ func (p *Parser) statement() statements.Stmt {
 		return p.functionDeclaration()
 	} else if p.match(tokens.While) {
 		return p.whileStatement()
+	} else if p.match(tokens.Print) {
+		return p.printStatement()
 	} else if p.match(tokens.Identifier) && p.check(tokens.Equal) {
 		return p.variableAssignment()
 	}
@@ -61,23 +63,6 @@ func (p *Parser) functionDeclaration() statements.Stmt {
 	p.consume(tokens.ParenClose, "Expected ')' after parameters.")
 	body := p.block()
 	return statements.FunctionDeclarationStmt{Name: name, Parameters: parameters, Body: body}
-}
-
-func (p *Parser) functionCall(name tokens.Token) expressions.Expr {
-	args := make([]expressions.Expr, 0)
-	if !p.check(tokens.ParenClose) {
-		for {
-			args = append(args, p.expression())
-			if len(args) >= 255 {
-				p.error(p.peek(), "Cannot have more than 255 arguments.")
-			}
-			if !p.match(tokens.Comma) {
-				break
-			}
-		}
-	}
-	p.consume(tokens.ParenClose, "Expected ')' after arguments.")
-	return expressions.FunctionCallExpr{Callee: name, Arguments: args}
 }
 
 func (p *Parser) block(checkBraces ...bool) statements.BlockStmt {

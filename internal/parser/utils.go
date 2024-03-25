@@ -50,16 +50,16 @@ func (p *Parser) previous() tokens.Token {
 
 func (p *Parser) error(token tokens.Token, message string) {
 	if token.Type == tokens.Eof {
-		p.report(token.Line+1, " at end", message)
+		p.report(token.Line+1, token.Pos, " at end", message)
 	} else {
-		p.report(token.Line+1, " at '"+token.Lexeme+"'", message)
+		p.report(token.Line+1, token.Pos, " at '"+token.Lexeme+"'", message)
 	}
 	p.synchronize()
 }
 
-func (p *Parser) report(line int, s string, message string) {
+func (p *Parser) report(line int, pos int, s string, message string) {
 	p.HadError = true
-	fmt.Printf("[line %d] Error%s: %s\n", line, s, message)
+	fmt.Printf("[Position %d:%d] Error%s: %s\n", line, pos, s, message)
 }
 
 func (p *Parser) consume(tokenType tokens.TokenType, message string) tokens.Token {

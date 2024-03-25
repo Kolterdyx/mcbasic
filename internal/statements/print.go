@@ -8,8 +8,8 @@ type PrintStmt struct {
 	Expression expressions.Expr
 }
 
-func (p PrintStmt) Accept(visitor StmtVisitor) {
-	visitor.VisitPrint(p)
+func (p PrintStmt) Accept(visitor StmtVisitor) interface{} {
+	return visitor.VisitPrint(p)
 }
 
 func (p PrintStmt) Type() StmtType {

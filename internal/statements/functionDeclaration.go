@@ -17,3 +17,12 @@ func (f FunctionDeclarationStmt) Accept(visitor StmtVisitor) interface{} {
 func (f FunctionDeclarationStmt) Type() StmtType {
 	return FunctionDeclarationStmtType
 }
+
+func (f FunctionDeclarationStmt) HasArg(arg string) bool {
+	for _, p := range f.Parameters {
+		if p.Lexeme == arg {
+			return true
+		}
+	}
+	return false
+}

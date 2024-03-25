@@ -64,7 +64,7 @@ func (d DebugVisitor) VisitFunctionDeclaration(f statements.FunctionDeclarationS
 }
 
 func (d DebugVisitor) VisitFunctionCall(f expressions.FunctionCallExpr) interface{} {
-	res := fmt.Sprintf("%s(", f.Callee.Lexeme)
+	res := fmt.Sprintf("%s(", f.Name.Lexeme)
 	for i, a := range f.Arguments {
 		res += a.Accept(d).(string)
 		if i < len(f.Arguments)-1 {

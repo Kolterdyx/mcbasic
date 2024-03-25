@@ -15,6 +15,7 @@ type Scanner struct {
 	current  int
 	tokens   []tokens.Token
 	line     int
+	pos      int
 }
 
 func (s *Scanner) report(line int, where string, message string) {
@@ -23,7 +24,7 @@ func (s *Scanner) report(line int, where string, message string) {
 }
 
 func (s *Scanner) error(line int, message string) {
-	s.report(line+1, "", message)
+	s.report(line+1, "at "+strconv.Itoa(s.pos), message)
 }
 
 func (s *Scanner) Scan(source string) []tokens.Token {
@@ -70,6 +71,7 @@ func (s *Scanner) scanToken() {
 		s.scanComment()
 	case '\n':
 		s.line++
+		s.pos = 0
 		fallthrough
 	case ' ':
 		fallthrough
@@ -145,6 +147,7 @@ func (s *Scanner) peek() byte {
 
 func (s *Scanner) advance() byte {
 	s.current++
+	s.pos++
 	return s.source[s.current-1]
 }
 
@@ -152,9 +155,9 @@ func (s *Scanner) addToken(tokenType tokens.TokenType) {
 	s.addTokenWithLiteral(tokenType, "")
 }
 
-func (s *Scanner) addTokenWithLiteral(tokenType tokens.TokenType, literal interface{}) {
+func (s *Scanner) addTokenWithLiteral(tokenType tokens.TokenType, literal string) {
 	text := s.source[s.start:s.current]
-	s.tokens = append(s.tokens, tokens.Token{Type: tokenType, Lexeme: text, Literal: literal, Line: s.line})
+	s.tokens = append(s.tokens, tokens.Token{Type: tokenType, Lexeme: text, Literal: literal, Line: s.line, Pos: s.pos})
 }
 
 func (s *Scanner) scanString() {
@@ -188,13 +191,13 @@ func (s *Scanner) scanNumber() {
 		for unicode.IsDigit(rune(s.peek())) {
 			s.advance()
 		}
-		ffloat, _ := strconv.ParseFloat(s.source[s.start:s.current], 64)
-		s.addTokenWithLiteral(tokens.Number, ffloat)
+		num, _ := strconv.ParseFloat(s.source[s.start:s.current], 64)
+		s.addTokenWithLiteral(tokens.Number, strconv.Itoa(int(num*1000)))
 	} else if unicode.IsLetter(rune(s.peek())) {
 		s.error(s.line, "Unexpected character: "+string(s.peek()))
 	} else {
-		iint, _ := strconv.Atoi(s.source[s.start:s.current])
-		s.addTokenWithLiteral(tokens.Number, iint)
+		num, _ := strconv.Atoi(s.source[s.start:s.current])
+		s.addTokenWithLiteral(tokens.Number, strconv.Itoa(num*1000))
 	}
 
 }

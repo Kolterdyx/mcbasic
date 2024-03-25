@@ -1,17 +1,12 @@
-let d = 1;
-let g = 45 + 7.34 * d;
-let f = 2 >= 3;
 
-def loop(e) {
-    let a = 3;
+
+def add(x, y) {
+    print x + y;
 }
 
-def setup() {
-    let f = 6.2;
-    f = 2;
-    let n = loop(f);
-    let a = -loop(3.5, -5) -f;
-    while (true) {
-        let a = 3;
-    }
+
+def test() {
+    add(1, 2);
+    add(3, 4);
+    add(5, 6);
 }
