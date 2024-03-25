@@ -12,6 +12,13 @@ import (
 	"path/filepath"
 )
 
+type ResStore string
+
+const (
+	ScoreRes ResStore = "score"
+	DataRes  ResStore = "data"
+)
+
 type Compiler struct {
 	Config       interfaces.ProjectConfig
 	Namespace    string
@@ -21,6 +28,10 @@ type Compiler struct {
 	tagsPath      string
 
 	currentFunction statements.FunctionDeclarationStmt
+
+	functionArgs map[string][]string
+
+	resStore ResStore
 
 	expressions.ExprVisitor
 	statements.StmtVisitor
@@ -33,6 +44,13 @@ func (c *Compiler) Compile(b parser.Program) {
 	}
 	c.createPackMeta()
 	c.createBuiltinFunctions()
+	c.functionArgs = make(map[string][]string)
+	for _, f := range b.Functions {
+		c.functionArgs[f.Name.Lexeme] = make([]string, 0)
+		for _, a := range f.Parameters {
+			c.functionArgs[f.Name.Lexeme] = append(c.functionArgs[f.Name.Lexeme], a.Lexeme)
+		}
+	}
 	for _, f := range b.Functions {
 		f.Accept(c)
 	}
@@ -74,6 +92,15 @@ func (c *Compiler) VisitFunctionDeclaration(f statements.FunctionDeclarationStmt
 	return nil
 }
 
+func (c *Compiler) VisitVariableDeclaration(v statements.VariableDeclarationStmt) interface{} {
+	cmd := ""
+	if v.Initializer != nil {
+		cmd += v.Initializer.Accept(c).(string)
+		cmd += c.declareVarWithVarVal(v.Name.Lexeme, "res")
+	}
+	return cmd
+}
+
 func (c *Compiler) VisitBlock(b statements.BlockStmt) interface{} {
 	cmd := ""
 	for _, s := range b.Statements {
@@ -85,7 +112,7 @@ func (c *Compiler) VisitBlock(b statements.BlockStmt) interface{} {
 func (c *Compiler) VisitPrint(p statements.PrintStmt) interface{} {
 	cmd := ""
 	cmd += p.Expression.Accept(c).(string)
-	cmd += c.storeArgFromVar("__print__", "text", "res")
+	cmd += c.storeArgFromVar("__print__", "text", "res", c.resStore)
 	cmd += c.print()
 	return cmd
 }
@@ -102,17 +129,17 @@ func (c *Compiler) VisitBinary(b expressions.BinaryExpr) interface{} {
 	cmd += c.declareVarWithVarVal("right", "res")
 	switch b.Operator.Type {
 	case tokens.Plus:
-		cmd += c.add("right", "left", "res")
+		cmd += c.add("left", "right")
 	case tokens.Minus:
-		cmd += c.sub("right", "left", "res")
+		cmd += c.sub("left", "right")
 	case tokens.Star:
-		cmd += c.mul("right", "left", "res")
+		cmd += c.mul("left", "right")
 	case tokens.Slash:
-		cmd += c.div("right", "left", "res")
+		cmd += c.div("left", "right")
 	case tokens.Percent:
-		cmd += c.mod("right", "left", "res")
+		cmd += c.mod("left", "right")
 	default:
-		cmd += c.comp(b.Operator.Lexeme, "left", "right", "res")
+		cmd += c.comp(b.Operator.Lexeme, "left", "right")
 	}
 	return cmd
 }
@@ -122,7 +149,12 @@ func (c *Compiler) VisitGrouping(g expressions.GroupingExpr) interface{} {
 }
 
 func (c *Compiler) VisitLiteral(l expressions.LiteralExpr) interface{} {
-	return c.declareVarWithVal("res", l.Value.(string))
+	if l.ValueType == expressions.NumberType {
+		return c.declareVarWithVal("res", l.Value.(string))
+	} else if l.ValueType == expressions.StringType {
+		return c.declareVarWithStringVal("res", l.Value.(string))
+	}
+	return ""
 }
 
 func (c *Compiler) VisitUnary(u expressions.UnaryExpr) interface{} {
@@ -131,10 +163,10 @@ func (c *Compiler) VisitUnary(u expressions.UnaryExpr) interface{} {
 	cmd += c.declareVarWithVarVal("expr", "res")
 	switch u.Operator.Type {
 	case tokens.Bang:
-		cmd += c.not("expr", "res")
+		cmd += c.not("expr")
 	case tokens.Minus:
 		cmd += c.declareVar("res")
-		cmd += c.sub("res", "expr", "res")
+		cmd += c.sub("res", "expr")
 	default:
 		panic("Unknown unary operator")
 	}
@@ -150,6 +182,10 @@ func (c *Compiler) VisitVariable(v expressions.VariableExpr) interface{} {
 
 func (c *Compiler) VisitFunctionCall(f expressions.FunctionCallExpr) interface{} {
 	cmd := ""
+	for i, a := range f.Arguments {
+		cmd += a.Accept(c).(string)
+		cmd += c.storeArgFromVar(f.Name.Lexeme, c.functionArgs[f.Name.Lexeme][i], "res", c.resStore)
+	}
 	cmd += c.call(f.Name.Lexeme)
 	return cmd
 }

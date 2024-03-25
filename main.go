@@ -53,6 +53,5 @@ func loadProject(file string) interfaces.ProjectConfig {
 		fmt.Println(err)
 		return interfaces.ProjectConfig{}
 	}
-	fmt.Println(project)
 	return project
 }

@@ -32,3 +32,7 @@ func (p *Parser) printStatement() statements.Stmt {
 	p.consume(tokens.Semicolon, "Expected ';' after value.")
 	return statements.PrintStmt{Expression: value}
 }
+
+func (p *Parser) stepBack() {
+	p.current--
+}

@@ -1,12 +1,25 @@
 
 
-def add(x, y) {
+def add(x number, y number) {
     print x + y;
 }
 
+def sub(x number, y number) {
+    print x - y;
+}
 
-def test() {
-    add(1, 2);
-    add(3, 4);
-    add(5, 6);
+def mul(x number, y number) {
+    print x * y;
+}
+
+def div(x number, y number) {
+    print x / y;
+}
+
+def f(t string) {
+    print t;
+}
+
+def init() {
+    f("Hello, World!");
 }

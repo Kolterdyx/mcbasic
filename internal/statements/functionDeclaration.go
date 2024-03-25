@@ -7,6 +7,7 @@ type FunctionDeclarationStmt struct {
 
 	Name       tokens.Token
 	Parameters []tokens.Token
+	Types      []tokens.Token
 	Body       BlockStmt
 }
 

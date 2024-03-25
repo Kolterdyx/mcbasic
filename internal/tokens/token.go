@@ -52,6 +52,9 @@ const (
 	If
 	Else
 	While
+
+	NumberType
+	StringType
 )
 
 func (t TokenType) String() string {
@@ -126,21 +129,27 @@ func (t TokenType) String() string {
 		return "True"
 	case False:
 		return "False"
+	case NumberType:
+		return "NumberType"
+	case StringType:
+		return "StringType"
 	default:
 		return "Unknown"
 	}
 }
 
 var Keywords = map[string]TokenType{
-	"print": Print,
-	"let":   Let,
-	"def":   Def,
-	"if":    If,
-	"else":  Else,
-	"and":   And,
-	"or":    Or,
-	"not":   Not,
-	"true":  True,
-	"false": False,
-	"while": While,
+	"print":  Print,
+	"let":    Let,
+	"def":    Def,
+	"if":     If,
+	"else":   Else,
+	"and":    And,
+	"or":     Or,
+	"not":    Not,
+	"true":   True,
+	"false":  False,
+	"while":  While,
+	"number": NumberType,
+	"string": StringType,
 }

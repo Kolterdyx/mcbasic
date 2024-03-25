@@ -100,13 +100,16 @@ func (p *Parser) functionCall(name tokens.Token) expressions.Expr {
 
 func (p *Parser) primary() expressions.Expr {
 	if p.match(tokens.False) {
-		return expressions.LiteralExpr{Value: false}
+		return expressions.LiteralExpr{Value: 0, ValueType: expressions.NumberType}
 	}
 	if p.match(tokens.True) {
-		return expressions.LiteralExpr{Value: true}
+		return expressions.LiteralExpr{Value: 1, ValueType: expressions.NumberType}
 	}
-	if p.match(tokens.Number, tokens.String) {
-		return expressions.LiteralExpr{Value: p.previous().Literal}
+	if p.match(tokens.Number) {
+		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: expressions.NumberType}
+	}
+	if p.match(tokens.String) {
+		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: expressions.StringType}
 	}
 	if p.match(tokens.ParenOpen) {
 		expr := p.expression()

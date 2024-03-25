@@ -1,9 +1,17 @@
 package expressions
 
+type ValueType string
+
+const (
+	NumberType ValueType = "number"
+	StringType ValueType = "string"
+)
+
 type LiteralExpr struct {
 	Expr
 
-	Value interface{}
+	Value     interface{}
+	ValueType ValueType
 }
 
 func (l LiteralExpr) Accept(v ExprVisitor) interface{} {
