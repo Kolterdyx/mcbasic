@@ -38,6 +38,7 @@ const (
 	BraceClose
 	Comma
 	Semicolon
+	Colon
 
 	Eof
 
@@ -119,6 +120,8 @@ func (t TokenType) String() string {
 		return "Comma"
 	case Semicolon:
 		return "Semicolon"
+	case Colon:
+		return "Colon"
 	case Eof:
 		return "Eof"
 	case Print:

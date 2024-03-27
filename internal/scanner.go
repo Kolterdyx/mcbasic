@@ -62,6 +62,8 @@ func (s *Scanner) scanToken() {
 		s.addToken(tokens.Comma)
 	case ';':
 		s.addToken(tokens.Semicolon)
+	case ':':
+		s.addToken(tokens.Colon)
 	case '-':
 		s.addToken(tokens.Minus)
 	case '+':

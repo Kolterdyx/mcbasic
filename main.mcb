@@ -1,4 +1,4 @@
 
-func main(x number){
-    let a number = 1;
+func main(x: number){
+    let a: number = 1;
 }

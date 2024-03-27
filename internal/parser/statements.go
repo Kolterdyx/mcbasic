@@ -41,6 +41,7 @@ func (p *Parser) expressionStatement() statements.Stmt {
 func (p *Parser) letDeclaration() statements.Stmt {
 	name := p.consume(tokens.Identifier, "Expected variable name.")
 	var varType tokens.Token
+	p.consume(tokens.Colon, "Expected type declaration.")
 	if p.match(tokens.NumberType, tokens.StringType) {
 		varType = p.previous()
 	} else {
@@ -73,6 +74,7 @@ func (p *Parser) functionDeclaration() statements.Stmt {
 				p.error(p.peek(), "Cannot have more than 255 parameters.")
 			}
 			parameters = append(parameters, p.consume(tokens.Identifier, "Expected parameter name."))
+			p.consume(tokens.Colon, "Expected type declaration.")
 			if !p.match(tokens.NumberType, tokens.StringType) {
 				p.error(p.peek(), "Expected parameter type.")
 			}
