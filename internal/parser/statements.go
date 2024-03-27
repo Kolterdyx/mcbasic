@@ -4,6 +4,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	log "github.com/sirupsen/logrus"
 )
 
 func (p *Parser) statement() statements.Stmt {
@@ -15,6 +16,10 @@ func (p *Parser) statement() statements.Stmt {
 		return p.whileStatement()
 	} else if p.match(tokens.Print) {
 		return p.printStatement()
+	} else if p.match(tokens.Exec) {
+		return p.execStatement()
+	} else if p.match(tokens.If) {
+		return p.ifStatement()
 	} else if p.match(tokens.Identifier) {
 		if p.check(tokens.Equal) {
 			return p.variableAssignment()
@@ -35,12 +40,18 @@ func (p *Parser) expressionStatement() statements.Stmt {
 
 func (p *Parser) letDeclaration() statements.Stmt {
 	name := p.consume(tokens.Identifier, "Expected variable name.")
+	var varType tokens.Token
+	if p.match(tokens.NumberType, tokens.StringType) {
+		varType = p.previous()
+	} else {
+		p.error(p.peek(), "Expected variable type.")
+	}
 	var initializer expressions.Expr
 	if p.match(tokens.Equal) {
 		initializer = p.expression()
 	}
 	p.consume(tokens.Semicolon, "Expected ';' after variable declaration.")
-	return statements.VariableDeclarationStmt{Name: name, Initializer: initializer}
+	return statements.VariableDeclarationStmt{Name: name, Type: varType, Initializer: initializer}
 }
 
 func (p *Parser) variableAssignment() statements.Stmt {
@@ -96,4 +107,35 @@ func (p *Parser) whileStatement() statements.Stmt {
 	p.consume(tokens.ParenClose, "Expected ')' after condition.")
 	body := p.block()
 	return statements.WhileStmt{Condition: condition, Body: body}
+}
+
+func (p *Parser) printStatement() statements.Stmt {
+	value := p.expression()
+	p.consume(tokens.Semicolon, "Expected ';' after value.")
+	return statements.PrintStmt{Expression: value}
+}
+
+func (p *Parser) execStatement() statements.Stmt {
+	if p.peek().Type != tokens.String {
+		log.Errorf("Expected string literal after 'exec'.\n")
+	}
+	value := p.expression()
+	p.consume(tokens.Semicolon, "Expected ';' after value.")
+	return statements.ExecStmt{Expression: value.(expressions.LiteralExpr)}
+}
+
+func (p *Parser) ifStatement() statements.Stmt {
+	p.consume(tokens.ParenOpen, "Expected '(' after 'if'.")
+	condition := p.expression()
+	p.consume(tokens.ParenClose, "Expected ')' after condition.")
+	thenBranch := p.block()
+	var elseBranch statements.BlockStmt
+	if p.match(tokens.Else) {
+		if p.match(tokens.If) {
+			elseBranch.Statements = append(elseBranch.Statements, p.ifStatement())
+		} else {
+			elseBranch = p.block(false)
+		}
+	}
+	return statements.IfStmt{Condition: condition, ThenBranch: thenBranch, ElseBranch: elseBranch}
 }

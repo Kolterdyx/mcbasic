@@ -15,7 +15,7 @@ func (f FunctionDeclarationStmt) Accept(visitor StmtVisitor) interface{} {
 	return visitor.VisitFunctionDeclaration(f)
 }
 
-func (f FunctionDeclarationStmt) Type() StmtType {
+func (f FunctionDeclarationStmt) TType() StmtType {
 	return FunctionDeclarationStmtType
 }
 

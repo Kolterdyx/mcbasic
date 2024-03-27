@@ -1,9 +1,9 @@
 package parser
 
 import (
-	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	log "github.com/sirupsen/logrus"
 )
 
 func (p *Parser) expression() expressions.Expr {
@@ -81,7 +81,7 @@ func (p *Parser) value() expressions.Expr {
 }
 
 func (p *Parser) functionCall(name tokens.Token) expressions.Expr {
-	fmt.Println("Function call: ", name.Lexeme)
+	log.Debugf("Function call: %s\n", name.Lexeme)
 	args := make([]expressions.Expr, 0)
 	if !p.check(tokens.ParenClose) {
 		for {

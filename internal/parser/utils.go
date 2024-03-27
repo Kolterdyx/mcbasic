@@ -1,8 +1,8 @@
 package parser
 
 import (
-	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	log "github.com/sirupsen/logrus"
 )
 
 func (p *Parser) match(tokenTypes ...tokens.TokenType) bool {
@@ -59,7 +59,7 @@ func (p *Parser) error(token tokens.Token, message string) {
 
 func (p *Parser) report(line int, pos int, s string, message string) {
 	p.HadError = true
-	fmt.Printf("[Position %d:%d] Error%s: %s\n", line, pos, s, message)
+	log.Errorf("[Position %d:%d] Error%s: %s\n", line, pos, s, message)
 }
 
 func (p *Parser) consume(tokenType tokens.TokenType, message string) tokens.Token {

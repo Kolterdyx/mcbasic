@@ -12,6 +12,6 @@ func (e ExpressionStmt) Accept(visitor StmtVisitor) interface{} {
 	return visitor.VisitExpression(e)
 }
 
-func (e ExpressionStmt) Type() StmtType {
+func (e ExpressionStmt) TType() StmtType {
 	return ExpressionStmtType
 }

@@ -1,22 +1,15 @@
 package compiler
 
 import (
-	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
-	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	cp "github.com/otiai10/copy"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
-)
-
-type ResStore string
-
-const (
-	ScoreRes ResStore = "score"
-	DataRes  ResStore = "data"
 )
 
 type Compiler struct {
@@ -29,165 +22,53 @@ type Compiler struct {
 
 	currentFunction statements.FunctionDeclarationStmt
 
+	// functionArgs is a map of function names to their parameter names
 	functionArgs map[string][]string
 
-	resStore ResStore
+	opHandler ops.Op
 
 	expressions.ExprVisitor
 	statements.StmtVisitor
 }
 
-func (c *Compiler) Compile(b parser.Program) {
+func (c *Compiler) Compile(program parser.Program) {
 	err := c.createDirectoryTree()
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalln(err)
 	}
 	c.createPackMeta()
-	c.createBuiltinFunctions()
 	c.functionArgs = make(map[string][]string)
-	for _, f := range b.Functions {
-		c.functionArgs[f.Name.Lexeme] = make([]string, 0)
-		for _, a := range f.Parameters {
-			c.functionArgs[f.Name.Lexeme] = append(c.functionArgs[f.Name.Lexeme], a.Lexeme)
+	for _, function := range program.Functions {
+		c.functionArgs[function.Name.Lexeme] = make([]string, 0)
+		for _, parameter := range function.Parameters {
+			c.functionArgs[function.Name.Lexeme] = append(c.functionArgs[function.Name.Lexeme], parameter.Lexeme)
 		}
 	}
-	for _, f := range b.Functions {
+	// The opHandler is used to generate commands
+	c.opHandler = ops.Op{Namespace: c.Namespace}
+	// Traverse the AST to generate the functions
+	for _, f := range program.Functions {
 		f.Accept(c)
 	}
-
+	// Built-in functions are created after the user-defined functions to avoid overwriting them
+	c.createBuiltinFunctions()
 	err = cp.Copy(c.DatapackRoot, "/home/kolterdyx/.minecraft/saves/Test/datapacks/"+c.Config.Project.Name)
 	if err != nil {
-		return
+		log.Fatalln(err)
 	}
 }
 
 func (c *Compiler) createDirectoryTree() error {
 	c.Namespace = c.Config.Project.Namespace
 	c.DatapackRoot, _ = filepath.Abs(c.Config.Project.Name)
-	fmt.Println("Compiling to " + c.DatapackRoot)
+	log.Infof("Compiling to %s\n", c.DatapackRoot)
 	c.functionsPath = c.DatapackRoot + "/data/" + c.Namespace + "/functions"
 	c.tagsPath = c.DatapackRoot + "/data/minecraft/tags"
 
 	err := os.MkdirAll(c.functionsPath, 0755)
 	err = os.MkdirAll(c.tagsPath, 0755)
+	err = os.MkdirAll(c.DatapackRoot+"/data/"+c.Namespace+"/functions/ifs", 0755)
 	return err
-}
-
-func (c *Compiler) VisitFunctionDeclaration(f statements.FunctionDeclarationStmt) interface{} {
-	// Create file
-	filename := f.Name.Lexeme + ".mcfunction"
-	fmt.Println("Creating file " + filename)
-
-	c.currentFunction = f
-
-	source := ""
-	for _, s := range f.Body.Statements {
-		source += s.Accept(c).(string)
-	}
-
-	err := os.WriteFile(c.functionsPath+"/"+filename, []byte(source), 0644)
-	if err != nil {
-		fmt.Println(err)
-	}
-	return nil
-}
-
-func (c *Compiler) VisitVariableDeclaration(v statements.VariableDeclarationStmt) interface{} {
-	cmd := ""
-	if v.Initializer != nil {
-		cmd += v.Initializer.Accept(c).(string)
-		cmd += c.declareVarWithVarVal(v.Name.Lexeme, "res")
-	}
-	return cmd
-}
-
-func (c *Compiler) VisitBlock(b statements.BlockStmt) interface{} {
-	cmd := ""
-	for _, s := range b.Statements {
-		cmd += s.Accept(c).(string)
-	}
-	return cmd
-}
-
-func (c *Compiler) VisitPrint(p statements.PrintStmt) interface{} {
-	cmd := ""
-	cmd += p.Expression.Accept(c).(string)
-	cmd += c.storeArgFromVar("__print__", "text", "res", c.resStore)
-	cmd += c.print()
-	return cmd
-}
-
-func (c *Compiler) VisitExpression(e statements.ExpressionStmt) interface{} {
-	return e.Expression.Accept(c)
-}
-
-func (c *Compiler) VisitBinary(b expressions.BinaryExpr) interface{} {
-	cmd := ""
-	cmd += b.Left.Accept(c).(string)
-	cmd += c.declareVarWithVarVal("left", "res")
-	cmd += b.Right.Accept(c).(string)
-	cmd += c.declareVarWithVarVal("right", "res")
-	switch b.Operator.Type {
-	case tokens.Plus:
-		cmd += c.add("left", "right")
-	case tokens.Minus:
-		cmd += c.sub("left", "right")
-	case tokens.Star:
-		cmd += c.mul("left", "right")
-	case tokens.Slash:
-		cmd += c.div("left", "right")
-	case tokens.Percent:
-		cmd += c.mod("left", "right")
-	default:
-		cmd += c.comp(b.Operator.Lexeme, "left", "right")
-	}
-	return cmd
-}
-
-func (c *Compiler) VisitGrouping(g expressions.GroupingExpr) interface{} {
-	return g.Expression.Accept(c)
-}
-
-func (c *Compiler) VisitLiteral(l expressions.LiteralExpr) interface{} {
-	if l.ValueType == expressions.NumberType {
-		return c.declareVarWithVal("res", l.Value.(string))
-	} else if l.ValueType == expressions.StringType {
-		return c.declareVarWithStringVal("res", l.Value.(string))
-	}
-	return ""
-}
-
-func (c *Compiler) VisitUnary(u expressions.UnaryExpr) interface{} {
-	cmd := ""
-	cmd += u.Expression.Accept(c).(string)
-	cmd += c.declareVarWithVarVal("expr", "res")
-	switch u.Operator.Type {
-	case tokens.Bang:
-		cmd += c.not("expr")
-	case tokens.Minus:
-		cmd += c.declareVar("res")
-		cmd += c.sub("res", "expr")
-	default:
-		panic("Unknown unary operator")
-	}
-	return cmd
-}
-
-func (c *Compiler) VisitVariable(v expressions.VariableExpr) interface{} {
-	if c.currentFunction.HasArg(v.Name.Lexeme) {
-		return c.assignVal("res", c.macro(v.Name.Lexeme))
-	}
-	return c.assignExpr("res", v.Name.Lexeme)
-}
-
-func (c *Compiler) VisitFunctionCall(f expressions.FunctionCallExpr) interface{} {
-	cmd := ""
-	for i, a := range f.Arguments {
-		cmd += a.Accept(c).(string)
-		cmd += c.storeArgFromVar(f.Name.Lexeme, c.functionArgs[f.Name.Lexeme][i], "res", c.resStore)
-	}
-	cmd += c.call(f.Name.Lexeme)
-	return cmd
 }
 
 func (c *Compiler) createPackMeta() {
@@ -199,7 +80,7 @@ func (c *Compiler) createPackMeta() {
 }`
 	err := os.WriteFile(c.DatapackRoot+"/pack.mcmeta", []byte(packMcmeta), 0644)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalln(err)
 	}
 }
 
@@ -214,6 +95,6 @@ func (c *Compiler) createFunction(name string, source string) {
 	filename := name + ".mcfunction"
 	err := os.WriteFile(c.functionsPath+"/"+filename, []byte(source), 0644)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalln(err)
 	}
 }

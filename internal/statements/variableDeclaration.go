@@ -9,6 +9,7 @@ type VariableDeclarationStmt struct {
 	Stmt
 
 	Name        tokens.Token
+	Type        tokens.Token
 	Initializer expressions.Expr
 }
 
@@ -16,6 +17,6 @@ func (v VariableDeclarationStmt) Accept(visitor StmtVisitor) interface{} {
 	return visitor.VisitVariableDeclaration(v)
 }
 
-func (v VariableDeclarationStmt) Type() StmtType {
+func (v VariableDeclarationStmt) TType() StmtType {
 	return VariableDeclarationStmtType
 }

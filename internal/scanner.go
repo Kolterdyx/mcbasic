@@ -3,9 +3,14 @@ package internal
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 	"unicode"
+)
+
+const (
+	FixedPointMagnitude = 1000
 )
 
 type Scanner struct {
@@ -19,7 +24,7 @@ type Scanner struct {
 }
 
 func (s *Scanner) report(line int, where string, message string) {
-	fmt.Printf("[line %d] Error %s: %s\n", line, where, message)
+	log.Errorf("[line %d] Error %s: %s\n", line, where, message)
 	s.HadError = true
 }
 
@@ -192,12 +197,12 @@ func (s *Scanner) scanNumber() {
 			s.advance()
 		}
 		num, _ := strconv.ParseFloat(s.source[s.start:s.current], 64)
-		s.addTokenWithLiteral(tokens.Number, strconv.Itoa(int(num*1000)))
+		s.addTokenWithLiteral(tokens.Number, strconv.Itoa(int(num*FixedPointMagnitude)))
 	} else if unicode.IsLetter(rune(s.peek())) {
 		s.error(s.line, "Unexpected character: "+string(s.peek()))
 	} else {
 		num, _ := strconv.Atoi(s.source[s.start:s.current])
-		s.addTokenWithLiteral(tokens.Number, strconv.Itoa(num*1000))
+		s.addTokenWithLiteral(tokens.Number, strconv.Itoa(num*FixedPointMagnitude))
 	}
 
 }

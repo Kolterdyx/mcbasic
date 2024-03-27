@@ -14,6 +14,6 @@ func (v VariableAssignmentStmt) Accept(visitor StmtVisitor) interface{} {
 	return visitor.VisitVariableAssignment(v)
 }
 
-func (v VariableAssignmentStmt) Type() StmtType {
+func (v VariableAssignmentStmt) TType() StmtType {
 	return VariableAssignmentStmtType
 }

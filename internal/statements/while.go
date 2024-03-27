@@ -13,6 +13,6 @@ func (w WhileStmt) Accept(v StmtVisitor) interface{} {
 	return v.VisitWhile(w)
 }
 
-func (w WhileStmt) Type() StmtType {
+func (w WhileStmt) TType() StmtType {
 	return WhileStmtType
 }

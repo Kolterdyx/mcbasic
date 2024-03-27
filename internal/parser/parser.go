@@ -1,9 +1,9 @@
 package parser
 
 import (
-	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	log "github.com/sirupsen/logrus"
 )
 
 type Parser struct {
@@ -19,18 +19,12 @@ func (p *Parser) Parse() Program {
 		if statement == nil {
 			continue
 		}
-		if statement.Type() != statements.FunctionDeclarationStmtType {
-			fmt.Println("Only function declarations are allowed at the top level. Found: ", statement.Type())
+		if statement.TType() != statements.FunctionDeclarationStmtType {
+			log.Errorf("Only function declarations are allowed at the top level. Found: %s\n", statement.TType())
 		}
 		functions = append(functions, statement.(statements.FunctionDeclarationStmt))
 	}
 	return Program{Functions: functions}
-}
-
-func (p *Parser) printStatement() statements.Stmt {
-	value := p.expression()
-	p.consume(tokens.Semicolon, "Expected ';' after value.")
-	return statements.PrintStmt{Expression: value}
 }
 
 func (p *Parser) stepBack() {

@@ -1,25 +1,4 @@
 
-
-def add(x number, y number) {
-    print x + y;
-}
-
-def sub(x number, y number) {
-    print x - y;
-}
-
-def mul(x number, y number) {
-    print x * y;
-}
-
-def div(x number, y number) {
-    print x / y;
-}
-
-def f(t string) {
-    print t;
-}
-
-def init() {
-    f("Hello, World!");
+func main(x number){
+    let a number = 1;
 }
