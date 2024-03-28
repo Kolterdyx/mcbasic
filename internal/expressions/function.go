@@ -1,9 +1,13 @@
 package expressions
 
-import "github.com/Kolterdyx/mcbasic/internal/tokens"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/tokens"
+)
 
 type FunctionCallExpr struct {
 	Expr
+	interfaces.SourceLocation
 
 	Name      tokens.Token
 	Arguments []Expr

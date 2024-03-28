@@ -7,7 +7,7 @@ type Token struct {
 	Lexeme  string
 	Literal string
 	Line    int
-	Pos     int
+	Column  int
 }
 
 func (t Token) String() string {
@@ -51,7 +51,6 @@ const (
 	Def
 	And
 	Or
-	Not
 	If
 	Else
 	While
@@ -89,7 +88,7 @@ func (t TokenType) String() string {
 	case GreaterEqual:
 		return "GreaterEqual"
 	case Equal:
-		return "Equal"
+		return "Eq"
 	case EqualEqual:
 		return "EqualEqual"
 	case Bang:
@@ -100,8 +99,6 @@ func (t TokenType) String() string {
 		return "And"
 	case Or:
 		return "Or"
-	case Not:
-		return "Not"
 	case If:
 		return "If"
 	case Else:
@@ -153,7 +150,6 @@ var Keywords = map[string]TokenType{
 	"else":   Else,
 	"and":    And,
 	"or":     Or,
-	"not":    Not,
 	"true":   True,
 	"false":  False,
 	"while":  While,

@@ -164,7 +164,7 @@ func (s *Scanner) addToken(tokenType tokens.TokenType) {
 
 func (s *Scanner) addTokenWithLiteral(tokenType tokens.TokenType, literal string) {
 	text := s.source[s.start:s.current]
-	s.tokens = append(s.tokens, tokens.Token{Type: tokenType, Lexeme: text, Literal: literal, Line: s.line, Pos: s.pos})
+	s.tokens = append(s.tokens, tokens.Token{Type: tokenType, Lexeme: text, Literal: literal, Line: s.line, Column: s.pos})
 }
 
 func (s *Scanner) scanString() {

@@ -1,4 +1,9 @@
 
-func main(x: number){
-    let a: number = 1;
+func test(x: number, y: number) {
+    print "test";
+    print x + y;
+}
+
+func main() {
+    test(1, 2);
 }

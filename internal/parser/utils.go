@@ -50,9 +50,9 @@ func (p *Parser) previous() tokens.Token {
 
 func (p *Parser) error(token tokens.Token, message string) {
 	if token.Type == tokens.Eof {
-		p.report(token.Line+1, token.Pos, " at end", message)
+		p.report(token.Line+1, token.Column, " at end", message)
 	} else {
-		p.report(token.Line+1, token.Pos, " at '"+token.Lexeme+"'", message)
+		p.report(token.Line+1, token.Column, " at '"+token.Lexeme+"'", message)
 	}
 	p.synchronize()
 }

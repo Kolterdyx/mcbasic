@@ -1,9 +1,13 @@
 package expressions
 
-import "github.com/Kolterdyx/mcbasic/internal/tokens"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/tokens"
+)
 
 type UnaryExpr struct {
 	Expr
+	interfaces.SourceLocation
 
 	Operator   tokens.Token
 	Expression Expr

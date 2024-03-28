@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	log "github.com/sirupsen/logrus"
@@ -29,4 +30,8 @@ func (p *Parser) Parse() Program {
 
 func (p *Parser) stepBack() {
 	p.current--
+}
+
+func (p *Parser) location() interfaces.SourceLocation {
+	return interfaces.SourceLocation{Line: p.previous().Line, Column: p.previous().Column}
 }

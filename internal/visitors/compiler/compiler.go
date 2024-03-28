@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
@@ -52,6 +53,7 @@ func (c *Compiler) Compile(program parser.Program) {
 	}
 	// Built-in functions are created after the user-defined functions to avoid overwriting them
 	c.createBuiltinFunctions()
+	c.createFunctionTags()
 	err = cp.Copy(c.DatapackRoot, "/home/kolterdyx/.minecraft/saves/Test/datapacks/"+c.Config.Project.Name)
 	if err != nil {
 		log.Fatalln(err)
@@ -67,7 +69,7 @@ func (c *Compiler) createDirectoryTree() error {
 
 	err := os.MkdirAll(c.functionsPath, 0755)
 	err = os.MkdirAll(c.tagsPath, 0755)
-	err = os.MkdirAll(c.DatapackRoot+"/data/"+c.Namespace+"/functions/ifs", 0755)
+	err = os.MkdirAll(c.functionsPath+"/builtin", 0755)
 	return err
 }
 
@@ -86,8 +88,14 @@ func (c *Compiler) createPackMeta() {
 
 func (c *Compiler) createBuiltinFunctions() {
 	c.createFunction(
-		"__print__",
+		"builtin/print",
 		`$tellraw @a {"text":"$(text)"}`,
+	)
+	c.createFunction(
+		"builtin/init",
+		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
+			c.opHandler.Print("Hello, world!")+
+			c.opHandler.Call("main"),
 	)
 }
 
@@ -97,4 +105,25 @@ func (c *Compiler) createFunction(name string, source string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+func (c *Compiler) createFunctionTags() {
+	// load tag
+	loadTag := `{
+	"values": [
+		"%s"
+	]
+}`
+	err := os.MkdirAll(c.tagsPath+"/functions", 0755)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = os.WriteFile(c.tagsPath+"/functions/load.json", []byte(fmt.Sprintf(loadTag, c.Namespace+":builtin/init")), 0644)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func (c *Compiler) error(location interfaces.SourceLocation, message string) {
+	log.Fatalf("Error at %d:%d: %s\n", location.Line, location.Column, message)
 }

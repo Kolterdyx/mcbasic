@@ -1,5 +1,7 @@
 package expressions
 
+import "github.com/Kolterdyx/mcbasic/internal/interfaces"
+
 type ValueType string
 
 const (
@@ -9,6 +11,7 @@ const (
 
 type LiteralExpr struct {
 	Expr
+	interfaces.SourceLocation
 
 	Value     interface{}
 	ValueType ValueType

@@ -8,3 +8,8 @@ type ProjectConfig struct {
 		Entrypoint string
 	}
 }
+
+type SourceLocation struct {
+	Line   int
+	Column int
+}

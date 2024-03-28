@@ -1,9 +1,13 @@
 package expressions
 
-import "github.com/Kolterdyx/mcbasic/internal/tokens"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/tokens"
+)
 
 type BinaryExpr struct {
 	Expr
+	interfaces.SourceLocation
 
 	Left     Expr
 	Operator tokens.Token

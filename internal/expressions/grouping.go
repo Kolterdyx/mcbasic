@@ -1,7 +1,10 @@
 package expressions
 
+import "github.com/Kolterdyx/mcbasic/internal/interfaces"
+
 type GroupingExpr struct {
 	Expr
+	interfaces.SourceLocation
 
 	Expression Expr
 }
