@@ -123,7 +123,7 @@ func (p *Parser) execStatement() statements.Stmt {
 	}
 	value := p.expression()
 	p.consume(tokens.Semicolon, "Expected ';' after value.")
-	return statements.ExecStmt{Expression: value.(expressions.LiteralExpr)}
+	return statements.ExecStmt{Command: value.(expressions.LiteralExpr).Value.(string)}
 }
 
 func (p *Parser) ifStatement() statements.Stmt {
@@ -136,7 +136,7 @@ func (p *Parser) ifStatement() statements.Stmt {
 		if p.match(tokens.If) {
 			elseBranch.Statements = append(elseBranch.Statements, p.ifStatement())
 		} else {
-			elseBranch = p.block(false)
+			elseBranch = p.block()
 		}
 	}
 	return statements.IfStmt{Condition: condition, ThenBranch: thenBranch, ElseBranch: elseBranch}

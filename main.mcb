@@ -1,9 +1,23 @@
 
-func test(x: number, y: number) {
-    print "test";
-    print x + y;
+func test(v1: string, v2: string) {
+    exec "tellraw @a {\"text\":\"$(v1) $(v2)\"}";
 }
 
+
 func main() {
-    test(1, 2);
+
+    test("Hello", "World");
+
+    let x: number = 2;
+    let y: number = 2;
+
+    if (x + y == 3) {
+        print "success 1";
+    } else if (x + y == 6) {
+        print "success 2";
+    } else {
+        print "failure";
+    }
+
+    print "2";
 }

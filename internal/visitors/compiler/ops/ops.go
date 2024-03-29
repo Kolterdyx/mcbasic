@@ -21,6 +21,7 @@ const (
 
 type Op struct {
 	Namespace string
+	Scope     string
 }
 
 func (o *Op) Macro(argName string) string {

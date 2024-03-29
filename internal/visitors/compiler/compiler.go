@@ -6,6 +6,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
+	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	cp "github.com/otiai10/copy"
 	log "github.com/sirupsen/logrus"
@@ -22,14 +23,19 @@ type Compiler struct {
 	tagsPath      string
 
 	currentFunction statements.FunctionDeclarationStmt
+	currentScope    string
 
 	// functionArgs is a map of function names to their parameter names
 	functionArgs map[string][]string
+	// functionArgTypes is a map of function names to their parameter types. It matches the functionArgs map
+	functionArgTypes map[string][]tokens.TokenType
 
 	opHandler ops.Op
 
 	expressions.ExprVisitor
 	statements.StmtVisitor
+
+	regCounter int
 }
 
 func (c *Compiler) Compile(program parser.Program) {
@@ -39,10 +45,14 @@ func (c *Compiler) Compile(program parser.Program) {
 	}
 	c.createPackMeta()
 	c.functionArgs = make(map[string][]string)
+	c.functionArgTypes = make(map[string][]tokens.TokenType)
 	for _, function := range program.Functions {
 		c.functionArgs[function.Name.Lexeme] = make([]string, 0)
 		for _, parameter := range function.Parameters {
 			c.functionArgs[function.Name.Lexeme] = append(c.functionArgs[function.Name.Lexeme], parameter.Lexeme)
+		}
+		for _, argType := range function.Types {
+			c.functionArgTypes[function.Name.Lexeme] = append(c.functionArgTypes[function.Name.Lexeme], argType.Type)
 		}
 	}
 	// The opHandler is used to generate commands
@@ -126,4 +136,9 @@ func (c *Compiler) createFunctionTags() {
 
 func (c *Compiler) error(location interfaces.SourceLocation, message string) {
 	log.Fatalf("Error at %d:%d: %s\n", location.Line, location.Column, message)
+}
+
+func (c *Compiler) newReg(regName string) string {
+	c.regCounter++
+	return regName + fmt.Sprintf("%d", c.regCounter)
 }

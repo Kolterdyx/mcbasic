@@ -58,7 +58,8 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 		}
 	}
 
-	cmd := expr.Left.Accept(c).(string)
+	cmd := ""
+	cmd += expr.Left.Accept(c).(string)
 	cmd += c.opHandler.RegShift(ops.RX, ops.RA)
 	cmd += expr.Right.Accept(c).(string)
 	cmd += c.opHandler.RegShift(ops.RX, ops.RB)
@@ -92,43 +93,24 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 	switch expr.Operator.Type {
 	case tokens.EqualEqual:
 		cmd += c.opHandler.Eq(ops.RA, ops.RB)
-		cmd += c.opHandler.RegShift(ops.RA, ops.RX)
 		return cmd
 	case tokens.BangEqual:
 		cmd += c.opHandler.Neq(ops.RA, ops.RB)
-		cmd += c.opHandler.RegShift(ops.RA, ops.RX)
 		return cmd
 	case tokens.Less:
 		cmd += c.opHandler.Lt(ops.RA, ops.RB)
-		cmd += c.opHandler.RegShift(ops.RA, ops.RX)
 		return cmd
 	case tokens.LessEqual:
 		cmd += c.opHandler.Lte(ops.RA, ops.RB)
-		cmd += c.opHandler.RegShift(ops.RA, ops.RX)
 		return cmd
 	case tokens.Greater:
 		cmd += c.opHandler.Gt(ops.RA, ops.RB)
-		cmd += c.opHandler.RegShift(ops.RA, ops.RX)
 		return cmd
 	case tokens.GreaterEqual:
 		cmd += c.opHandler.Gte(ops.RA, ops.RB)
-		cmd += c.opHandler.RegShift(ops.RA, ops.RX)
 		return cmd
 	default:
 		log.Debug("Not a comparison operator")
-	}
-
-	switch expr.Operator.Type {
-	case tokens.And:
-		cmd += c.opHandler.And(ops.RA, ops.RB)
-		cmd += c.opHandler.RegShift(ops.RA, ops.RX)
-		return cmd
-	case tokens.Or:
-		cmd += c.opHandler.Or(ops.RA, ops.RB)
-		cmd += c.opHandler.RegShift(ops.RA, ops.RX)
-		return cmd
-	default:
-		log.Debug("Not a logical operator")
 	}
 
 	log.Fatalln("Unknown binary operator")
@@ -143,9 +125,35 @@ func (c *Compiler) VisitFunctionCall(expr expressions.FunctionCallExpr) interfac
 	cmd := ""
 	for i, arg := range expr.Arguments {
 		cmd += arg.Accept(c).(string)
-		cmd += c.opHandler.RegSave(ops.RX, ops.RX)
+		switch c.functionArgTypes[expr.Name.Lexeme][i] {
+		case tokens.NumberType:
+			cmd += c.opHandler.RegShift(ops.RX, ops.RA)
+		case tokens.StringType:
+			break
+		default:
+			break
+		}
 		cmd += c.opHandler.ArgLoad(expr.Name.Lexeme, c.functionArgs[expr.Name.Lexeme][i], ops.RX)
 	}
 	cmd += c.opHandler.Call(expr.Name.Lexeme)
+	return cmd
+}
+
+func (c *Compiler) VisitLogical(stmt expressions.LogicalExpr) interface{} {
+	cmd := ""
+	ra := c.newReg(ops.RA)
+	rb := c.newReg(ops.RB)
+	cmd += stmt.Left.Accept(c).(string)
+	cmd += c.opHandler.RegShift(ops.RX, ra)
+	cmd += stmt.Right.Accept(c).(string)
+	cmd += c.opHandler.RegShift(ops.RX, rb)
+	switch stmt.Operator.Type {
+	case tokens.And:
+		cmd += c.opHandler.And(ra, rb)
+	case tokens.Or:
+		cmd += c.opHandler.Or(ra, rb)
+	default:
+		log.Fatalln("Unknown logical operator")
+	}
 	return cmd
 }

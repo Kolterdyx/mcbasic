@@ -9,6 +9,9 @@ import (
 func (o *Op) Ift(condition string, commands []string) string {
 	cmd := ""
 	for _, c := range commands {
+		if c == "" {
+			continue
+		}
 		cmd += fmt.Sprintf("execute if %s run %s\n", condition, c)
 	}
 	return cmd
@@ -18,6 +21,9 @@ func (o *Op) Ift(condition string, commands []string) string {
 func (o *Op) Ifn(condition string, commands []string) string {
 	cmd := ""
 	for _, c := range commands {
+		if c == "" {
+			continue
+		}
 		cmd += fmt.Sprintf("execute unless %s run %s\n", condition, c)
 	}
 	return cmd

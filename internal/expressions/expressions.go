@@ -9,6 +9,7 @@ const (
 	UnaryExprType        ExprType = "Unary"
 	VariableExprType     ExprType = "Variable"
 	FunctionCallExprType ExprType = "FunctionCall"
+	LogicalExprType      ExprType = "Logical"
 )
 
 type ExprVisitor interface {
@@ -18,6 +19,7 @@ type ExprVisitor interface {
 	VisitUnary(l UnaryExpr) interface{}
 	VisitVariable(l VariableExpr) interface{}
 	VisitFunctionCall(l FunctionCallExpr) interface{}
+	VisitLogical(l LogicalExpr) interface{}
 }
 
 type Expr interface {

@@ -7,7 +7,31 @@ import (
 )
 
 func (p *Parser) expression() expressions.Expr {
-	return p.equality()
+	return p.or()
+}
+
+func (p *Parser) or() expressions.Expr {
+	expr := p.and()
+
+	for p.match(tokens.Or) {
+		operator := p.previous()
+		right := p.and()
+		expr = expressions.LogicalExpr{Left: expr, Operator: operator, Right: right, SourceLocation: p.location()}
+	}
+
+	return expr
+}
+
+func (p *Parser) and() expressions.Expr {
+	expr := p.equality()
+
+	for p.match(tokens.And) {
+		operator := p.previous()
+		right := p.equality()
+		expr = expressions.LogicalExpr{Left: expr, Operator: operator, Right: right, SourceLocation: p.location()}
+	}
+
+	return expr
 }
 
 func (p *Parser) equality() expressions.Expr {

@@ -1,16 +1,20 @@
 package compiler
 
 import (
+	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	"strconv"
+	"strings"
 )
 
 func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationStmt) interface{} {
 	c.currentFunction = stmt
+	c.currentScope = stmt.Name.Lexeme
 	source := c.opHandler.RegLoad(strconv.Itoa(internal.FixedPointMagnitude), ops.RCF)
+	c.opHandler.Scope = c.currentScope
 
 	// Store arguments in variables
 	for i, arg := range stmt.Parameters {
@@ -62,5 +66,24 @@ func (c *Compiler) VisitPrint(stmt statements.PrintStmt) interface{} {
 		cmd += c.opHandler.ArgLoad("builtin/print", "text", ops.RX)
 	}
 	cmd += c.opHandler.Call("builtin/print")
+	return cmd
+}
+
+func (c *Compiler) VisitExec(stmt statements.ExecStmt) interface{} {
+	return stmt.Command + "\n"
+}
+
+func (c *Compiler) VisitIf(stmt statements.IfStmt) interface{} {
+	ifReg := c.newReg(ops.RX)
+	cmd := ""
+	cmd += stmt.Condition.Accept(c).(string)
+	cmd += c.opHandler.RegShift(ops.RX, ifReg)
+	cmd += c.opHandler.And(ifReg, ifReg)
+	thenBranch := stmt.ThenBranch.Accept(c).(string)
+	elseBranch := stmt.ElseBranch.Accept(c).(string)
+	cond := fmt.Sprintf("score %s %s matches 1..", ifReg, c.Namespace)
+	cmd += c.opHandler.Ift(cond, strings.Split(thenBranch, "\n"))
+
+	cmd += c.opHandler.Ifn(cond, strings.Split(elseBranch, "\n"))
 	return cmd
 }
