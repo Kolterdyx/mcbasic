@@ -4,7 +4,7 @@ import "fmt"
 
 // RegWrite stands for "register write". It moves a variable from data storage to a register for further processing.
 func (o *Op) RegWrite(varName string, regName string) string {
-	return fmt.Sprintf("execute store result score %s %s run data get storage %s:%s.%s %s\n", regName, o.Namespace, o.Namespace, VarPath, o.Scope, varName)
+	return fmt.Sprintf("execute store result score %s %s run data get storage %s:%s.%s %s$(__call__)\n", regName, o.Namespace, o.Namespace, VarPath, o.Scope, varName)
 }
 
 // RegLoad stands for "register load". It writes a value to a register.
@@ -19,5 +19,5 @@ func (o *Op) RegShift(regFrom string, regTo string) string {
 
 // RegSave stands for "register save". It moves a variable from a register to data storage for further processing.
 func (o *Op) RegSave(varName string, regName string) string {
-	return fmt.Sprintf("execute store result storage %s:%s.%s %s int 1 run scoreboard players get %s %s\n", o.Namespace, VarPath, o.Scope, varName, regName, o.Namespace)
+	return fmt.Sprintf("execute store result storage %s:%s.%s %s$(__call__) int 1 run scoreboard players get %s %s\n", o.Namespace, VarPath, o.Scope, varName, regName, o.Namespace)
 }

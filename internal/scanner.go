@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	FixedPointMagnitude = 1000
+	FixedPointMagnitude = 1
 )
 
 type Scanner struct {

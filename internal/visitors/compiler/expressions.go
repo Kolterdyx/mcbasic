@@ -127,7 +127,7 @@ func (c *Compiler) VisitFunctionCall(expr expressions.FunctionCallExpr) interfac
 		cmd += arg.Accept(c).(string)
 		switch c.functionArgTypes[expr.Name.Lexeme][i] {
 		case tokens.NumberType:
-			cmd += c.opHandler.RegShift(ops.RX, ops.RA)
+			cmd += c.opHandler.RegSave(ops.RX, ops.RX)
 		case tokens.StringType:
 			break
 		default:
@@ -141,8 +141,8 @@ func (c *Compiler) VisitFunctionCall(expr expressions.FunctionCallExpr) interfac
 
 func (c *Compiler) VisitLogical(stmt expressions.LogicalExpr) interface{} {
 	cmd := ""
-	ra := c.newReg(ops.RA)
-	rb := c.newReg(ops.RB)
+	ra := c.newRegister(ops.RA)
+	rb := c.newRegister(ops.RB)
 	cmd += stmt.Left.Accept(c).(string)
 	cmd += c.opHandler.RegShift(ops.RX, ra)
 	cmd += stmt.Right.Accept(c).(string)

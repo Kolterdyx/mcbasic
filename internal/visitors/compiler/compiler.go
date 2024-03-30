@@ -51,9 +51,11 @@ func (c *Compiler) Compile(program parser.Program) {
 		for _, parameter := range function.Parameters {
 			c.functionArgs[function.Name.Lexeme] = append(c.functionArgs[function.Name.Lexeme], parameter.Lexeme)
 		}
+		c.functionArgs[function.Name.Lexeme] = append(c.functionArgs[function.Name.Lexeme], "__call__")
 		for _, argType := range function.Types {
 			c.functionArgTypes[function.Name.Lexeme] = append(c.functionArgTypes[function.Name.Lexeme], argType.Type)
 		}
+		c.functionArgTypes[function.Name.Lexeme] = append(c.functionArgTypes[function.Name.Lexeme], tokens.NumberType)
 	}
 	// The opHandler is used to generate commands
 	c.opHandler = ops.Op{Namespace: c.Namespace}
@@ -104,7 +106,8 @@ func (c *Compiler) createBuiltinFunctions() {
 	c.createFunction(
 		"builtin/init",
 		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
-			c.opHandler.Print("Hello, world!")+
+			c.opHandler.RegLoad("0", ops.CALL)+
+			c.opHandler.Print("MCB pack loaded")+
 			c.opHandler.Call("main"),
 	)
 }
@@ -138,7 +141,7 @@ func (c *Compiler) error(location interfaces.SourceLocation, message string) {
 	log.Fatalf("Error at %d:%d: %s\n", location.Line, location.Column, message)
 }
 
-func (c *Compiler) newReg(regName string) string {
+func (c *Compiler) newRegister(regName string) string {
 	c.regCounter++
-	return regName + fmt.Sprintf("%d", c.regCounter)
+	return regName + fmt.Sprintf("%d$(__call__)", c.regCounter)
 }

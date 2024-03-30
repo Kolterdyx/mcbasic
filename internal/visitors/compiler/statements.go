@@ -70,11 +70,11 @@ func (c *Compiler) VisitPrint(stmt statements.PrintStmt) interface{} {
 }
 
 func (c *Compiler) VisitExec(stmt statements.ExecStmt) interface{} {
-	return stmt.Command + "\n"
+	return c.opHandler.Exec(stmt.Command)
 }
 
 func (c *Compiler) VisitIf(stmt statements.IfStmt) interface{} {
-	ifReg := c.newReg(ops.RX)
+	ifReg := c.newRegister(ops.RX)
 	cmd := ""
 	cmd += stmt.Condition.Accept(c).(string)
 	cmd += c.opHandler.RegShift(ops.RX, ifReg)
@@ -83,7 +83,18 @@ func (c *Compiler) VisitIf(stmt statements.IfStmt) interface{} {
 	elseBranch := stmt.ElseBranch.Accept(c).(string)
 	cond := fmt.Sprintf("score %s %s matches 1..", ifReg, c.Namespace)
 	cmd += c.opHandler.Ift(cond, strings.Split(thenBranch, "\n"))
-
 	cmd += c.opHandler.Ifn(cond, strings.Split(elseBranch, "\n"))
+	return cmd
+}
+
+func (c *Compiler) VisitWhile(stmt statements.WhileStmt) interface{} {
+	condReg := c.newRegister(ops.RX)
+	cmd := ""
+	cmd += stmt.Condition.Accept(c).(string)
+	cmd += c.opHandler.RegShift(ops.RX, condReg)
+	cmd += c.opHandler.And(condReg, condReg)
+	loop := stmt.Body.Accept(c).(string)
+	cond := fmt.Sprintf("score %s %s matches 1..", condReg, c.Namespace)
+	cmd += c.opHandler.Ift(cond, strings.Split(loop, "\n"))
 	return cmd
 }
