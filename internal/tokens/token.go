@@ -42,9 +42,6 @@ const (
 
 	Eof
 
-	Print
-	Exec
-
 	True
 	False
 	Let
@@ -121,8 +118,6 @@ func (t TokenType) String() string {
 		return "Colon"
 	case Eof:
 		return "Eof"
-	case Print:
-		return "Print"
 	case Let:
 		return "Let"
 	case Def:
@@ -135,15 +130,12 @@ func (t TokenType) String() string {
 		return "NumberType"
 	case StringType:
 		return "StringType"
-	case Exec:
-		return "Exec"
 	default:
 		return "Unknown"
 	}
 }
 
 var Keywords = map[string]TokenType{
-	"print":  Print,
 	"let":    Let,
 	"func":   Def,
 	"if":     If,
@@ -155,5 +147,4 @@ var Keywords = map[string]TokenType{
 	"while":  While,
 	"number": NumberType,
 	"string": StringType,
-	"exec":   Exec,
 }

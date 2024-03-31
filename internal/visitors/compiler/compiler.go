@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
@@ -12,7 +13,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
+	"strconv"
 )
+
+type Func struct {
+	Name string
+	Args []statements.Arg
+}
 
 type Compiler struct {
 	Config       interfaces.ProjectConfig
@@ -25,10 +32,9 @@ type Compiler struct {
 	currentFunction statements.FunctionDeclarationStmt
 	currentScope    string
 
-	// functionArgs is a map of function names to their parameter names
-	functionArgs map[string][]string
-	// functionArgTypes is a map of function names to their parameter types. It matches the functionArgs map
-	functionArgTypes map[string][]tokens.TokenType
+	functions map[string]Func
+
+	scope map[string][]string
 
 	opHandler ops.Op
 
@@ -36,6 +42,19 @@ type Compiler struct {
 	statements.StmtVisitor
 
 	regCounter int
+
+	InitFuncName string
+	TickFuncName string
+}
+
+func NewCompiler(config interfaces.ProjectConfig) *Compiler {
+	c := &Compiler{Config: config, InitFuncName: "mcb/init", TickFuncName: "mcb/tick"}
+	c.Namespace = config.Project.Namespace
+	c.opHandler = ops.Op{Namespace: c.Namespace}
+	c.functions = make(map[string]Func)
+	c.scope = make(map[string][]string)
+
+	return c
 }
 
 func (c *Compiler) Compile(program parser.Program) {
@@ -44,28 +63,32 @@ func (c *Compiler) Compile(program parser.Program) {
 		log.Fatalln(err)
 	}
 	c.createPackMeta()
-	c.functionArgs = make(map[string][]string)
-	c.functionArgTypes = make(map[string][]tokens.TokenType)
 	for _, function := range program.Functions {
-		c.functionArgs[function.Name.Lexeme] = make([]string, 0)
+		f := Func{
+			Name: function.Name.Lexeme,
+			Args: make([]statements.Arg, 0),
+		}
 		for _, parameter := range function.Parameters {
-			c.functionArgs[function.Name.Lexeme] = append(c.functionArgs[function.Name.Lexeme], parameter.Lexeme)
+			f.Args = append(f.Args, statements.Arg{
+				Name: parameter.Name,
+				Type: parameter.Type,
+			})
 		}
-		c.functionArgs[function.Name.Lexeme] = append(c.functionArgs[function.Name.Lexeme], "__call__")
-		for _, argType := range function.Types {
-			c.functionArgTypes[function.Name.Lexeme] = append(c.functionArgTypes[function.Name.Lexeme], argType.Type)
-		}
-		c.functionArgTypes[function.Name.Lexeme] = append(c.functionArgTypes[function.Name.Lexeme], tokens.NumberType)
+		f.Args = append(f.Args, statements.Arg{
+			Name: "__call__",
+			Type: tokens.NumberType,
+		})
+		c.functions[function.Name.Lexeme] = f
 	}
-	// The opHandler is used to generate commands
-	c.opHandler = ops.Op{Namespace: c.Namespace}
+
+	// Built-in functions are protected by the compiler, so they can't be overwritten
+	c.createFunctionTags()
+	c.createBuiltinFunctions()
+
 	// Traverse the AST to generate the functions
 	for _, f := range program.Functions {
 		f.Accept(c)
 	}
-	// Built-in functions are created after the user-defined functions to avoid overwriting them
-	c.createBuiltinFunctions()
-	c.createFunctionTags()
 	err = cp.Copy(c.DatapackRoot, "/home/kolterdyx/.minecraft/saves/Test/datapacks/"+c.Config.Project.Name)
 	if err != nil {
 		log.Fatalln(err)
@@ -100,20 +123,46 @@ func (c *Compiler) createPackMeta() {
 
 func (c *Compiler) createBuiltinFunctions() {
 	c.createFunction(
-		"builtin/print",
+		"print",
 		`$tellraw @a {"text":"$(text)"}`,
+		[]statements.Arg{
+			{Name: "text", Type: tokens.StringType},
+		},
+	)
+	c.createFunction(
+		"exec",
+		`$execute run $(command)`,
+		[]statements.Arg{
+			{Name: "command", Type: tokens.StringType},
+		},
 	)
 	c.createFunction(
 		"builtin/init",
 		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
+			c.opHandler.RegLoad(strconv.Itoa(internal.FixedPointMagnitude), ops.RCF)+
 			c.opHandler.RegLoad("0", ops.CALL)+
 			c.opHandler.Print("MCB pack loaded")+
 			c.opHandler.Call("main"),
+		[]statements.Arg{},
 	)
 }
 
-func (c *Compiler) createFunction(name string, source string) {
+func (c *Compiler) createFunction(name string, source string, args []statements.Arg) {
 	filename := name + ".mcfunction"
+
+	if name == c.InitFuncName || name == c.TickFuncName {
+		return
+	}
+	f := Func{
+		Name: name,
+		Args: make([]statements.Arg, 0),
+	}
+	for _, parameter := range args {
+		f.Args = append(f.Args, statements.Arg{Name: parameter.Name, Type: parameter.Type})
+	}
+	f.Args = append(f.Args, statements.Arg{Name: "__call__", Type: tokens.NumberType})
+	c.functions[name] = f
+
 	err := os.WriteFile(c.functionsPath+"/"+filename, []byte(source), 0644)
 	if err != nil {
 		log.Fatalln(err)
@@ -138,10 +187,10 @@ func (c *Compiler) createFunctionTags() {
 }
 
 func (c *Compiler) error(location interfaces.SourceLocation, message string) {
-	log.Fatalf("Error at %d:%d: %s\n", location.Line, location.Column, message)
+	log.Fatalf("Error at %d:%d: %s\n", location.Line+1, location.Column, message)
 }
 
 func (c *Compiler) newRegister(regName string) string {
 	c.regCounter++
-	return regName + fmt.Sprintf("%d$(__call__)", c.regCounter)
+	return regName + fmt.Sprintf("%d$(__call__)_", c.regCounter)
 }

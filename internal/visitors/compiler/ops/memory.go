@@ -7,12 +7,12 @@ import (
 
 // Sc stands for "scoreboard". It moves a variable from data storage to the scoreboard for further processing.
 func (o *Op) Sc(varName string) string {
-	return fmt.Sprintf("execute store result score %s %s run data get storage %s:%s.%s %s$(__call__)\n", varName, o.Namespace, o.Namespace, VarPath, o.Scope, varName)
+	return fmt.Sprintf("execute store result score %s$(__call__) %s run data get storage %s:%s.%s %s$(__call__)\n", varName, o.Namespace, o.Namespace, VarPath, o.Scope, varName)
 }
 
 // St stands for "store". It moves a variable from the scoreboard to data storage for further processing.
 func (o *Op) St(varName string) string {
-	return fmt.Sprintf("execute store result storage %s:%s.%s %s$(__call__) int 1 run scoreboard players get %s %s\n", o.Namespace, VarPath, o.Scope, varName, varName, varName)
+	return fmt.Sprintf("execute store result storage %s:%s.%s %s$(__call__) int 1 run scoreboard players get %s$(__call__) %s\n", o.Namespace, VarPath, o.Scope, varName, varName, o.Namespace)
 }
 
 // Set sets a variable to a specific value.

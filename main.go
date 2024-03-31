@@ -52,7 +52,7 @@ func main() {
 		os.Exit(1)
 	}
 	log.Debug("Program parsed successfully")
-	c := compiler.Compiler{Config: config}
+	c := compiler.NewCompiler(config)
 	c.Compile(program)
 	log.Debug("Compilation complete")
 }

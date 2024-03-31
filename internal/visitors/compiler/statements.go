@@ -2,8 +2,6 @@ package compiler
 
 import (
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal"
-	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	"strconv"
@@ -13,24 +11,26 @@ import (
 func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationStmt) interface{} {
 	c.currentFunction = stmt
 	c.currentScope = stmt.Name.Lexeme
-	source := c.opHandler.RegLoad(strconv.Itoa(internal.FixedPointMagnitude), ops.RCF)
+	source := ""
 	c.opHandler.Scope = c.currentScope
 
 	// Store arguments in variables
 	for i, arg := range stmt.Parameters {
-		source += c.opHandler.SetMacro(arg.Lexeme, c.opHandler.Macro(arg.Lexeme))
+		c.scope[c.currentScope] = append(c.scope[c.currentScope], arg.Name)
+		source += c.opHandler.SetMacro(arg.Name, c.opHandler.Macro(arg.Name))
 		source += c.opHandler.RegLoad(strconv.Itoa(i), ops.RA)
 		source += c.opHandler.RegShift(ops.RA, ops.RX)
 	}
 
 	source += stmt.Body.Accept(c).(string)
 	source = c.opHandler.MacroReplace(source)
-	c.createFunction(stmt.Name.Lexeme, source)
+	c.createFunction(stmt.Name.Lexeme, source, stmt.Parameters)
 	return ""
 }
 
 func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationStmt) interface{} {
 	cmd := ""
+	c.scope[c.currentScope] = append(c.scope[c.currentScope], stmt.Name.Lexeme)
 	if stmt.Initializer != nil {
 		cmd += stmt.Initializer.Accept(c).(string)
 		cmd += c.opHandler.RegSave(stmt.Name.Lexeme, ops.RX)
@@ -55,22 +55,6 @@ func (c *Compiler) VisitBlock(stmt statements.BlockStmt) interface{} {
 		cmd += s.Accept(c).(string)
 	}
 	return cmd
-}
-
-func (c *Compiler) VisitPrint(stmt statements.PrintStmt) interface{} {
-	cmd := stmt.Expression.Accept(c).(string)
-	if stmt.Expression.Type() == expressions.LiteralExprType {
-		cmd += c.opHandler.ArgLoad("builtin/print", "text", ops.RX)
-	} else {
-		cmd += c.opHandler.RegSave(ops.RX, ops.RX)
-		cmd += c.opHandler.ArgLoad("builtin/print", "text", ops.RX)
-	}
-	cmd += c.opHandler.Call("builtin/print")
-	return cmd
-}
-
-func (c *Compiler) VisitExec(stmt statements.ExecStmt) interface{} {
-	return c.opHandler.Exec(stmt.Command)
 }
 
 func (c *Compiler) VisitIf(stmt statements.IfStmt) interface{} {

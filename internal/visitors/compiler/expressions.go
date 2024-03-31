@@ -16,6 +16,9 @@ func (c *Compiler) VisitLiteral(expr expressions.LiteralExpr) interface{} {
 }
 
 func (c *Compiler) VisitVariable(expr expressions.VariableExpr) interface{} {
+	if !slices.Contains(c.scope[c.currentScope], expr.Name.Lexeme) {
+		c.error(expr.SourceLocation, "Undeclared variable.")
+	}
 	return c.opHandler.RegWrite(expr.Name.Lexeme, ops.RX)
 }
 
@@ -123,9 +126,12 @@ func (c *Compiler) VisitGrouping(expr expressions.GroupingExpr) interface{} {
 
 func (c *Compiler) VisitFunctionCall(expr expressions.FunctionCallExpr) interface{} {
 	cmd := ""
+	if _, ok := c.functions[expr.Name.Lexeme]; !ok {
+		c.error(expr.SourceLocation, "Undefined function called.")
+	}
 	for i, arg := range expr.Arguments {
 		cmd += arg.Accept(c).(string)
-		switch c.functionArgTypes[expr.Name.Lexeme][i] {
+		switch c.functions[expr.Name.Lexeme].Args[i].Type {
 		case tokens.NumberType:
 			cmd += c.opHandler.RegSave(ops.RX, ops.RX)
 		case tokens.StringType:
@@ -133,7 +139,7 @@ func (c *Compiler) VisitFunctionCall(expr expressions.FunctionCallExpr) interfac
 		default:
 			break
 		}
-		cmd += c.opHandler.ArgLoad(expr.Name.Lexeme, c.functionArgs[expr.Name.Lexeme][i], ops.RX)
+		cmd += c.opHandler.ArgLoad(expr.Name.Lexeme, c.functions[expr.Name.Lexeme].Args[i].Name, ops.RX)
 	}
 	cmd += c.opHandler.Call(expr.Name.Lexeme)
 	return cmd

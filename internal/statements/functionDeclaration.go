@@ -2,12 +2,16 @@ package statements
 
 import "github.com/Kolterdyx/mcbasic/internal/tokens"
 
+type Arg struct {
+	Name string
+	Type tokens.TokenType
+}
+
 type FunctionDeclarationStmt struct {
 	Stmt
 
 	Name       tokens.Token
-	Parameters []tokens.Token
-	Types      []tokens.Token
+	Parameters []Arg
 	Body       BlockStmt
 }
 
@@ -21,7 +25,7 @@ func (f FunctionDeclarationStmt) TType() StmtType {
 
 func (f FunctionDeclarationStmt) HasArg(arg string) bool {
 	for _, p := range f.Parameters {
-		if p.Lexeme == arg {
+		if p.Name == arg {
 			return true
 		}
 	}

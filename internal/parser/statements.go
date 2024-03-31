@@ -14,10 +14,6 @@ func (p *Parser) statement() statements.Stmt {
 		return p.functionDeclaration()
 	} else if p.match(tokens.While) {
 		return p.whileStatement()
-	} else if p.match(tokens.Print) {
-		return p.printStatement()
-	} else if p.match(tokens.Exec) {
-		return p.execStatement()
 	} else if p.match(tokens.If) {
 		return p.ifStatement()
 	} else if p.match(tokens.Identifier) {
@@ -66,19 +62,19 @@ func (p *Parser) variableAssignment() statements.Stmt {
 func (p *Parser) functionDeclaration() statements.Stmt {
 	name := p.consume(tokens.Identifier, "Expected function name.")
 	p.consume(tokens.ParenOpen, "Expected '(' after function name.")
-	parameters := make([]tokens.Token, 0)
-	types := make([]tokens.Token, 0)
+	parameters := make([]statements.Arg, 0)
 	if !p.check(tokens.ParenClose) {
 		for {
 			if len(parameters) >= 255 {
 				p.error(p.peek(), "Cannot have more than 255 parameters.")
 			}
-			parameters = append(parameters, p.consume(tokens.Identifier, "Expected parameter name."))
+			argName := p.consume(tokens.Identifier, "Expected parameter name.")
 			p.consume(tokens.Colon, "Expected type declaration.")
 			if !p.match(tokens.NumberType, tokens.StringType) {
 				p.error(p.peek(), "Expected parameter type.")
 			}
-			types = append(types, p.previous())
+			type_ := p.previous()
+			parameters = append(parameters, statements.Arg{Name: argName.Lexeme, Type: type_.Type})
 			if !p.match(tokens.Comma) {
 				break
 			}
@@ -86,7 +82,7 @@ func (p *Parser) functionDeclaration() statements.Stmt {
 	}
 	p.consume(tokens.ParenClose, "Expected ')' after parameters.")
 	body := p.block()
-	return statements.FunctionDeclarationStmt{Name: name, Parameters: parameters, Types: types, Body: body}
+	return statements.FunctionDeclarationStmt{Name: name, Parameters: parameters, Body: body}
 }
 
 func (p *Parser) block(checkBraces ...bool) statements.BlockStmt {
