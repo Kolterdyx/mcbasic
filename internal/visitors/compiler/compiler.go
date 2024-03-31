@@ -141,7 +141,8 @@ func (c *Compiler) createBuiltinFunctions() {
 		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
 			c.opHandler.RegLoad(strconv.Itoa(internal.FixedPointMagnitude), ops.RCF)+
 			c.opHandler.RegLoad("0", ops.CALL)+
-			c.opHandler.Print("MCB pack loaded")+
+			c.opHandler.Set("tmp", "MCB pack loaded")+
+			c.opHandler.ArgLoad("print", "text", "tmp")+
 			c.opHandler.Call("main"),
 		[]statements.Arg{},
 	)
@@ -192,5 +193,5 @@ func (c *Compiler) error(location interfaces.SourceLocation, message string) {
 
 func (c *Compiler) newRegister(regName string) string {
 	c.regCounter++
-	return regName + fmt.Sprintf("%d$(__call__)_", c.regCounter)
+	return regName + fmt.Sprintf("%d_", c.regCounter)
 }

@@ -40,10 +40,13 @@ func (o *Op) MacroReplace(source string) string {
 	return strings.Join(lines, "\n")
 }
 
-func (o *Op) Exec(command string) string {
-	return fmt.Sprintf("%s\n", command)
-}
-
 func (o *Op) Inc(reg string) string {
 	return fmt.Sprintf("scoreboard players add %s %s 1\n", reg, o.Namespace)
+}
+
+func cs(s string) string {
+	if strings.Contains(s, "$(__call__)") {
+		return s
+	}
+	return s + "$(__call__)"
 }

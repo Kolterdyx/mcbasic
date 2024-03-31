@@ -8,6 +8,6 @@ func add(x: number, y: number) {
 
 
 func main() {
-    print("Main");
+    print("Hello world");
     add(2, 3);
 }
