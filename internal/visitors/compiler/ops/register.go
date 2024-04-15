@@ -1,27 +1,15 @@
 package ops
 
-import (
-	"fmt"
-)
+import "fmt"
 
-// RegWrite stands for "register write". It moves a variable from data storage to a register for further processing.
-func (o *Op) RegWrite(varName string, regName string) string {
-	cmd := fmt.Sprintf("execute store result score %s %s run data get storage %s:%s.%s %s\n", cs(regName), o.Namespace, o.Namespace, VarPath, o.Scope, cs(varName))
-	cmd += fmt.Sprintf("execute store result storage %s:%s.%s %s int 1 run data get storage %s:%s.%s %s\n", o.Namespace, VarPath, o.Scope, cs(regName), o.Namespace, VarPath, o.Scope, cs(varName))
-	return cmd
+func (o *Op) Move(from string, to string) string {
+	return fmt.Sprintf("data modify storage %s:%s.%s set from storage %s:%s.%s\n", o.Namespace, VarPath, to, o.Namespace, VarPath, from)
 }
 
-// RegLoad stands for "register load". It writes a value to a register.
-func (o *Op) RegLoad(value string, regName string) string {
-	return fmt.Sprintf("scoreboard players set %s %s %s\n", cs(regName), o.Namespace, value)
+func (o *Op) MoveConst(value string, to string) string {
+	return fmt.Sprintf("data modify storage %s:%s.%s set value %s\n", o.Namespace, VarPath, to, value)
 }
 
-// RegShift stands for "register shift". It moves a variable from one register to another.
-func (o *Op) RegShift(regFrom string, regTo string) string {
-	return fmt.Sprintf("scoreboard players operation %s %s = %s %s\n", cs(regTo), o.Namespace, cs(regFrom), o.Namespace)
-}
-
-// RegSave stands for "register save". It moves a variable from a register to data storage for further processing.
-func (o *Op) RegSave(varName string, regName string) string {
-	return fmt.Sprintf("execute store result storage %s:%s.%s %s int 1 run scoreboard players get %s %s\n", o.Namespace, VarPath, o.Scope, cs(varName), cs(regName), o.Namespace)
+func (o *Op) MoveScore(from string, to string) string {
+	return fmt.Sprintf("execute store result score %s %s run data get storage %s:%s.%s\n", o.Namespace, to, o.Namespace, VarPath, from)
 }

@@ -40,10 +40,6 @@ func (o *Op) MacroReplace(source string) string {
 	return strings.Join(lines, "\n")
 }
 
-func (o *Op) Inc(reg string) string {
-	return fmt.Sprintf("scoreboard players add %s %s 1\n", reg, o.Namespace)
-}
-
 func (o *Op) Return() string {
 	return fmt.Sprintf("return run data get storage %s:%s.%s %s\n", o.Namespace, VarPath, o.Scope, cs(RX))
 }

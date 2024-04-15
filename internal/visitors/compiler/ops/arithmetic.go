@@ -1,34 +1,32 @@
 package ops
 
-import (
-	"fmt"
-)
+import "fmt"
 
-func (o *Op) arithmetic(var1 string, var2 string, operator string) string {
-	return fmt.Sprintf("scoreboard players operation %s %s %s %s %s\n", cs(var1), o.Namespace, operator, cs(var2), o.Namespace)
+func (o *Op) arithmeticOperation(a string, b string, to string, operator string) string {
+	cmd := ""
+	cmd += o.MoveScore(a, RX)
+	cmd += o.MoveScore(b, RB)
+	cmd += fmt.Sprintf("scoreboard players operation %s %s %s %s %s\n", o.Namespace, RX, operator, o.Namespace, RB)
+	cmd += o.MoveScore(RX, to)
+	return cmd
 }
 
-// Add adds two variables together. The result is stored in the first variable.
-func (o *Op) Add(var1 string, var2 string) string {
-	return o.arithmetic(var1, var2, "+=")
+func (o *Op) Add(a string, b string, to string) string {
+	return o.arithmeticOperation(a, b, to, "+=")
 }
 
-// Sub subtracts the second variable from the first variable. The result is stored in the first variable.
-func (o *Op) Sub(var1 string, var2 string) string {
-	return o.arithmetic(var1, var2, "-=")
+func (o *Op) Sub(a string, b string, to string) string {
+	return o.arithmeticOperation(a, b, to, "-=")
 }
 
-// Mul multiplies two variables together. The result is stored in the first variable.
-func (o *Op) Mul(var1 string, var2 string) string {
-	return o.arithmetic(var1, var2, "*=")
+func (o *Op) Mul(a string, b string, to string) string {
+	return o.arithmeticOperation(a, b, to, "*=")
 }
 
-// Div divides the first variable by the second variable. The result is stored in the first variable.
-func (o *Op) Div(var1 string, var2 string) string {
-	return o.arithmetic(var1, var2, "/=")
+func (o *Op) Div(a string, b string, to string) string {
+	return o.arithmeticOperation(a, b, to, "/=")
 }
 
-// Mod calculates the modulus of the first variable by the second variable. The result is stored in the first variable.
-func (o *Op) Mod(var1 string, var2 string) string {
-	return o.arithmetic(var1, var2, "%=")
+func (o *Op) Mod(a string, b string, to string) string {
+	return o.arithmeticOperation(a, b, to, "%=")
 }

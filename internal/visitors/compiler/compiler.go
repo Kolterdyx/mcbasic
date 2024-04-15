@@ -2,7 +2,6 @@ package compiler
 
 import (
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
@@ -13,7 +12,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
-	"strconv"
 )
 
 type Func struct {
@@ -136,16 +134,21 @@ func (c *Compiler) createBuiltinFunctions() {
 			{Name: "command", Type: tokens.StringType},
 		},
 	)
-	c.createFunction(
-		"builtin/init",
-		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
-			c.opHandler.RegLoad(strconv.Itoa(internal.FixedPointMagnitude), ops.RCF)+
-			c.opHandler.RegLoad("0", ops.CALL)+
-			c.opHandler.Set("tmp", "MCB pack loaded")+
-			c.opHandler.ArgLoad("print", "text", "tmp")+
-			c.opHandler.Call("main"),
-		[]statements.FuncArg{},
-	)
+	//c.createFunction(
+	//	"builtin/init",
+	//	fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
+	//		c.opHandler.RegLoad(strconv.Itoa(internal.FixedPointMagnitude), ops.RCF)+
+	//		c.opHandler.RegLoad("0", ops.CALL)+
+	//		c.opHandler.Set("tmp", "MCB pack loaded")+
+	//		c.opHandler.ArgLoad("print", "text", "tmp")+
+	//		c.opHandler.Call("main"),
+	//	[]statements.FuncArg{},
+	//)
+	//c.createFunction(
+	//	"builtin/tick",
+	//		c.opHandler.Call("tick"),
+	//	[]statements.FuncArg{},
+	//)
 }
 
 func (c *Compiler) createFunction(name string, source string, args []statements.FuncArg) {
@@ -177,11 +180,20 @@ func (c *Compiler) createFunctionTags() {
 		"%s"
 	]
 }`
+	tickTag := `{
+	"values": [
+		"%s"
+	]
+}`
 	err := os.MkdirAll(c.tagsPath+"/functions", 0755)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	err = os.WriteFile(c.tagsPath+"/functions/load.json", []byte(fmt.Sprintf(loadTag, c.Namespace+":builtin/init")), 0644)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = os.WriteFile(c.tagsPath+"/functions/tick.json", []byte(fmt.Sprintf(tickTag, c.Namespace+":builtin/tick")), 0644)
 	if err != nil {
 		log.Fatalln(err)
 	}
