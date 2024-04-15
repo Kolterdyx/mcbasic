@@ -20,3 +20,7 @@ func (u UnaryExpr) Accept(v ExprVisitor) interface{} {
 func (u UnaryExpr) TType() ExprType {
 	return UnaryExprType
 }
+
+func (u UnaryExpr) ReturnType() ValueType {
+	return NumberType
+}

@@ -16,3 +16,7 @@ func (g GroupingExpr) Accept(v ExprVisitor) interface{} {
 func (g GroupingExpr) TType() ExprType {
 	return GroupingExprType
 }
+
+func (g GroupingExpr) ReturnType() ValueType {
+	return g.Expression.ReturnType()
+}

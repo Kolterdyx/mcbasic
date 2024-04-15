@@ -21,3 +21,7 @@ func (l LogicalExpr) Accept(v ExprVisitor) interface{} {
 func (l LogicalExpr) TType() ExprType {
 	return LogicalExprType
 }
+
+func (l LogicalExpr) ReturnType() ValueType {
+	return NumberType
+}
