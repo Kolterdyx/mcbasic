@@ -17,6 +17,6 @@ func (f FunctionCallExpr) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitFunctionCall(f)
 }
 
-func (f FunctionCallExpr) Type() ExprType {
+func (f FunctionCallExpr) TType() ExprType {
 	return FunctionCallExprType
 }

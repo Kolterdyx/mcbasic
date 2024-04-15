@@ -18,7 +18,7 @@ import (
 
 type Func struct {
 	Name string
-	Args []statements.Arg
+	Args []statements.FuncArg
 }
 
 type Compiler struct {
@@ -66,15 +66,15 @@ func (c *Compiler) Compile(program parser.Program) {
 	for _, function := range program.Functions {
 		f := Func{
 			Name: function.Name.Lexeme,
-			Args: make([]statements.Arg, 0),
+			Args: make([]statements.FuncArg, 0),
 		}
 		for _, parameter := range function.Parameters {
-			f.Args = append(f.Args, statements.Arg{
+			f.Args = append(f.Args, statements.FuncArg{
 				Name: parameter.Name,
 				Type: parameter.Type,
 			})
 		}
-		f.Args = append(f.Args, statements.Arg{
+		f.Args = append(f.Args, statements.FuncArg{
 			Name: "__call__",
 			Type: tokens.NumberType,
 		})
@@ -125,14 +125,14 @@ func (c *Compiler) createBuiltinFunctions() {
 	c.createFunction(
 		"print",
 		`$tellraw @a {"text":"$(text)"}`,
-		[]statements.Arg{
+		[]statements.FuncArg{
 			{Name: "text", Type: tokens.StringType},
 		},
 	)
 	c.createFunction(
 		"exec",
 		`$execute run $(command)`,
-		[]statements.Arg{
+		[]statements.FuncArg{
 			{Name: "command", Type: tokens.StringType},
 		},
 	)
@@ -144,11 +144,11 @@ func (c *Compiler) createBuiltinFunctions() {
 			c.opHandler.Set("tmp", "MCB pack loaded")+
 			c.opHandler.ArgLoad("print", "text", "tmp")+
 			c.opHandler.Call("main"),
-		[]statements.Arg{},
+		[]statements.FuncArg{},
 	)
 }
 
-func (c *Compiler) createFunction(name string, source string, args []statements.Arg) {
+func (c *Compiler) createFunction(name string, source string, args []statements.FuncArg) {
 	filename := name + ".mcfunction"
 
 	if name == c.InitFuncName || name == c.TickFuncName {
@@ -156,12 +156,12 @@ func (c *Compiler) createFunction(name string, source string, args []statements.
 	}
 	f := Func{
 		Name: name,
-		Args: make([]statements.Arg, 0),
+		Args: make([]statements.FuncArg, 0),
 	}
 	for _, parameter := range args {
-		f.Args = append(f.Args, statements.Arg{Name: parameter.Name, Type: parameter.Type})
+		f.Args = append(f.Args, statements.FuncArg{Name: parameter.Name, Type: parameter.Type})
 	}
-	f.Args = append(f.Args, statements.Arg{Name: "__call__", Type: tokens.NumberType})
+	f.Args = append(f.Args, statements.FuncArg{Name: "__call__", Type: tokens.NumberType})
 	c.functions[name] = f
 
 	err := os.WriteFile(c.functionsPath+"/"+filename, []byte(source), 0644)

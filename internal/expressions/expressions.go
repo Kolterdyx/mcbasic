@@ -24,5 +24,5 @@ type ExprVisitor interface {
 
 type Expr interface {
 	Accept(v ExprVisitor) interface{}
-	Type() ExprType
+	TType() ExprType
 }

@@ -1,13 +1,10 @@
 
-func add(x: number, y: number) {
-    let res: number = x + y;
-    print(x);
-    print(y);
-    print(res);
-}
-
 
 func main() {
     print("Hello world");
-    add(2, 3);
+    let x: number = 10;
+    let y: number = 20;
+    let z: number = x + y;
+    print(z);
+    print(10 + 20);
 }

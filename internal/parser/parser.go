@@ -11,10 +11,17 @@ type Parser struct {
 	HadError bool
 	current  int
 	Tokens   []tokens.Token
+
+	currentScope string
+
+	variables map[string][]statements.VarDef
+	functions []statements.FuncDef
 }
 
 func (p *Parser) Parse() Program {
 	var functions []statements.FunctionDeclarationStmt
+	p.functions = make([]statements.FuncDef, 0)
+	p.variables = make(map[string][]statements.VarDef)
 	for !p.IsAtEnd() {
 		statement := p.statement()
 		if statement == nil {
@@ -23,7 +30,9 @@ func (p *Parser) Parse() Program {
 		if statement.TType() != statements.FunctionDeclarationStmtType {
 			log.Errorf("Only function declarations are allowed at the top level. Found: %s\n", statement.TType())
 		}
-		functions = append(functions, statement.(statements.FunctionDeclarationStmt))
+		funcStmt := statement.(statements.FunctionDeclarationStmt)
+		functions = append(functions, funcStmt)
+		p.functions = append(p.functions, statements.FuncDef{Name: funcStmt.Name.Lexeme, ReturnType: funcStmt.ReturnType})
 	}
 	return Program{Functions: functions}
 }

@@ -33,7 +33,7 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 	c.scope[c.currentScope] = append(c.scope[c.currentScope], stmt.Name.Lexeme)
 	if stmt.Initializer != nil {
 		cmd += stmt.Initializer.Accept(c).(string)
-		cmd += c.opHandler.RegSave(stmt.Name.Lexeme, ops.RX)
+		cmd += c.opHandler.Cp(ops.RX, stmt.Name.Lexeme)
 		return cmd
 	}
 	return c.opHandler.Set(stmt.Name.Lexeme, "0")
@@ -65,13 +65,14 @@ func (c *Compiler) VisitIf(stmt statements.IfStmt) interface{} {
 	cmd += c.opHandler.And(ifReg, ifReg)
 	thenBranch := stmt.ThenBranch.Accept(c).(string)
 	elseBranch := stmt.ElseBranch.Accept(c).(string)
-	cond := fmt.Sprintf("score %s %s matches 1..", ifReg, c.Namespace)
+	cond := fmt.Sprintf("score %s$(__call__) %s matches 1..", ifReg, c.Namespace)
 	cmd += c.opHandler.Ift(cond, strings.Split(thenBranch, "\n"))
 	cmd += c.opHandler.Ifn(cond, strings.Split(elseBranch, "\n"))
 	return cmd
 }
 
 func (c *Compiler) VisitWhile(stmt statements.WhileStmt) interface{} {
+	return "# While loops are not supported in Minecraft"
 	condReg := c.newRegister(ops.RX)
 	cmd := ""
 	cmd += stmt.Condition.Accept(c).(string)
@@ -80,5 +81,12 @@ func (c *Compiler) VisitWhile(stmt statements.WhileStmt) interface{} {
 	loop := stmt.Body.Accept(c).(string)
 	cond := fmt.Sprintf("score %s %s matches 1..", condReg, c.Namespace)
 	cmd += c.opHandler.Ift(cond, strings.Split(loop, "\n"))
+	return cmd
+}
+
+func (c *Compiler) VisitReturn(stmt statements.ReturnStmt) interface{} {
+	cmd := ""
+	cmd += stmt.Expression.Accept(c).(string)
+	cmd += c.opHandler.Return()
 	return cmd
 }

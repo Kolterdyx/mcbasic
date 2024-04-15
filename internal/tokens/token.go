@@ -51,6 +51,7 @@ const (
 	If
 	Else
 	While
+	Return
 
 	NumberType
 	StringType
@@ -102,6 +103,8 @@ func (t TokenType) String() string {
 		return "Else"
 	case While:
 		return "While"
+	case Return:
+		return "Return"
 	case ParenOpen:
 		return "ParenOpen"
 	case ParenClose:
@@ -147,4 +150,5 @@ var Keywords = map[string]TokenType{
 	"while":  While,
 	"number": NumberType,
 	"string": StringType,
+	"return": Return,
 }

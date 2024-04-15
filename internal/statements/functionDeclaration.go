@@ -2,16 +2,23 @@ package statements
 
 import "github.com/Kolterdyx/mcbasic/internal/tokens"
 
-type Arg struct {
+type FuncArg struct {
 	Name string
 	Type tokens.TokenType
+}
+
+type FuncDef struct {
+	Name       string
+	Parameters []FuncArg
+	ReturnType tokens.TokenType
 }
 
 type FunctionDeclarationStmt struct {
 	Stmt
 
 	Name       tokens.Token
-	Parameters []Arg
+	Parameters []FuncArg
+	ReturnType tokens.TokenType
 	Body       BlockStmt
 }
 

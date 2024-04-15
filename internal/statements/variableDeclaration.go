@@ -5,11 +5,16 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 )
 
+type VarDef struct {
+	Name string
+	Type tokens.TokenType
+}
+
 type VariableDeclarationStmt struct {
 	Stmt
 
 	Name        tokens.Token
-	Type        tokens.Token
+	Type        tokens.TokenType
 	Initializer expressions.Expr
 }
 

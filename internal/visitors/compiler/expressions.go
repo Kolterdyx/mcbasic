@@ -19,7 +19,9 @@ func (c *Compiler) VisitVariable(expr expressions.VariableExpr) interface{} {
 	if !slices.Contains(c.scope[c.currentScope], expr.Name.Lexeme) {
 		c.error(expr.SourceLocation, "Undeclared variable.")
 	}
-	return c.opHandler.RegWrite(expr.Name.Lexeme, ops.RX)
+	cmd := c.opHandler.Cp(expr.Name.Lexeme, ops.RX)
+	cmd += c.opHandler.RegWrite(ops.RX, ops.RX)
+	return cmd
 }
 
 func (c *Compiler) VisitUnary(expr expressions.UnaryExpr) interface{} {
@@ -47,13 +49,13 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 		tokens.Percent,
 	}
 	if slices.Contains(arithmeticOperators, expr.Operator.Type) {
-		if expr.Left.Type() == expressions.LiteralExprType {
+		if expr.Left.TType() == expressions.LiteralExprType {
 			left := expr.Left.(expressions.LiteralExpr)
 			if left.ValueType != expressions.NumberType {
 				c.error(left.SourceLocation, "Left side of binary arithmetic expression is not a number")
 			}
 		}
-		if expr.Right.Type() == expressions.LiteralExprType {
+		if expr.Right.TType() == expressions.LiteralExprType {
 			right := expr.Right.(expressions.LiteralExpr)
 			if right.ValueType != expressions.NumberType {
 				c.error(right.SourceLocation, "Right side of binary arithmetic expression is not a number")
@@ -63,31 +65,33 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 
 	cmd := ""
 	cmd += expr.Left.Accept(c).(string)
+	cmd += c.opHandler.RegLoad("0", ops.RA)
 	cmd += c.opHandler.RegShift(ops.RX, ops.RA)
 	cmd += expr.Right.Accept(c).(string)
+	cmd += c.opHandler.RegLoad("0", ops.RB)
 	cmd += c.opHandler.RegShift(ops.RX, ops.RB)
 	switch expr.Operator.Type {
 	case tokens.Plus:
 		cmd += c.opHandler.Add(ops.RA, ops.RB)
-		cmd += c.opHandler.RegShift(ops.RA, ops.RX)
+		cmd += c.opHandler.RegSave(ops.RX, ops.RA)
 		return cmd
 	case tokens.Minus:
 		cmd += c.opHandler.Sub(ops.RA, ops.RB)
-		cmd += c.opHandler.RegShift(ops.RA, ops.RX)
+		cmd += c.opHandler.RegSave(ops.RX, ops.RA)
 		return cmd
 	case tokens.Star:
 		cmd += c.opHandler.Mul(ops.RA, ops.RB)
 		cmd += c.opHandler.Div(ops.RA, ops.RCF) // Compensate for fixed-point shift
-		cmd += c.opHandler.RegShift(ops.RA, ops.RX)
+		cmd += c.opHandler.RegSave(ops.RX, ops.RA)
 		return cmd
 	case tokens.Slash:
 		cmd += c.opHandler.Div(ops.RB, ops.RCF) // Compensate for fixed-point shift
 		cmd += c.opHandler.Div(ops.RA, ops.RB)
-		cmd += c.opHandler.RegShift(ops.RA, ops.RX)
+		cmd += c.opHandler.RegSave(ops.RX, ops.RA)
 		return cmd
 	case tokens.Percent:
 		cmd += c.opHandler.Mod(ops.RA, ops.RB)
-		cmd += c.opHandler.RegShift(ops.RA, ops.RX)
+		cmd += c.opHandler.RegSave(ops.RX, ops.RA)
 		return cmd
 	default:
 		log.Debug("Not an arithmetic operator")

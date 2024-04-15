@@ -17,6 +17,6 @@ func (u UnaryExpr) Accept(v ExprVisitor) interface{} {
 	return v.VisitUnary(u)
 }
 
-func (u UnaryExpr) Type() ExprType {
+func (u UnaryExpr) TType() ExprType {
 	return UnaryExprType
 }

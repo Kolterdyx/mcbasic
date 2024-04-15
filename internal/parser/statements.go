@@ -4,7 +4,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
-	log "github.com/sirupsen/logrus"
 )
 
 func (p *Parser) statement() statements.Stmt {
@@ -16,6 +15,8 @@ func (p *Parser) statement() statements.Stmt {
 		return p.whileStatement()
 	} else if p.match(tokens.If) {
 		return p.ifStatement()
+	} else if p.match(tokens.Return) {
+		return p.returnStatement()
 	} else if p.match(tokens.Identifier) {
 		if p.check(tokens.Equal) {
 			return p.variableAssignment()
@@ -36,10 +37,10 @@ func (p *Parser) expressionStatement() statements.Stmt {
 
 func (p *Parser) letDeclaration() statements.Stmt {
 	name := p.consume(tokens.Identifier, "Expected variable name.")
-	var varType tokens.Token
+	var varType tokens.TokenType
 	p.consume(tokens.Colon, "Expected type declaration.")
 	if p.match(tokens.NumberType, tokens.StringType) {
-		varType = p.previous()
+		varType = p.previous().Type
 	} else {
 		p.error(p.peek(), "Expected variable type.")
 	}
@@ -48,6 +49,7 @@ func (p *Parser) letDeclaration() statements.Stmt {
 		initializer = p.expression()
 	}
 	p.consume(tokens.Semicolon, "Expected ';' after variable declaration.")
+	p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{Name: name.Lexeme, Type: varType})
 	return statements.VariableDeclarationStmt{Name: name, Type: varType, Initializer: initializer}
 }
 
@@ -62,7 +64,7 @@ func (p *Parser) variableAssignment() statements.Stmt {
 func (p *Parser) functionDeclaration() statements.Stmt {
 	name := p.consume(tokens.Identifier, "Expected function name.")
 	p.consume(tokens.ParenOpen, "Expected '(' after function name.")
-	parameters := make([]statements.Arg, 0)
+	parameters := make([]statements.FuncArg, 0)
 	if !p.check(tokens.ParenClose) {
 		for {
 			if len(parameters) >= 255 {
@@ -74,7 +76,7 @@ func (p *Parser) functionDeclaration() statements.Stmt {
 				p.error(p.peek(), "Expected parameter type.")
 			}
 			type_ := p.previous()
-			parameters = append(parameters, statements.Arg{Name: argName.Lexeme, Type: type_.Type})
+			parameters = append(parameters, statements.FuncArg{Name: argName.Lexeme, Type: type_.Type})
 			if !p.match(tokens.Comma) {
 				break
 			}
@@ -107,21 +109,6 @@ func (p *Parser) whileStatement() statements.Stmt {
 	return statements.WhileStmt{Condition: condition, Body: body}
 }
 
-func (p *Parser) printStatement() statements.Stmt {
-	value := p.expression()
-	p.consume(tokens.Semicolon, "Expected ';' after value.")
-	return statements.PrintStmt{Expression: value}
-}
-
-func (p *Parser) execStatement() statements.Stmt {
-	if p.peek().Type != tokens.String {
-		log.Errorf("Expected string literal after 'exec'.\n")
-	}
-	value := p.expression()
-	p.consume(tokens.Semicolon, "Expected ';' after value.")
-	return statements.ExecStmt{Command: value.(expressions.LiteralExpr).Value.(string)}
-}
-
 func (p *Parser) ifStatement() statements.Stmt {
 	p.consume(tokens.ParenOpen, "Expected '(' after 'if'.")
 	condition := p.expression()
@@ -136,4 +123,10 @@ func (p *Parser) ifStatement() statements.Stmt {
 		}
 	}
 	return statements.IfStmt{Condition: condition, ThenBranch: thenBranch, ElseBranch: elseBranch}
+}
+
+func (p *Parser) returnStatement() statements.Stmt {
+	value := p.expression()
+	p.consume(tokens.Semicolon, "Expected ';' after return statement.")
+	return statements.ReturnStmt{Expression: value}
 }

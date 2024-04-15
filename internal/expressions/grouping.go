@@ -13,6 +13,6 @@ func (g GroupingExpr) Accept(v ExprVisitor) interface{} {
 	return v.VisitGrouping(g)
 }
 
-func (g GroupingExpr) Type() ExprType {
+func (g GroupingExpr) TType() ExprType {
 	return GroupingExprType
 }

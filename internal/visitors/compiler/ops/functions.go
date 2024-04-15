@@ -13,6 +13,6 @@ func (o *Op) Call(funcName string) string {
 	cmd += o.Inc(CALL)
 	cmd += o.RegSave(RX, CALL)
 	cmd += o.ArgLoad(funcName, "__call__", RX)
-	cmd += fmt.Sprintf("function %s:%s with storage %s:%s.%s\n", o.Namespace, funcName, o.Namespace, ArgPath, funcName)
+	cmd += fmt.Sprintf("execute store result storage %s:%s.%s %s int 1 run function %s:%s with storage %s:%s.%s\n", o.Namespace, VarPath, o.Scope, cs(RX), o.Namespace, funcName, o.Namespace, ArgPath, funcName)
 	return cmd
 }

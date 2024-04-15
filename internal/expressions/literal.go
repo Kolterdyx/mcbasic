@@ -21,6 +21,6 @@ func (l LiteralExpr) Accept(v ExprVisitor) interface{} {
 	return v.VisitLiteral(l)
 }
 
-func (l LiteralExpr) Type() ExprType {
+func (l LiteralExpr) TType() ExprType {
 	return LiteralExprType
 }

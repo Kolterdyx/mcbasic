@@ -18,6 +18,6 @@ func (b BinaryExpr) Accept(v ExprVisitor) interface{} {
 	return v.VisitBinary(b)
 }
 
-func (b BinaryExpr) Type() ExprType {
+func (b BinaryExpr) TType() ExprType {
 	return BinaryExprType
 }
