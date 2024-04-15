@@ -1,10 +1,4 @@
 
-
 func main() {
-    print("Hello world");
-    let x: number = 10;
-    let y: number = 20;
-    let z: number = x + y;
-    print(z);
-    print(10 + 20);
+    let a: string = "1" + 2;
 }

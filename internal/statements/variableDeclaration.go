@@ -7,14 +7,14 @@ import (
 
 type VarDef struct {
 	Name string
-	Type tokens.TokenType
+	Type expressions.ValueType
 }
 
 type VariableDeclarationStmt struct {
 	Stmt
 
 	Name        tokens.Token
-	Type        tokens.TokenType
+	Type        expressions.ValueType
 	Initializer expressions.Expr
 }
 

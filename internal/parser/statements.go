@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
@@ -37,10 +38,12 @@ func (p *Parser) expressionStatement() statements.Stmt {
 
 func (p *Parser) letDeclaration() statements.Stmt {
 	name := p.consume(tokens.Identifier, "Expected variable name.")
-	var varType tokens.TokenType
+	var varType expressions.ValueType
 	p.consume(tokens.Colon, "Expected type declaration.")
-	if p.match(tokens.NumberType, tokens.StringType) {
-		varType = p.previous().Type
+	if p.match(tokens.NumberType) {
+		varType = expressions.NumberType
+	} else if p.match(tokens.StringType) {
+		varType = expressions.StringType
 	} else {
 		p.error(p.peek(), "Expected variable type.")
 	}
@@ -49,6 +52,9 @@ func (p *Parser) letDeclaration() statements.Stmt {
 		initializer = p.expression()
 	}
 	p.consume(tokens.Semicolon, "Expected ';' after variable declaration.")
+	if (initializer != nil && initializer.ReturnType() != varType) || (initializer == nil && varType == expressions.StringType) {
+		p.error(p.peekCount(-2), fmt.Sprintf("Cannot assign %s to %s.", initializer.ReturnType(), varType))
+	}
 	p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{Name: name.Lexeme, Type: varType})
 	return statements.VariableDeclarationStmt{Name: name, Type: varType, Initializer: initializer}
 }
@@ -76,15 +82,31 @@ func (p *Parser) functionDeclaration() statements.Stmt {
 				p.error(p.peek(), "Expected parameter type.")
 			}
 			type_ := p.previous()
-			parameters = append(parameters, statements.FuncArg{Name: argName.Lexeme, Type: type_.Type})
+			var valueType expressions.ValueType
+			if type_.Type == tokens.StringType {
+				valueType = expressions.StringType
+			} else {
+				valueType = expressions.NumberType
+			}
+			parameters = append(parameters, statements.FuncArg{Name: argName.Lexeme, Type: valueType})
 			if !p.match(tokens.Comma) {
 				break
 			}
 		}
 	}
 	p.consume(tokens.ParenClose, "Expected ')' after parameters.")
+	returnType := expressions.VoidType
+	if p.match(tokens.NumberType) {
+		returnType = expressions.NumberType
+	} else if p.match(tokens.StringType) {
+		returnType = expressions.StringType
+	}
+	// Add all parameters to the current scope
+	for _, arg := range parameters {
+		p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{Name: arg.Name, Type: arg.Type})
+	}
 	body := p.block()
-	return statements.FunctionDeclarationStmt{Name: name, Parameters: parameters, Body: body}
+	return statements.FunctionDeclarationStmt{Name: name, Parameters: parameters, ReturnType: returnType, Body: body}
 }
 
 func (p *Parser) block(checkBraces ...bool) statements.BlockStmt {

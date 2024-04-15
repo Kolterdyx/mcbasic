@@ -25,4 +25,5 @@ type ExprVisitor interface {
 type Expr interface {
 	Accept(v ExprVisitor) interface{}
 	TType() ExprType
+	ReturnType() ValueType
 }

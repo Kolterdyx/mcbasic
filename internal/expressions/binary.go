@@ -21,3 +21,7 @@ func (b BinaryExpr) Accept(v ExprVisitor) interface{} {
 func (b BinaryExpr) TType() ExprType {
 	return BinaryExprType
 }
+
+func (b BinaryExpr) ReturnType() ValueType {
+	return b.Left.ReturnType()
+}

@@ -14,7 +14,8 @@ const (
 	RA = "ra"
 	RB = "rb"
 
-	RX = "rx"
+	RX  = "rx"
+	RET = "ret"
 
 	RCF  = "rcf"
 	CALL = "call"

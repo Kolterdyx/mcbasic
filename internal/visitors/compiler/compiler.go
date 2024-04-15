@@ -6,7 +6,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
-	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	cp "github.com/otiai10/copy"
 	log "github.com/sirupsen/logrus"
@@ -74,7 +73,7 @@ func (c *Compiler) Compile(program parser.Program) {
 		}
 		f.Args = append(f.Args, statements.FuncArg{
 			Name: "__call__",
-			Type: tokens.NumberType,
+			Type: expressions.NumberType,
 		})
 		c.functions[function.Name.Lexeme] = f
 	}
@@ -100,10 +99,18 @@ func (c *Compiler) createDirectoryTree() error {
 	c.functionsPath = c.DatapackRoot + "/data/" + c.Namespace + "/functions"
 	c.tagsPath = c.DatapackRoot + "/data/minecraft/tags"
 
-	err := os.MkdirAll(c.functionsPath, 0755)
-	err = os.MkdirAll(c.tagsPath, 0755)
-	err = os.MkdirAll(c.functionsPath+"/builtin", 0755)
-	return err
+	errs := []error{
+		os.MkdirAll(c.functionsPath, 0755),
+		os.MkdirAll(c.functionsPath+"/internal", 0755),
+		os.MkdirAll(c.tagsPath, 0755),
+		os.MkdirAll(c.functionsPath+"/builtin", 0755),
+	}
+	for _, err := range errs {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *Compiler) createPackMeta() {
@@ -124,14 +131,14 @@ func (c *Compiler) createBuiltinFunctions() {
 		"print",
 		`$tellraw @a {"text":"$(text)"}`,
 		[]statements.FuncArg{
-			{Name: "text", Type: tokens.StringType},
+			{Name: "text", Type: expressions.StringType},
 		},
 	)
 	c.createFunction(
 		"exec",
 		`$execute run $(command)`,
 		[]statements.FuncArg{
-			{Name: "command", Type: tokens.StringType},
+			{Name: "command", Type: expressions.StringType},
 		},
 	)
 	//c.createFunction(
@@ -164,7 +171,7 @@ func (c *Compiler) createFunction(name string, source string, args []statements.
 	for _, parameter := range args {
 		f.Args = append(f.Args, statements.FuncArg{Name: parameter.Name, Type: parameter.Type})
 	}
-	f.Args = append(f.Args, statements.FuncArg{Name: "__call__", Type: tokens.NumberType})
+	f.Args = append(f.Args, statements.FuncArg{Name: "__call__", Type: expressions.NumberType})
 	c.functions[name] = f
 
 	err := os.WriteFile(c.functionsPath+"/"+filename, []byte(source), 0644)

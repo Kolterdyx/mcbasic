@@ -44,3 +44,10 @@ func (p *Parser) stepBack() {
 func (p *Parser) location() interfaces.SourceLocation {
 	return interfaces.SourceLocation{Line: p.previous().Line, Column: p.previous().Column}
 }
+
+func (p *Parser) peekCount(offset int) tokens.Token {
+	if p.current+offset >= len(p.Tokens) {
+		return p.Tokens[len(p.Tokens)-1]
+	}
+	return p.Tokens[p.current+offset]
+}

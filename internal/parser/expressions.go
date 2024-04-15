@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 )
@@ -97,7 +98,7 @@ func (p *Parser) value() expressions.Expr {
 		if p.match(tokens.ParenOpen) {
 			return p.functionCall(identifier)
 		} else {
-			return expressions.VariableExpr{Name: identifier, SourceLocation: p.location()}
+			return expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: p.getType(identifier)}
 		}
 	}
 	return p.primary()
@@ -118,7 +119,23 @@ func (p *Parser) functionCall(name tokens.Token) expressions.Expr {
 		}
 	}
 	p.consume(tokens.ParenClose, "Expected ')' after arguments.")
-	return expressions.FunctionCallExpr{Name: name, Arguments: args, SourceLocation: location}
+	// Find the function in the current scope
+	var returnType expressions.ValueType
+	for _, f := range p.functions {
+		if f.Name == name.Lexeme {
+			if len(f.Parameters) != len(args) {
+				p.error(p.peekCount(-len(args)-1), fmt.Sprintf("Expected %d arguments, got %d.", len(f.Parameters), len(args)))
+			}
+			for i, arg := range args {
+				if arg.ReturnType() != f.Parameters[i].Type {
+					p.error(p.peekCount(-i), fmt.Sprintf("Expected %s, got %s.", f.Parameters[i].Type, arg.ReturnType()))
+				}
+			}
+			returnType = f.ReturnType
+			break
+		}
+	}
+	return expressions.FunctionCallExpr{Name: name, Arguments: args, SourceLocation: location, Type: returnType}
 }
 
 func (p *Parser) primary() expressions.Expr {
@@ -142,4 +159,16 @@ func (p *Parser) primary() expressions.Expr {
 
 	p.error(p.peek(), "Expected expression.")
 	return nil
+}
+
+func (p *Parser) getType(name tokens.Token) expressions.ValueType {
+	// Search the variable in the current scope
+	for _, v := range p.variables {
+		for _, def := range v {
+			if def.Name == name.Lexeme {
+				return def.Type
+			}
+		}
+	}
+	panic("Variable not found")
 }

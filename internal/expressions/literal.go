@@ -5,6 +5,7 @@ import "github.com/Kolterdyx/mcbasic/internal/interfaces"
 type ValueType string
 
 const (
+	VoidType   ValueType = ""
 	NumberType ValueType = "number"
 	StringType ValueType = "string"
 )
@@ -23,4 +24,8 @@ func (l LiteralExpr) Accept(v ExprVisitor) interface{} {
 
 func (l LiteralExpr) TType() ExprType {
 	return LiteralExprType
+}
+
+func (l LiteralExpr) ReturnType() ValueType {
+	return l.ValueType
 }

@@ -1,16 +1,19 @@
 package statements
 
-import "github.com/Kolterdyx/mcbasic/internal/tokens"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/expressions"
+	"github.com/Kolterdyx/mcbasic/internal/tokens"
+)
 
 type FuncArg struct {
 	Name string
-	Type tokens.TokenType
+	Type expressions.ValueType
 }
 
 type FuncDef struct {
 	Name       string
 	Parameters []FuncArg
-	ReturnType tokens.TokenType
+	ReturnType expressions.ValueType
 }
 
 type FunctionDeclarationStmt struct {
@@ -18,7 +21,7 @@ type FunctionDeclarationStmt struct {
 
 	Name       tokens.Token
 	Parameters []FuncArg
-	ReturnType tokens.TokenType
+	ReturnType expressions.ValueType
 	Body       BlockStmt
 }
 

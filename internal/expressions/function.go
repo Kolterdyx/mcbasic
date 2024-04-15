@@ -11,6 +11,7 @@ type FunctionCallExpr struct {
 
 	Name      tokens.Token
 	Arguments []Expr
+	Type      ValueType
 }
 
 func (f FunctionCallExpr) Accept(visitor ExprVisitor) interface{} {
@@ -19,4 +20,8 @@ func (f FunctionCallExpr) Accept(visitor ExprVisitor) interface{} {
 
 func (f FunctionCallExpr) TType() ExprType {
 	return FunctionCallExprType
+}
+
+func (f FunctionCallExpr) ReturnType() ValueType {
+	return f.Type
 }
