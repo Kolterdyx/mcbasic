@@ -4,10 +4,10 @@ import "fmt"
 
 func (o *Op) arithmeticOperation(a string, b string, to string, operator string) string {
 	cmd := ""
-	cmd += o.MoveScore(a, RX)
-	cmd += o.MoveScore(b, RB)
-	cmd += fmt.Sprintf("scoreboard players operation %s %s %s %s %s\n", o.Namespace, RX, operator, o.Namespace, RB)
-	cmd += o.MoveScore(RX, to)
+	cmd += o.MoveScore(Cs(a), Cs(RX))
+	cmd += o.MoveScore(Cs(b), Cs(RB))
+	cmd += fmt.Sprintf("scoreboard players operation %s %s %s %s %s\n", Cs(RX), o.Namespace, operator, Cs(RB), o.Namespace)
+	cmd += o.LoadScore(Cs(RX), Cs(to))
 	return cmd
 }
 

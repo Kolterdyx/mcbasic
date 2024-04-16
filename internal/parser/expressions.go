@@ -121,19 +121,26 @@ func (p *Parser) functionCall(name tokens.Token) expressions.Expr {
 	p.consume(tokens.ParenClose, "Expected ')' after arguments.")
 	// Find the function in the current scope
 	var returnType expressions.ValueType
+	found := false
 	for _, f := range p.functions {
 		if f.Name == name.Lexeme {
 			if len(f.Parameters) != len(args) {
-				p.error(p.peekCount(-len(args)-1), fmt.Sprintf("Expected %d arguments, got %d.", len(f.Parameters), len(args)))
+				p.error(name, fmt.Sprintf("Expected %d arguments, got %d.", len(f.Parameters), len(args)))
+				return nil
 			}
 			for i, arg := range args {
-				if arg.ReturnType() != f.Parameters[i].Type {
-					p.error(p.peekCount(-i), fmt.Sprintf("Expected %s, got %s.", f.Parameters[i].Type, arg.ReturnType()))
+				if arg.ReturnType() != f.Parameters[i].Type && f.Parameters[i].Type != expressions.VoidType {
+					p.error(p.peekCount(-(len(f.Parameters)-i)*2), fmt.Sprintf("Expected %s, got %s.", f.Parameters[i].Type, arg.ReturnType()))
+					return nil
 				}
 			}
 			returnType = f.ReturnType
+			found = true
 			break
 		}
+	}
+	if !found {
+		p.error(name, fmt.Sprintf("Function %s not found.", name.Lexeme))
 	}
 	return expressions.FunctionCallExpr{Name: name, Arguments: args, SourceLocation: location, Type: returnType}
 }

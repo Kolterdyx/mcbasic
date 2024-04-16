@@ -1,4 +1,10 @@
 
+func test(a: number, b: number) number {
+    return 2 / a + b * 2;
+}
+
 func main() {
-    let a: string = "1" + 2;
+    print("Hello, World!");
+    let x: number = test(2, 3);
+    print(x);
 }

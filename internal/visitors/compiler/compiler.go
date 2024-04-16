@@ -214,3 +214,7 @@ func (c *Compiler) newRegister(regName string) string {
 	c.regCounter++
 	return regName + fmt.Sprintf("%d_", c.regCounter)
 }
+
+func (c *Compiler) addBuiltInFunctionsToScope() {
+	c.scope[c.currentScope] = append(c.scope[c.currentScope], "print", "exec")
+}

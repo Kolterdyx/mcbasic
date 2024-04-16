@@ -11,14 +11,14 @@ const (
 )
 
 const (
-	RA = "ra"
-	RB = "rb"
+	RA = "RA"
+	RB = "RB"
 
-	RX  = "rx"
-	RET = "ret"
+	RX  = "RX"
+	RET = "RET"
 
-	RCF  = "rcf"
-	CALL = "call"
+	RCF  = "RCF"
+	CALL = "CALL"
 )
 
 type Op struct {
@@ -42,10 +42,10 @@ func (o *Op) MacroReplace(source string) string {
 }
 
 func (o *Op) Return() string {
-	return fmt.Sprintf("return run data get storage %s:%s.%s %s\n", o.Namespace, VarPath, o.Scope, cs(RX))
+	return fmt.Sprintf("return fail\n")
 }
 
-func cs(s string) string {
+func Cs(s string) string {
 	if s == RCF || s == CALL {
 		return s
 	}
