@@ -1,3 +1,7 @@
 *.mcfunction
 *.mcmeta
 *.json
+*.txt
+mcbasic
+.idea
+*.sum
