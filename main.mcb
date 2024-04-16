@@ -5,6 +5,6 @@ func test(a: number, b: number) number {
 
 func main() {
     print("Hello, World!");
-    let x: number = test(2, 3);
+    let x: number = test(2, 3) % 4;
     print(x);
 }

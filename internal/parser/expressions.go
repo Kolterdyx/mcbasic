@@ -73,7 +73,7 @@ func (p *Parser) term() expressions.Expr {
 func (p *Parser) factor() expressions.Expr {
 	expr := p.unary()
 
-	for p.match(tokens.Slash, tokens.Star) {
+	for p.match(tokens.Slash, tokens.Star, tokens.Percent) {
 		operator := p.previous()
 		right := p.unary()
 		expr = expressions.BinaryExpr{Left: expr, Operator: operator, Right: right, SourceLocation: p.location()}
