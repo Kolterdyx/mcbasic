@@ -62,3 +62,11 @@ Feel free to contribute to this project by opening an issue or a pull request.
 Optimization suggestions are also welcome, as I'm still learning about compilers.
 
 To avoid duplicated work, please submit an issue before starting a contribution, and explain what your contribution will implement.
+
+## Development documentation
+
+- [Implementation details](implementation_details.md)
+
+## License
+
+This project is licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html). See the [LICENSE](LICENSE) file for more details.
