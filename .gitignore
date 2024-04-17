@@ -5,3 +5,5 @@
 mcbasic
 .idea
 *.sum
+build
+main.mcb

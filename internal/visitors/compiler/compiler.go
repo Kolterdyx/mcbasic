@@ -94,7 +94,7 @@ func (c *Compiler) Compile(program parser.Program) {
 
 func (c *Compiler) createDirectoryTree() error {
 	c.Namespace = c.Config.Project.Namespace
-	c.DatapackRoot, _ = filepath.Abs(c.Config.Project.Name)
+	c.DatapackRoot, _ = filepath.Abs(c.Config.OutputDir + "/" + c.Config.Project.Name)
 	log.Infof("Compiling to %s\n", c.DatapackRoot)
 	c.functionsPath = c.DatapackRoot + "/data/" + c.Namespace + "/functions"
 	c.tagsPath = c.DatapackRoot + "/data/minecraft/tags"

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"github.com/BurntSushi/toml"
 	"github.com/Kolterdyx/mcbasic/internal"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
@@ -21,19 +21,8 @@ func main() {
 		PadLevelText:           true,
 	})
 
-	// Read the config file
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: mcbasic <config>")
-		return
-	}
-	projectFile := os.Args[1]
-	if projectFile == "" {
-		fmt.Println("Usage: mcbasic <config>")
-		return
-	}
+	config := parseArgs()
 
-	// Load toml file
-	config := loadProject(projectFile)
 	entrypoint := config.Project.Entrypoint
 	blob, _ := os.ReadFile(entrypoint)
 	source := string(blob)
@@ -67,4 +56,27 @@ func loadProject(file string) interfaces.ProjectConfig {
 		log.Fatalln(err)
 	}
 	return project
+}
+
+func parseArgs() interfaces.ProjectConfig {
+	// Parse command line arguments
+	projectFilePtr := flag.String("config", "project.toml", "Path to the project config file")
+	outputDirPtr := flag.String("output", "build", "Output directory")
+	flag.Parse()
+
+	// Load config toml file
+	config := loadProject(*projectFilePtr)
+	validateProjectConfig(config)
+	config.OutputDir = *outputDirPtr
+
+	return config
+}
+
+func validateProjectConfig(config interfaces.ProjectConfig) {
+	if config.Project.Entrypoint == "" {
+		log.Fatalln("Entrypoint not specified")
+	}
+	if config.Project.Name == "" {
+		log.Fatalln("Name not specified")
+	}
 }

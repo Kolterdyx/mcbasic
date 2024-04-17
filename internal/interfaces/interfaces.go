@@ -7,6 +7,7 @@ type ProjectConfig struct {
 		Authors    []string
 		Entrypoint string
 	}
+	OutputDir string
 }
 
 type SourceLocation struct {
