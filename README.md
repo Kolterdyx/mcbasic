@@ -24,6 +24,10 @@ This project is still WIP and is not fit for actual use.
   - [ ] **Boolean**.
   - [ ] **Structs**.
 - [x] **Comments**: Single-line comments with `#`.
+- [ ] **String operations**:
+  - [ ] **Concatenation**.
+  - [ ] **Length**.
+  - [ ] **Substring**.
 
 
 ## Quirks
