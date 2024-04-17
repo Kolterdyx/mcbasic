@@ -13,10 +13,28 @@ This project is still WIP and is not fit for actual use.
 - [ ] **Control Flow**:
   - [ ] **If-else statements**.
   - [ ] **Loops**.
-- [x] **Operators**:
+- [ ] **Operators**:
   - [x] **Arithmetic**.
   - [ ] **Comparison**.
   - [ ] **Logical operators**.
+- [ ] **Data Types**:
+  - [x] **Number**.
+  - [x] **String**.
+  - [ ] **Array**.
+  - [ ] **Boolean**.
+  - [ ] **Structs**.
+- [x] **Comments**: Single-line comments with `#`.
+
+
+## Quirks
+
+These are some of the quirks of the language that you should be aware of. They may be fixed in the future.
+
+- **No global scope**: Only functions can be declared at the top level. Variables must be declared inside functions.
+- **No type inference**: The compiler does not infer the type of variable from its value.
+- **No type casting**: You cannot cast a variable from one type to another.
+- **Recursive functions**: Recursive functions have not been thoroughly tested and may not work as expected.
+
 
 ## Example
 
