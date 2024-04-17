@@ -1,0 +1,8 @@
+#!/bin/bash
+docker-compose up -d
+# Wait for the server to start
+while ! docker logs minecraft_docker | grep "Done" > /dev/null; do
+  sleep 1
+done
+docker exec -it minecraft_docker rcon-cli
+docker-compose down
