@@ -14,8 +14,14 @@ import (
 )
 
 type Func struct {
+	Name       string
+	Args       []statements.FuncArg
+	ReturnType expressions.ValueType
+}
+
+type TypedIdentifier struct {
 	Name string
-	Args []statements.FuncArg
+	Type expressions.ValueType
 }
 
 type Compiler struct {
@@ -31,7 +37,7 @@ type Compiler struct {
 
 	functions map[string]Func
 
-	scope map[string][]string
+	scope map[string][]TypedIdentifier
 
 	opHandler ops.Op
 
@@ -49,7 +55,7 @@ func NewCompiler(config interfaces.ProjectConfig) *Compiler {
 	c.Namespace = config.Project.Namespace
 	c.opHandler = ops.Op{Namespace: c.Namespace}
 	c.functions = make(map[string]Func)
-	c.scope = make(map[string][]string)
+	c.scope = make(map[string][]TypedIdentifier)
 
 	return c
 }
@@ -62,8 +68,9 @@ func (c *Compiler) Compile(program parser.Program) {
 	c.createPackMeta()
 	for _, function := range program.Functions {
 		f := Func{
-			Name: function.Name.Lexeme,
-			Args: make([]statements.FuncArg, 0),
+			Name:       function.Name.Lexeme,
+			Args:       make([]statements.FuncArg, 0),
+			ReturnType: function.ReturnType,
 		}
 		for _, parameter := range function.Parameters {
 			f.Args = append(f.Args, statements.FuncArg{
@@ -133,6 +140,7 @@ func (c *Compiler) createBuiltinFunctions() {
 		[]statements.FuncArg{
 			{Name: "text", Type: expressions.StringType},
 		},
+		expressions.VoidType,
 	)
 	c.createFunction(
 		"exec",
@@ -140,6 +148,7 @@ func (c *Compiler) createBuiltinFunctions() {
 		[]statements.FuncArg{
 			{Name: "command", Type: expressions.StringType},
 		},
+		expressions.VoidType,
 	)
 	c.createFunction(
 		"internal/init",
@@ -149,23 +158,26 @@ func (c *Compiler) createBuiltinFunctions() {
 			c.opHandler.LoadArgConst("print", "text", "MCB pack loaded")+
 			c.opHandler.Call("main", ""),
 		[]statements.FuncArg{},
+		expressions.VoidType,
 	)
 	//c.createFunction(
 	//	"internal/tick",
 	//		c.opHandler.Call("tick"),
 	//	[]statements.FuncArg{},
+	//  expressions.VoidType,
 	//)
 }
 
-func (c *Compiler) createFunction(name string, source string, args []statements.FuncArg) {
+func (c *Compiler) createFunction(name string, source string, args []statements.FuncArg, returnType expressions.ValueType) {
 	filename := name + ".mcfunction"
 
 	if name == c.InitFuncName || name == c.TickFuncName {
 		return
 	}
 	f := Func{
-		Name: name,
-		Args: make([]statements.FuncArg, 0),
+		Name:       name,
+		Args:       make([]statements.FuncArg, 0),
+		ReturnType: returnType,
 	}
 	for _, parameter := range args {
 		f.Args = append(f.Args, statements.FuncArg{Name: parameter.Name, Type: parameter.Type})
@@ -215,5 +227,24 @@ func (c *Compiler) newRegister(regName string) string {
 }
 
 func (c *Compiler) addBuiltInFunctionsToScope() {
-	c.scope[c.currentScope] = append(c.scope[c.currentScope], "print", "exec")
+	c.scope[c.currentScope] = append(c.scope[c.currentScope],
+		TypedIdentifier{
+			Name: "print",
+			Type: expressions.VoidType,
+		},
+		TypedIdentifier{
+			Name: "exec",
+			Type: expressions.VoidType,
+		})
+}
+
+// Searches the current scope for functions and variables, returns the type of the variable or function
+func (c *Compiler) getReturnType(name string) expressions.ValueType {
+	for _, identifier := range c.scope[c.currentScope] {
+		if identifier.Name == name {
+			fmt.Printf("Found identifier %s\n", name)
+			return identifier.Type
+		}
+	}
+	return expressions.VoidType
 }

@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	log "github.com/sirupsen/logrus"
@@ -9,7 +10,7 @@ import (
 func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationStmt) interface{} {
 	c.currentFunction = stmt
 	c.currentScope = stmt.Name.Lexeme
-	c.scope[stmt.Name.Lexeme] = []string{}
+	c.scope[stmt.Name.Lexeme] = []TypedIdentifier{}
 	c.addBuiltInFunctionsToScope()
 
 	cmd := ""
@@ -23,7 +24,19 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 	args := make([]statements.FuncArg, 0)
 	for _, arg := range stmt.Parameters {
 		args = append(args, statements.FuncArg{Name: arg.Name, Type: arg.Type})
-		c.scope[stmt.Name.Lexeme] = append(c.scope[stmt.Name.Lexeme], arg.Name)
+		c.scope[stmt.Name.Lexeme] = append(c.scope[stmt.Name.Lexeme],
+			TypedIdentifier{
+				arg.Name,
+				arg.Type,
+			})
+	}
+	// add function to all scopes
+	for scope := range c.scope {
+		c.scope[scope] = append(c.scope[scope],
+			TypedIdentifier{
+				stmt.Name.Lexeme,
+				stmt.ReturnType,
+			})
 	}
 
 	// function wrapper that automatically loads the __call__ parameter
@@ -32,8 +45,8 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 		wrapperSource += c.opHandler.LoadArgConst("internal/"+stmt.Name.Lexeme+"__wrapped", arg.Name, c.opHandler.Macro(arg.Name))
 	}
 	wrapperSource += c.opHandler.Call("internal/"+stmt.Name.Lexeme+"__wrapped", "")
-	c.createFunction(stmt.Name.Lexeme, c.opHandler.MacroReplace(wrapperSource), args)
-	c.createFunction("internal/"+stmt.Name.Lexeme+"__wrapped", c.opHandler.MacroReplace(source), args)
+	c.createFunction(stmt.Name.Lexeme, c.opHandler.MacroReplace(wrapperSource), args, stmt.ReturnType)
+	c.createFunction("internal/"+stmt.Name.Lexeme+"__wrapped", c.opHandler.MacroReplace(source), args, stmt.ReturnType)
 	return ""
 }
 
@@ -66,6 +79,22 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 		cmd += stmt.Initializer.Accept(c).(string)
 	}
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(stmt.Name.Lexeme))
-	c.scope[c.currentScope] = append(c.scope[c.currentScope], stmt.Name.Lexeme)
+	c.scope[c.currentScope] = append(c.scope[c.currentScope],
+		TypedIdentifier{
+			stmt.Name.Lexeme,
+			stmt.Type,
+		})
+	return cmd
+}
+
+func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStmt) interface{} {
+	cmd := ""
+
+	fmt.Println(stmt.Name.Lexeme, stmt.Value.ReturnType(), c.getReturnType(stmt.Name.Lexeme))
+	if stmt.Value.ReturnType() != c.getReturnType(stmt.Name.Lexeme) {
+		log.Fatalln("Assignment type mismatch")
+	}
+	cmd += stmt.Value.Accept(c).(string)
+	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(stmt.Name.Lexeme))
 	return cmd
 }
