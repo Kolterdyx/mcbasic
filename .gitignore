@@ -7,3 +7,4 @@ mcbasic
 *.sum
 build
 main.mcb
+utils/mcdata

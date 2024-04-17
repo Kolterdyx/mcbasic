@@ -41,9 +41,16 @@ func main() {
 		os.Exit(1)
 	}
 	log.Debug("Program parsed successfully")
+
+	// Remove the contents of the output directory
+	err := os.RemoveAll(config.OutputDir)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	c := compiler.NewCompiler(config)
 	c.Compile(program)
-	log.Debug("Compilation complete")
+	log.Info("Compilation complete")
 }
 
 func loadProject(file string) interfaces.ProjectConfig {
