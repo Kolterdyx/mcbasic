@@ -141,18 +141,17 @@ func (c *Compiler) createBuiltinFunctions() {
 			{Name: "command", Type: expressions.StringType},
 		},
 	)
+	c.createFunction(
+		"internal/init",
+		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
+			c.opHandler.MoveConst("0", ops.CALL)+
+			c.opHandler.MoveScore(ops.CALL, ops.CALL)+
+			c.opHandler.LoadArgConst("print", "text", "MCB pack loaded")+
+			c.opHandler.Call("main", ""),
+		[]statements.FuncArg{},
+	)
 	//c.createFunction(
-	//	"builtin/init",
-	//	fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
-	//		c.opHandler.RegLoad(strconv.Itoa(internal.FixedPointMagnitude), ops.RCF)+
-	//		c.opHandler.RegLoad("0", ops.CALL)+
-	//		c.opHandler.Set("tmp", "MCB pack loaded")+
-	//		c.opHandler.ArgLoad("print", "text", "tmp")+
-	//		c.opHandler.Call("main"),
-	//	[]statements.FuncArg{},
-	//)
-	//c.createFunction(
-	//	"builtin/tick",
+	//	"internal/tick",
 	//		c.opHandler.Call("tick"),
 	//	[]statements.FuncArg{},
 	//)
@@ -196,11 +195,11 @@ func (c *Compiler) createFunctionTags() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	err = os.WriteFile(c.tagsPath+"/functions/load.json", []byte(fmt.Sprintf(loadTag, c.Namespace+":builtin/init")), 0644)
+	err = os.WriteFile(c.tagsPath+"/functions/load.json", []byte(fmt.Sprintf(loadTag, c.Namespace+":internal/init")), 0644)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	err = os.WriteFile(c.tagsPath+"/functions/tick.json", []byte(fmt.Sprintf(tickTag, c.Namespace+":builtin/tick")), 0644)
+	err = os.WriteFile(c.tagsPath+"/functions/tick.json", []byte(fmt.Sprintf(tickTag, c.Namespace+":internal/tick")), 0644)
 	if err != nil {
 		log.Fatalln(err)
 	}

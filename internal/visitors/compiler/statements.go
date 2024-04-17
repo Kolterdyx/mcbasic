@@ -26,7 +26,14 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 		c.scope[stmt.Name.Lexeme] = append(c.scope[stmt.Name.Lexeme], arg.Name)
 	}
 
-	c.createFunction(stmt.Name.Lexeme, c.opHandler.MacroReplace(source), args)
+	// function wrapper that automatically loads the __call__ parameter
+	wrapperSource := ""
+	for _, arg := range stmt.Parameters {
+		wrapperSource += c.opHandler.LoadArgConst("internal/"+stmt.Name.Lexeme+"__wrapped", arg.Name, c.opHandler.Macro(arg.Name))
+	}
+	wrapperSource += c.opHandler.Call("internal/"+stmt.Name.Lexeme+"__wrapped", "")
+	c.createFunction(stmt.Name.Lexeme, c.opHandler.MacroReplace(wrapperSource), args)
+	c.createFunction("internal/"+stmt.Name.Lexeme+"__wrapped", c.opHandler.MacroReplace(source), args)
 	return ""
 }
 
