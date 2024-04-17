@@ -1,7 +1,6 @@
 package compiler
 
 import (
-	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	log "github.com/sirupsen/logrus"
@@ -49,7 +48,6 @@ func (c *Compiler) VisitReturn(stmt statements.ReturnStmt) interface{} {
 		log.Fatalln("Return type does not match function return type")
 	}
 	cmd += stmt.Expression.Accept(c).(string)
-	fmt.Println(cmd)
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.RET)
 	cmd += c.opHandler.Return()
 	return cmd

@@ -1,7 +1,6 @@
 package compiler
 
 import (
-	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
@@ -57,7 +56,6 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 }
 
 func (c *Compiler) VisitVariable(expr expressions.VariableExpr) interface{} {
-	fmt.Printf("Variable %s, in scope %s\n", expr.Name.Lexeme, c.currentScope)
 	return c.opHandler.Move(ops.Cs(expr.Name.Lexeme), ops.Cs(ops.RX))
 }
 
