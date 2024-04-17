@@ -60,3 +60,5 @@ func main() {
 
 Feel free to contribute to this project by opening an issue or a pull request.
 Optimization suggestions are also welcome, as I'm still learning about compilers.
+
+To avoid duplicated work, please submit an issue before starting a contribution, and explain what your contribution will implement.
