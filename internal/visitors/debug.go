@@ -31,10 +31,6 @@ func (d DebugVisitor) VisitExpression(e statements.ExpressionStmt) interface{} {
 	return e.Expression.Accept(d)
 }
 
-func (d DebugVisitor) VisitPrint(p statements.PrintStmt) interface{} {
-	return p.Expression.Accept(d)
-}
-
 func (d DebugVisitor) VisitVariable(v expressions.VariableExpr) interface{} {
 	return v.Name.Lexeme
 }
@@ -54,7 +50,7 @@ func (d DebugVisitor) VisitVariableAssignment(v statements.VariableAssignmentStm
 func (d DebugVisitor) VisitFunctionDeclaration(f statements.FunctionDeclarationStmt) interface{} {
 	res := fmt.Sprintf("def %s(", f.Name.Lexeme)
 	for i, p := range f.Parameters {
-		res += p.Lexeme
+		res += p.Name
 		if i < len(f.Parameters)-1 {
 			res += ", "
 		}

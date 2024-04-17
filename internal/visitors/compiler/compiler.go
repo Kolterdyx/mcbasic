@@ -45,7 +45,7 @@ type Compiler struct {
 }
 
 func NewCompiler(config interfaces.ProjectConfig) *Compiler {
-	c := &Compiler{Config: config, InitFuncName: "mcb/init", TickFuncName: "mcb/tick"}
+	c := &Compiler{Config: config, InitFuncName: config.Project.Namespace + "/init", TickFuncName: config.Project.Namespace + "/tick"}
 	c.Namespace = config.Project.Namespace
 	c.opHandler = ops.Op{Namespace: c.Namespace}
 	c.functions = make(map[string]Func)
