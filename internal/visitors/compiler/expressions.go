@@ -75,6 +75,15 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 		case tokens.Plus:
 			cmd += c.opHandler.FixedAdd(regRa, regRb, ops.RO)
 			cmd += c.opHandler.Move(ops.Cs(ops.RO), ops.Cs(ops.RX))
+		case tokens.Minus:
+			cmd += c.opHandler.FixedSub(regRa, regRb, ops.RO)
+			cmd += c.opHandler.Move(ops.Cs(ops.RO), ops.Cs(ops.RX))
+		case tokens.Star:
+			//cmd += c.opHandler.FixedMul(regRa, regRb, ops.RO)
+			cmd += c.opHandler.Move(ops.Cs(ops.RO), ops.Cs(ops.RX))
+		case tokens.Slash:
+			//cmd += c.opHandler.FixedDiv(regRa, regRb, ops.RO)
+			cmd += c.opHandler.Move(ops.Cs(ops.RO), ops.Cs(ops.RX))
 		}
 
 	case expressions.StringType:

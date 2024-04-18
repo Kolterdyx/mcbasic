@@ -19,7 +19,7 @@ func (o *Op) MoveConst(value string, to string) string {
 
 func (o *Op) MoveFixedConst(value string, to string) string {
 	vw := to + ".whole"
-	vf := to + ".fixed"
+	vf := to + ".fract"
 	values := strings.Split(value, ".")
 	if len(values) != 2 {
 		values = append(values, "0")
