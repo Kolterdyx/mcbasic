@@ -11,11 +11,11 @@ This project is still WIP and is not fit for actual use.
 - [x] **Variables**: Declare and assign variables.
 - [x] **Functions**: Define and call functions.
 - [ ] **Control Flow**:
-  - [ ] **If-else statements**.
+  - [x] **If-else statements**.
   - [ ] **Loops**.
 - [ ] **Operators**:
   - [x] **Arithmetic**.
-  - [ ] **Comparison**.
+  - [x] **Comparison**.
   - [ ] **Logical operators**.
 - [ ] **Data Types**:
   - [x] **Number**.
