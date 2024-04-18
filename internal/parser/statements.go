@@ -40,7 +40,7 @@ func (p *Parser) letDeclaration() statements.Stmt {
 	name := p.consume(tokens.Identifier, "Expected variable name.")
 	var varType expressions.ValueType
 	p.consume(tokens.Colon, "Expected type declaration.")
-	if p.match(tokens.NumberType) {
+	if p.match(tokens.IntType) {
 		varType = expressions.NumberType
 	} else if p.match(tokens.StringType) {
 		varType = expressions.StringType
@@ -78,7 +78,7 @@ func (p *Parser) functionDeclaration() statements.Stmt {
 			}
 			argName := p.consume(tokens.Identifier, "Expected parameter name.")
 			p.consume(tokens.Colon, "Expected type declaration.")
-			if !p.match(tokens.NumberType, tokens.StringType) {
+			if !p.match(tokens.IntType, tokens.StringType) {
 				p.error(p.peek(), "Expected parameter type.")
 			}
 			type_ := p.previous()
@@ -96,7 +96,7 @@ func (p *Parser) functionDeclaration() statements.Stmt {
 	}
 	p.consume(tokens.ParenClose, "Expected ')' after parameters.")
 	returnType := expressions.VoidType
-	if p.match(tokens.NumberType) {
+	if p.match(tokens.IntType) {
 		returnType = expressions.NumberType
 	} else if p.match(tokens.StringType) {
 		returnType = expressions.StringType

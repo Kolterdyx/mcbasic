@@ -53,7 +53,8 @@ const (
 	While
 	Return
 
-	NumberType
+	IntType
+	FixedType
 	StringType
 )
 
@@ -129,8 +130,10 @@ func (t TokenType) String() string {
 		return "True"
 	case False:
 		return "False"
-	case NumberType:
-		return "NumberType"
+	case IntType:
+		return "IntType"
+	case FixedType:
+		return "FixedType"
 	case StringType:
 		return "StringType"
 	default:
@@ -148,7 +151,8 @@ var Keywords = map[string]TokenType{
 	"true":   True,
 	"false":  False,
 	"while":  While,
-	"number": NumberType,
-	"string": StringType,
+	"int":    IntType,
+	"fixed":  FixedType,
+	"str":    StringType,
 	"return": Return,
 }
