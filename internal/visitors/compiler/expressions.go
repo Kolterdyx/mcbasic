@@ -97,3 +97,24 @@ func (c *Compiler) VisitFunctionCall(expr expressions.FunctionCallExpr) interfac
 	}
 	return cmd
 }
+
+func (c *Compiler) VisitUnary(expr expressions.UnaryExpr) interface{} {
+	cmd := ""
+	switch expr.ReturnType() {
+	case expressions.NumberType:
+		switch expr.Operator.Type {
+		case tokens.Minus:
+			cmd += expressions.BinaryExpr{
+				Left: expressions.LiteralExpr{Value: "0", SourceLocation: expr.SourceLocation, ValueType: expressions.NumberType},
+				Operator: tokens.Token{
+					Type: tokens.Minus,
+				},
+				Right: expr.Expression,
+			}.Accept(c).(string)
+		case tokens.Bang:
+			cmd += expr.Expression.Accept(c).(string)
+			cmd += c.opHandler.NegateNumber(ops.Cs(ops.RX))
+		}
+	}
+	return cmd
+}
