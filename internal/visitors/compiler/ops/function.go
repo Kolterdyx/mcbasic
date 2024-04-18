@@ -16,8 +16,8 @@ func (o *Op) CallFunction(funcName string, args map[string]string, res string) s
 func (o *Op) Call(funcName string, res string) string {
 	cmd := ""
 	cmd += o.LoadArg(funcName, "__call__", CALL)
-	cmd += fmt.Sprintf("function %s:%s with storage %s:%s.%s\n", o.Namespace, funcName, o.Namespace, ArgPath, funcName)
 	cmd += o.Inc(CALL)
+	cmd += fmt.Sprintf("function %s:%s with storage %s:%s.%s\n", o.Namespace, funcName, o.Namespace, ArgPath, funcName)
 	if res == "" {
 		return cmd
 	}
