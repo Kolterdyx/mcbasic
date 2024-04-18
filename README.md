@@ -12,6 +12,7 @@ This project is still WIP and is not fit for actual use.
 - [x] **Functions**: Define and call functions.
 - [ ] **Control Flow**:
   - [x] **If-else statements**.
+  - [x] **Recursion**.
   - [ ] **Loops**.
 - [ ] **Operators**:
   - [x] **Arithmetic**.
@@ -47,12 +48,20 @@ func add(a: number, b: number) {
     return a + b;
 }
 
+func fib(n: number) {
+    if (n <= 1) {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+
 func main() {
     let x: number = 5;
     let y: number = 10;
     let z: number = add(x, y);
     print("Hello world!");
     print(z);
+    print(fib(10));
 }
 ```
 
