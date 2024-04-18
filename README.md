@@ -8,8 +8,11 @@ This project is still WIP and is not fit for actual use.
 
 ## Features
 
+This is a list of features that are currently implemented or planned for the future.
+
 - [x] **Variables**: Declare and assign variables.
 - [x] **Functions**: Define and call functions.
+- [ ] **Variadic functions**: Functions that can take a variable number of arguments.
 - [ ] **Control Flow**:
   - [x] **If-else statements**.
   - [x] **Recursion**.
@@ -22,8 +25,8 @@ This project is still WIP and is not fit for actual use.
   - [x] **Number**.
   - [x] **String**.
   - [ ] **Array**.
-  - [ ] **Boolean**.
-  - [ ] **Structs**.
+  - [x] **Boolean**: Booleans are represented as numbers, with 0 being false and 1 being true. There isn't a separate boolean type.
+  - [ ] **Structs**: User-defined data types.
 - [x] **Comments**: Single-line comments with `#`.
 - [ ] **String operations**:
   - [ ] **Concatenation**.
