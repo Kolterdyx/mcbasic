@@ -10,7 +10,7 @@ func (o *Op) Move(from string, to string) string {
 }
 
 func (o *Op) MoveConst(value string, to string) string {
-	if _, err := strconv.Atoi(value); err != nil && value[0] != '$' && value[1] != '(' {
+	if _, err := strconv.Atoi(value); err != nil && !(value[0] == '$' && value[1] == '(' && value[len(value)-1] == ')') && !(value[0] == '"' && value[len(value)-1] == '"') {
 		value = strconv.Quote(value)
 	}
 	return fmt.Sprintf("data modify storage %s:%s %s set value %s\n", o.Namespace, VarPath, to, value)

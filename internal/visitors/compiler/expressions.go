@@ -5,10 +5,18 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	log "github.com/sirupsen/logrus"
+	"strconv"
 )
 
 func (c *Compiler) VisitLiteral(expr expressions.LiteralExpr) interface{} {
-	return c.opHandler.MoveConst(expr.Value.(string), ops.Cs(ops.RX))
+	if expr.ReturnType() == expressions.NumberType {
+		return c.opHandler.MoveConst(expr.Value.(string), ops.Cs(ops.RX))
+	} else if expr.ReturnType() == expressions.StringType {
+		return c.opHandler.MoveConst(strconv.Quote(expr.Value.(string)), ops.Cs(ops.RX))
+	} else {
+		log.Fatalln("Invalid type in literal expression")
+		return ""
+	}
 }
 
 func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
