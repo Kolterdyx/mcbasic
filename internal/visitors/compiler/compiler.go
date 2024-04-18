@@ -276,26 +276,26 @@ func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx
 			}
 
 		}
-	//case tokens.Greater:
-	//	if expr.Left.ReturnType() != expressions.NumberType {
-	//		log.Fatalln("Invalid type in binary operation")
-	//	}
-	//	cmd += c.opHandler.GtNumbers(expr, ra, rb, rx)
-	//case tokens.GreaterEqual:
-	//	if expr.Left.ReturnType() != expressions.NumberType {
-	//		log.Fatalln("Invalid type in binary operation")
-	//	}
-	//	cmd += c.opHandler.GteNumbers(expr, ra, rb, rx)
-	//case tokens.Less:
-	//	if expr.Left.ReturnType() != expressions.NumberType {
-	//		log.Fatalln("Invalid type in binary operation")
-	//	}
-	//	cmd += c.opHandler.LtNumbers(expr, ra, rb, rx)
-	//case tokens.LessEqual:
-	//	if expr.Left.ReturnType() != expressions.NumberType {
-	//		log.Fatalln("Invalid type in binary operation")
-	//	}
-	//	cmd += c.opHandler.LteNumbers(expr, ra, rb, rx)
+	case tokens.Greater:
+		if expr.Left.ReturnType() != expressions.NumberType {
+			log.Fatalln("Invalid type in binary operation")
+		}
+		cmd += c.opHandler.GtNumbers(ra, rb, rx)
+	case tokens.GreaterEqual:
+		if expr.Left.ReturnType() != expressions.NumberType {
+			log.Fatalln("Invalid type in binary operation")
+		}
+		cmd += c.opHandler.GteNumbers(ra, rb, rx)
+	case tokens.Less:
+		if expr.Left.ReturnType() != expressions.NumberType {
+			log.Fatalln("Invalid type in binary operation")
+		}
+		cmd += c.opHandler.LtNumbers(ra, rb, rx)
+	case tokens.LessEqual:
+		if expr.Left.ReturnType() != expressions.NumberType {
+			log.Fatalln("Invalid type in binary operation")
+		}
+		cmd += c.opHandler.LteNumbers(ra, rb, rx)
 	default:
 		log.Fatalln("Unknown comparison operator")
 	}
