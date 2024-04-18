@@ -3,6 +3,7 @@ package ops
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 func (o *Op) Move(from string, to string) string {
@@ -14,6 +15,20 @@ func (o *Op) MoveConst(value string, to string) string {
 		value = strconv.Quote(value)
 	}
 	return fmt.Sprintf("data modify storage %s:%s %s set value %s\n", o.Namespace, VarPath, to, value)
+}
+
+func (o *Op) MoveFixedConst(value string, to string) string {
+	vw := to + ".whole"
+	vf := to + ".fixed"
+	values := strings.Split(value, ".")
+	if len(values) != 2 {
+		values = append(values, "0")
+	}
+	fmt.Printf("values: %v\n", values)
+	cmd := ""
+	cmd += o.MoveConst(values[0], vw)
+	cmd += o.MoveConst(values[1], vf)
+	return cmd
 }
 
 func (o *Op) MoveScore(from string, to string) string {

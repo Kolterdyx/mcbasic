@@ -15,6 +15,7 @@ const (
 	RB = "RB"
 
 	RX  = "RX"
+	RO  = "RO"
 	RET = "RET"
 
 	RCF  = "RCF"

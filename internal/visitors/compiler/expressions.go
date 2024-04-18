@@ -9,14 +9,17 @@ import (
 )
 
 func (c *Compiler) VisitLiteral(expr expressions.LiteralExpr) interface{} {
-	if expr.ReturnType() == expressions.NumberType {
+	switch expr.ReturnType() {
+	case expressions.IntType:
 		return c.opHandler.MoveConst(expr.Value.(string), ops.Cs(ops.RX))
-	} else if expr.ReturnType() == expressions.StringType {
+	case expressions.StringType:
 		return c.opHandler.MoveConst(strconv.Quote(expr.Value.(string)), ops.Cs(ops.RX))
-	} else {
+	case expressions.FixedType:
+		return c.opHandler.MoveFixedConst(expr.Value.(string), ops.Cs(ops.RX))
+	default:
 		log.Fatalln("Invalid type in literal expression")
-		return ""
 	}
+	return ""
 }
 
 func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
@@ -53,7 +56,8 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 		return cmd
 	}
 
-	if expr.ReturnType() == expressions.NumberType {
+	switch expr.ReturnType() {
+	case expressions.IntType:
 		switch expr.Operator.Type {
 		case tokens.Plus:
 			cmd += c.opHandler.Add(regRa, regRb, ops.RX)
@@ -66,14 +70,21 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 		case tokens.Percent:
 			cmd += c.opHandler.Mod(regRa, regRb, ops.RX)
 		}
-	} else if expr.ReturnType() == expressions.StringType {
+	case expressions.FixedType:
+		switch expr.Operator.Type {
+		case tokens.Plus:
+			cmd += c.opHandler.FixedAdd(regRa, regRb, ops.RO)
+			cmd += c.opHandler.Move(ops.Cs(ops.RO), ops.Cs(ops.RX))
+		}
+
+	case expressions.StringType:
 		log.Fatalln("String operations are not supported yet")
 		//if expr.Operator.Type == tokens.Plus {
 		//	return c.opHandler.Concat(ops.RA, ops.RB, ops.RX)
 		//} else {
 		//	panic("Unknown operator")
 		//}
-	} else {
+	default:
 		log.Fatalln("Invalid type in binary operation")
 	}
 	return cmd
@@ -101,11 +112,11 @@ func (c *Compiler) VisitFunctionCall(expr expressions.FunctionCallExpr) interfac
 func (c *Compiler) VisitUnary(expr expressions.UnaryExpr) interface{} {
 	cmd := ""
 	switch expr.ReturnType() {
-	case expressions.NumberType:
+	case expressions.IntType:
 		switch expr.Operator.Type {
 		case tokens.Minus:
 			cmd += expressions.BinaryExpr{
-				Left: expressions.LiteralExpr{Value: "0", SourceLocation: expr.SourceLocation, ValueType: expressions.NumberType},
+				Left: expressions.LiteralExpr{Value: "0", SourceLocation: expr.SourceLocation, ValueType: expressions.IntType},
 				Operator: tokens.Token{
 					Type: tokens.Minus,
 				},

@@ -81,7 +81,7 @@ func (c *Compiler) Compile(program parser.Program) {
 		}
 		f.Args = append(f.Args, statements.FuncArg{
 			Name: "__call__",
-			Type: expressions.NumberType,
+			Type: expressions.IntType,
 		})
 		c.functions[function.Name.Lexeme] = f
 	}
@@ -183,7 +183,7 @@ func (c *Compiler) createFunction(name string, source string, args []statements.
 	for _, parameter := range args {
 		f.Args = append(f.Args, statements.FuncArg{Name: parameter.Name, Type: parameter.Type})
 	}
-	f.Args = append(f.Args, statements.FuncArg{Name: "__call__", Type: expressions.NumberType})
+	f.Args = append(f.Args, statements.FuncArg{Name: "__call__", Type: expressions.IntType})
 	c.functions[name] = f
 
 	err := os.WriteFile(c.functionsPath+"/"+filename, []byte(source), 0644)
@@ -258,7 +258,7 @@ func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx
 			// Return false
 			cmd += c.opHandler.MoveConst("0", rx)
 		} else {
-			if expr.Left.ReturnType() == expressions.NumberType {
+			if expr.Left.ReturnType() == expressions.IntType {
 				cmd += c.opHandler.EqNumbers(ra, rb, rx)
 			} else if expr.Left.ReturnType() == expressions.StringType {
 				cmd += c.opHandler.EqStrings(ra, rb, rx)
@@ -269,7 +269,7 @@ func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx
 			// Return true
 			cmd += c.opHandler.MoveConst("1", rx)
 		} else {
-			if expr.Left.ReturnType() == expressions.NumberType {
+			if expr.Left.ReturnType() == expressions.IntType {
 				cmd += c.opHandler.NeqNumbers(ra, rb, rx)
 			} else if expr.Left.ReturnType() == expressions.StringType {
 				cmd += c.opHandler.NeqStrings(ra, rb, rx)
@@ -277,22 +277,22 @@ func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx
 
 		}
 	case tokens.Greater:
-		if expr.Left.ReturnType() != expressions.NumberType {
+		if expr.Left.ReturnType() != expressions.IntType {
 			log.Fatalln("Invalid type in binary operation")
 		}
 		cmd += c.opHandler.GtNumbers(ra, rb, rx)
 	case tokens.GreaterEqual:
-		if expr.Left.ReturnType() != expressions.NumberType {
+		if expr.Left.ReturnType() != expressions.IntType {
 			log.Fatalln("Invalid type in binary operation")
 		}
 		cmd += c.opHandler.GteNumbers(ra, rb, rx)
 	case tokens.Less:
-		if expr.Left.ReturnType() != expressions.NumberType {
+		if expr.Left.ReturnType() != expressions.IntType {
 			log.Fatalln("Invalid type in binary operation")
 		}
 		cmd += c.opHandler.LtNumbers(ra, rb, rx)
 	case tokens.LessEqual:
-		if expr.Left.ReturnType() != expressions.NumberType {
+		if expr.Left.ReturnType() != expressions.IntType {
 			log.Fatalln("Invalid type in binary operation")
 		}
 		cmd += c.opHandler.LteNumbers(ra, rb, rx)

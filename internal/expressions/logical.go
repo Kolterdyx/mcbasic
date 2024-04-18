@@ -23,5 +23,5 @@ func (l LogicalExpr) TType() ExprType {
 }
 
 func (l LogicalExpr) ReturnType() ValueType {
-	return NumberType
+	return IntType
 }

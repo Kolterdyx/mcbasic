@@ -41,9 +41,11 @@ func (p *Parser) letDeclaration() statements.Stmt {
 	var varType expressions.ValueType
 	p.consume(tokens.Colon, "Expected type declaration.")
 	if p.match(tokens.IntType) {
-		varType = expressions.NumberType
+		varType = expressions.IntType
 	} else if p.match(tokens.StringType) {
 		varType = expressions.StringType
+	} else if p.match(tokens.FixedType) {
+		varType = expressions.FixedType
 	} else {
 		p.error(p.peek(), "Expected variable type.")
 	}
@@ -86,7 +88,7 @@ func (p *Parser) functionDeclaration() statements.Stmt {
 			if type_.Type == tokens.StringType {
 				valueType = expressions.StringType
 			} else {
-				valueType = expressions.NumberType
+				valueType = expressions.IntType
 			}
 			parameters = append(parameters, statements.FuncArg{Name: argName.Lexeme, Type: valueType})
 			if !p.match(tokens.Comma) {
@@ -97,7 +99,7 @@ func (p *Parser) functionDeclaration() statements.Stmt {
 	p.consume(tokens.ParenClose, "Expected ')' after parameters.")
 	returnType := expressions.VoidType
 	if p.match(tokens.IntType) {
-		returnType = expressions.NumberType
+		returnType = expressions.IntType
 	} else if p.match(tokens.StringType) {
 		returnType = expressions.StringType
 	}

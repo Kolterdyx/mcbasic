@@ -30,3 +30,26 @@ func (o *Op) Div(a string, b string, to string) string {
 func (o *Op) Mod(a string, b string, to string) string {
 	return o.arithmeticOperation(a, b, to, "%=")
 }
+
+func (o *Op) FixedAdd(a string, b string, to string) string {
+	cmd := ""
+	aw := Cs(a) + ".whole"
+	af := Cs(a) + ".fixed"
+	bw := Cs(b) + ".whole"
+	bf := Cs(b) + ".fixed"
+	tw := Cs(to) + ".whole"
+	tf := Cs(to) + ".fixed"
+	cmd += o.Move(aw, Cs(RX))
+	cmd += o.Move(bw, Cs(RB))
+	cmd += o.Add(RX, RB, tw)
+	cmd += o.Move(af, Cs(RX))
+	cmd += o.Move(bf, Cs(RB))
+	cmd += o.Add(RX, RB, tf)
+	// Carry
+	//cmd += o.MoveScore(Cs(tf), Cs(RB))
+	//carry := ""
+	//carry += o.MoveConst("1", Cs(RX))
+	//carry += o.Add(RX, RB, to)
+	//cmd += o.ExecCond(fmt.Sprintf("score %s %s matches 10..", Cs(RB), o.Namespace), true, carry)
+	return cmd
+}

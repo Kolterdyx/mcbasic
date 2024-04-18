@@ -22,5 +22,5 @@ func (u UnaryExpr) TType() ExprType {
 }
 
 func (u UnaryExpr) ReturnType() ValueType {
-	return NumberType
+	return IntType
 }

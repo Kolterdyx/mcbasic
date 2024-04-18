@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	FixedPointMagnitude = 1
+	FixedPointMagnitude = 8
 )
 
 type Scanner struct {
@@ -199,12 +199,12 @@ func (s *Scanner) scanNumber() {
 			s.advance()
 		}
 		num, _ := strconv.ParseFloat(s.source[s.start:s.current], 64)
-		s.addTokenWithLiteral(tokens.Number, strconv.Itoa(int(num*FixedPointMagnitude)))
+		s.addTokenWithLiteral(tokens.Fixed, strconv.FormatFloat(num, 'f', FixedPointMagnitude, 64))
 	} else if unicode.IsLetter(rune(s.peek())) {
 		s.error(s.line, "Unexpected character: "+string(s.peek()))
 	} else {
 		num, _ := strconv.Atoi(s.source[s.start:s.current])
-		s.addTokenWithLiteral(tokens.Number, strconv.Itoa(num*FixedPointMagnitude))
+		s.addTokenWithLiteral(tokens.Int, strconv.Itoa(num))
 	}
 
 }
