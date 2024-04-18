@@ -28,6 +28,23 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 		log.Fatalln("Different types in binary operation")
 	}
 	cmd += "### Binary operation ###\n"
+
+	switch expr.Operator.Type {
+	case tokens.EqualEqual:
+		fallthrough
+	case tokens.BangEqual:
+		fallthrough
+	case tokens.Greater:
+		fallthrough
+	case tokens.GreaterEqual:
+		fallthrough
+	case tokens.Less:
+		fallthrough
+	case tokens.LessEqual:
+		cmd += c.Compare(expr, ops.Cs(regRa), ops.Cs(regRb), ops.Cs(ops.RX))
+		return cmd
+	}
+
 	if expr.ReturnType() == expressions.NumberType {
 		switch expr.Operator.Type {
 		case tokens.Plus:
@@ -40,15 +57,14 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 			cmd += c.opHandler.Div(regRa, regRb, ops.RX)
 		case tokens.Percent:
 			cmd += c.opHandler.Mod(regRa, regRb, ops.RX)
-		default:
-			panic("Unknown binary operator")
 		}
-		//} else if expr.ReturnType() == expressions.StringType {
-		//	if expr.Operator.Type == tokens.Plus {
-		//		return c.opHandler.Concat(ops.RA, ops.RB, ops.RX)
-		//	} else {
-		//		panic("Unknown operator")
-		//	}
+	} else if expr.ReturnType() == expressions.StringType {
+		log.Fatalln("String operations are not supported yet")
+		//if expr.Operator.Type == tokens.Plus {
+		//	return c.opHandler.Concat(ops.RA, ops.RB, ops.RX)
+		//} else {
+		//	panic("Unknown operator")
+		//}
 	} else {
 		log.Fatalln("Invalid type in binary operation")
 	}

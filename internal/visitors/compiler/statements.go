@@ -5,6 +5,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	log "github.com/sirupsen/logrus"
+	"reflect"
 )
 
 func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationStmt) interface{} {
@@ -96,5 +97,21 @@ func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStm
 	}
 	cmd += stmt.Value.Accept(c).(string)
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(stmt.Name.Lexeme))
+	return cmd
+}
+
+func (c *Compiler) VisitIf(stmt statements.IfStmt) interface{} {
+	cmd := ""
+	cmd += stmt.Condition.Accept(c).(string)
+	thenSource := stmt.ThenBranch.Accept(c).(string)
+	elseSource := ""
+	if reflect.ValueOf(stmt.ElseBranch) != reflect.ValueOf(statements.BlockStmt{}) {
+		elseSource = stmt.ElseBranch.Accept(c).(string)
+	}
+	condVar := c.newRegister(ops.RX)
+	cmd += c.opHandler.MoveScore(ops.Cs(ops.RX), ops.Cs(condVar))
+	cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 1", ops.Cs(condVar), c.Namespace), true, thenSource)
+	cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 1", ops.Cs(condVar), c.Namespace), false, elseSource)
+
 	return cmd
 }

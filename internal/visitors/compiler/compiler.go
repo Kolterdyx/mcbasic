@@ -6,6 +6,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
+	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	cp "github.com/otiai10/copy"
 	log "github.com/sirupsen/logrus"
@@ -223,7 +224,7 @@ func (c *Compiler) error(location interfaces.SourceLocation, message string) {
 
 func (c *Compiler) newRegister(regName string) string {
 	c.regCounter++
-	return regName + fmt.Sprintf("%d_", c.regCounter)
+	return regName + fmt.Sprintf("_%d", c.regCounter)
 }
 
 func (c *Compiler) addBuiltInFunctionsToScope() {
@@ -242,9 +243,61 @@ func (c *Compiler) addBuiltInFunctionsToScope() {
 func (c *Compiler) getReturnType(name string) expressions.ValueType {
 	for _, identifier := range c.scope[c.currentScope] {
 		if identifier.Name == name {
-			fmt.Printf("Found identifier %s\n", name)
 			return identifier.Type
 		}
 	}
 	return expressions.VoidType
+}
+
+func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx string) string {
+	cmd := ""
+	cmd += "### Comparison operation ###\n"
+	switch expr.Operator.Type {
+	case tokens.EqualEqual:
+		if expr.Left.ReturnType() != expr.Right.ReturnType() {
+			// Return false
+			cmd += c.opHandler.MoveConst("0", rx)
+		} else {
+			if expr.Left.ReturnType() == expressions.NumberType {
+				cmd += c.opHandler.EqNumbers(ra, rb, rx)
+			} else if expr.Left.ReturnType() == expressions.StringType {
+				cmd += c.opHandler.EqStrings(ra, rb, rx)
+			}
+		}
+	case tokens.BangEqual:
+		if expr.Left.ReturnType() != expr.Right.ReturnType() {
+			// Return true
+			cmd += c.opHandler.MoveConst("1", rx)
+		} else {
+			if expr.Left.ReturnType() == expressions.NumberType {
+				cmd += c.opHandler.NeqNumbers(ra, rb, rx)
+			} else if expr.Left.ReturnType() == expressions.StringType {
+				cmd += c.opHandler.NeqStrings(ra, rb, rx)
+			}
+
+		}
+	//case tokens.Greater:
+	//	if expr.Left.ReturnType() != expressions.NumberType {
+	//		log.Fatalln("Invalid type in binary operation")
+	//	}
+	//	cmd += c.opHandler.GtNumbers(expr, ra, rb, rx)
+	//case tokens.GreaterEqual:
+	//	if expr.Left.ReturnType() != expressions.NumberType {
+	//		log.Fatalln("Invalid type in binary operation")
+	//	}
+	//	cmd += c.opHandler.GteNumbers(expr, ra, rb, rx)
+	//case tokens.Less:
+	//	if expr.Left.ReturnType() != expressions.NumberType {
+	//		log.Fatalln("Invalid type in binary operation")
+	//	}
+	//	cmd += c.opHandler.LtNumbers(expr, ra, rb, rx)
+	//case tokens.LessEqual:
+	//	if expr.Left.ReturnType() != expressions.NumberType {
+	//		log.Fatalln("Invalid type in binary operation")
+	//	}
+	//	cmd += c.opHandler.LteNumbers(expr, ra, rb, rx)
+	default:
+		log.Fatalln("Unknown comparison operator")
+	}
+	return cmd
 }
