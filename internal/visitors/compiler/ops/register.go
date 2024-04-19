@@ -26,8 +26,10 @@ func (o *Op) MoveFixedConst(value string, to string) string {
 	}
 	fmt.Printf("values: %v\n", values)
 	cmd := ""
-	cmd += o.MoveConst(values[0], vw)
-	cmd += o.MoveConst(values[1], vf)
+	w, _ := strconv.ParseInt(values[0], 10, 64)
+	f, _ := strconv.ParseInt(values[1], 10, 64)
+	cmd += o.MoveConst(strconv.FormatInt(w, 10), vw)
+	cmd += o.MoveConst(strconv.FormatInt(f, 10), vf)
 	return cmd
 }
 

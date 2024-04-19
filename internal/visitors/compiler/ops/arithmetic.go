@@ -56,7 +56,7 @@ func (o *Op) FixedAdd(a string, b string, to string) string {
 	cmd += o.MoveScore(tf, tmpReg)
 	carry := ""
 	carry += o.MoveConst("1", Cs(RX))
-	carry += o.Add(Cs(RX), tw, tw)
+	carry += o.Add(tw, Cs(RX), tw)
 	carry += o.MoveConst(strconv.Itoa(precisionMagnitude), Cs(RX))
 	carry += o.Sub(tf, Cs(RX), tf)
 	cmd += o.ExecCond(fmt.Sprintf("score %s %s matches %d..", tmpReg, o.Namespace, precisionMagnitude), true, carry)
@@ -79,14 +79,14 @@ func (o *Op) FixedSub(a string, b string, to string) string {
 	cmd += o.Move(bf, Cs(RB))
 	cmd += o.Sub(RX, RB, tf)
 	// Borrow
-	//precisionMagnitude := int(math.Pow(10, internal.FixedPointMagnitude))
-	//tmpReg := Cs(RX) + "tmp"
-	//cmd += o.MoveScore(tf, tmpReg)
-	//borrow := ""
-	//borrow += o.MoveConst("1", Cs(RX))
-	//borrow += o.Sub(tw, Cs(RX), tw)
-	//borrow += o.MoveConst(strconv.Itoa(precisionMagnitude), Cs(RX))
-	//borrow += o.Add(tf, Cs(RX), tf)
-	//cmd += o.ExecCond(fmt.Sprintf("score %s %s matches ..-1", tmpReg, o.Namespace), true, borrow)
+	precisionMagnitude := int(math.Pow(10, internal.FixedPointMagnitude))
+	tmpReg := Cs(RX) + "tmp"
+	cmd += o.MoveScore(tf, tmpReg)
+	borrow := ""
+	borrow += o.MoveConst("1", Cs(RX))
+	borrow += o.Sub(tw, Cs(RX), tw)
+	borrow += o.MoveConst(strconv.Itoa(precisionMagnitude), Cs(RX))
+	borrow += o.Add(tf, Cs(RX), tf)
+	cmd += o.ExecCond(fmt.Sprintf("score %s %s matches ..-1", tmpReg, o.Namespace), true, borrow)
 	return cmd
 }
