@@ -28,6 +28,7 @@ func (o *Op) MoveFixedConst(value string, to string) string {
 	cmd := ""
 	w, _ := strconv.ParseInt(values[0], 10, 64)
 	f, _ := strconv.ParseInt(values[1], 10, 64)
+	cmd += fmt.Sprintf("data modify storage %s:%s %s set value {}\n", o.Namespace, VarPath, to)
 	cmd += o.MoveConst(strconv.FormatInt(w, 10), vw)
 	cmd += o.MoveConst(strconv.FormatInt(f, 10), vf)
 	return cmd
