@@ -78,7 +78,7 @@ To avoid duplicated work, please submit an issue before starting a contribution,
 
 ## Development documentation
 
-- [Implementation details](implementation_details.md)
+- [Implementation details](docs/implementation_details.md)
 
 ## License
 
