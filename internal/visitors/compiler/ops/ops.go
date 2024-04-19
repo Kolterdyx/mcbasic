@@ -11,15 +11,15 @@ const (
 )
 
 const (
-	RA = "RA"
-	RB = "RB"
+	RA = "$RA"
+	RB = "$RB"
 
-	RX  = "RX"
-	RO  = "RO"
-	RET = "RET"
+	RX  = "$RX"
+	RO  = "$RO"
+	RET = "$RET"
 
-	RCF  = "RCF"
-	CALL = "CALL"
+	RCF  = "$RCF"
+	CALL = "$CALL"
 )
 
 type Op struct {
