@@ -33,7 +33,7 @@ var (
 	Obfuscated    = TextFormat{Id: "obfuscated", Format: "§k"}
 )
 
-func (o *Op) Trace(desc string, content string) string {
+func (o *Op) Trace(desc string, content string, extra string) string {
 	cmd := ""
 
 	if o.EnableTraces {
@@ -41,20 +41,24 @@ func (o *Op) Trace(desc string, content string) string {
 		// All but the last character
 		content = fmt.Sprintf("%s, \"color\": \"%s\"}", content[:len(content)-1], Green.Id)
 		cmd += "#@ BEGIN TRACE\n"
-		cmd += fmt.Sprintf("tellraw @a [{\"text\": \"%sTrace %s: \"},%s]\n", Red.Format, desc, content)
+		if extra == "" {
+			cmd += fmt.Sprintf("tellraw @a [{\"text\": \"%sTrace %s: \"},%s]\n", Red.Format, desc, content)
+		} else {
+			cmd += fmt.Sprintf("tellraw @a [{\"text\": \"%sTrace %s: \"},{\"text\":\"%s \"},%s]\n", Red.Format, desc, extra, content)
+		}
 		cmd += "#@ END TRACE\n"
 	}
 	return cmd
 }
 
-func (o *Op) TraceStorage(storage string, path string) string {
+func (o *Op) TraceStorage(storage string, path string, extra string) string {
 	if path == "" {
-		return o.Trace(fmt.Sprintf("(%s)", storage), fmt.Sprintf("{\"storage\":\"%s\"}", storage))
+		return o.Trace(fmt.Sprintf("(%s)", storage), fmt.Sprintf("{\"storage\":\"%s\"}", storage), extra)
 	} else {
-		return o.Trace(fmt.Sprintf("(%s: %s)", storage, path), fmt.Sprintf("{\"storage\":\"%s\",\"nbt\":\"%s\"}", storage, path))
+		return o.Trace(fmt.Sprintf("(%s: %s)", storage, path), fmt.Sprintf("{\"storage\":\"%s\",\"nbt\":\"%s\"}", storage, path), extra)
 	}
 }
 
-func (o *Op) TraceScore(varName string, ns string) string {
-	return o.Trace(fmt.Sprintf("(%s:%s)", ns, varName), fmt.Sprintf("{\"score\":{\"name\":\"%s\",\"objective\":\"%s\"}}]", varName, ns))
+func (o *Op) TraceScore(varName string, ns string, extra string) string {
+	return o.Trace(fmt.Sprintf("(%s:%s)", ns, varName), fmt.Sprintf("{\"score\":{\"name\":\"%s\",\"objective\":\"%s\"}}]", varName, ns), extra)
 }
