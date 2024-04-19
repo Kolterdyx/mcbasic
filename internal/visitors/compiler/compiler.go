@@ -45,7 +45,7 @@ type Compiler struct {
 	expressions.ExprVisitor
 	statements.StmtVisitor
 
-	regCounter int
+	regCounters map[string]int
 
 	InitFuncName string
 	TickFuncName string
@@ -57,6 +57,7 @@ func NewCompiler(config interfaces.ProjectConfig) *Compiler {
 	c.opHandler = ops.Op{Namespace: c.Namespace}
 	c.functions = make(map[string]Func)
 	c.scope = make(map[string][]TypedIdentifier)
+	c.regCounters = make(map[string]int)
 
 	return c
 }
@@ -223,8 +224,8 @@ func (c *Compiler) error(location interfaces.SourceLocation, message string) {
 }
 
 func (c *Compiler) newRegister(regName string) string {
-	c.regCounter++
-	return regName + fmt.Sprintf("_%d", c.regCounter)
+	c.regCounters[regName]++
+	return regName + fmt.Sprintf("_%d", c.regCounters[regName])
 }
 
 func (c *Compiler) addBuiltInFunctionsToScope() {
@@ -278,26 +279,26 @@ func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx
 		}
 	case tokens.Greater:
 		if expr.Left.ReturnType() != expressions.IntType {
-			log.Fatalln("Invalid type in binary operation")
+			c.error(expr.SourceLocation, "Invalid type in binary operation")
 		}
 		cmd += c.opHandler.GtNumbers(ra, rb, rx)
 	case tokens.GreaterEqual:
 		if expr.Left.ReturnType() != expressions.IntType {
-			log.Fatalln("Invalid type in binary operation")
+			c.error(expr.SourceLocation, "Invalid type in binary operation")
 		}
 		cmd += c.opHandler.GteNumbers(ra, rb, rx)
 	case tokens.Less:
 		if expr.Left.ReturnType() != expressions.IntType {
-			log.Fatalln("Invalid type in binary operation")
+			c.error(expr.SourceLocation, "Invalid type in binary operation")
 		}
 		cmd += c.opHandler.LtNumbers(ra, rb, rx)
 	case tokens.LessEqual:
 		if expr.Left.ReturnType() != expressions.IntType {
-			log.Fatalln("Invalid type in binary operation")
+			c.error(expr.SourceLocation, "Invalid type in binary operation")
 		}
 		cmd += c.opHandler.LteNumbers(ra, rb, rx)
 	default:
-		log.Fatalln("Unknown comparison operator")
+		c.error(expr.SourceLocation, "Unknown comparison operator")
 	}
 	return cmd
 }

@@ -4,7 +4,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
-	log "github.com/sirupsen/logrus"
 	"strconv"
 )
 
@@ -17,7 +16,7 @@ func (c *Compiler) VisitLiteral(expr expressions.LiteralExpr) interface{} {
 	case expressions.FixedType:
 		return c.opHandler.MoveFixedConst(expr.Value.(string), ops.Cs(ops.RX))
 	default:
-		log.Fatalln("Invalid type in literal expression")
+		c.error(expr.SourceLocation, "Invalid type in literal expression")
 	}
 	return ""
 }
@@ -36,7 +35,7 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regRb))
 
 	if expr.Left.ReturnType() != expr.Right.ReturnType() {
-		log.Fatalln("Different types in binary operation")
+		c.error(expr.SourceLocation, "Different types in binary operation")
 	}
 	cmd += "### Binary operation ###\n"
 
@@ -79,7 +78,7 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 			cmd += c.opHandler.FixedSub(regRa, regRb, ops.RO)
 			cmd += c.opHandler.Move(ops.Cs(ops.RO), ops.Cs(ops.RX))
 		case tokens.Star:
-			//cmd += c.opHandler.FixedMul(regRa, regRb, ops.RO)
+			cmd += c.opHandler.FixedMul(regRa, regRb, ops.RO)
 			cmd += c.opHandler.Move(ops.Cs(ops.RO), ops.Cs(ops.RX))
 		case tokens.Slash:
 			//cmd += c.opHandler.FixedDiv(regRa, regRb, ops.RO)
@@ -87,14 +86,14 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 		}
 
 	case expressions.StringType:
-		log.Fatalln("String operations are not supported yet")
+		c.error(expr.SourceLocation, "String operations are not supported yet")
 		//if expr.Operator.Type == tokens.Plus {
 		//	return c.opHandler.Concat(ops.RA, ops.RB, ops.RX)
 		//} else {
 		//	panic("Unknown operator")
 		//}
 	default:
-		log.Fatalln("Invalid type in binary operation")
+		c.error(expr.SourceLocation, "Invalid type in binary operation")
 	}
 	return cmd
 }
