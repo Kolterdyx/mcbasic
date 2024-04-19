@@ -4,7 +4,6 @@
 *.txt
 mcbasic
 .idea
-*.sum
 build
 main.mcb
 utils/mcdata
