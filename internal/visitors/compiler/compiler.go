@@ -54,7 +54,10 @@ type Compiler struct {
 func NewCompiler(config interfaces.ProjectConfig) *Compiler {
 	c := &Compiler{Config: config, InitFuncName: config.Project.Namespace + "/init", TickFuncName: config.Project.Namespace + "/tick"}
 	c.Namespace = config.Project.Namespace
-	c.opHandler = ops.Op{Namespace: c.Namespace}
+	c.opHandler = ops.Op{
+		Namespace:    c.Namespace,
+		EnableTraces: config.EnableTraces,
+	}
 	c.functions = make(map[string]Func)
 	c.scope = make(map[string][]TypedIdentifier)
 	c.regCounters = make(map[string]int)

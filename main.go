@@ -69,12 +69,14 @@ func parseArgs() interfaces.ProjectConfig {
 	// Parse command line arguments
 	projectFilePtr := flag.String("config", "project.toml", "Path to the project config file")
 	outputDirPtr := flag.String("output", "build", "Output directory")
+	enableTracesPtr := flag.Bool("traces", false, "Enable traces")
 	flag.Parse()
 
 	// Load config toml file
 	config := loadProject(*projectFilePtr)
 	validateProjectConfig(config)
 	config.OutputDir = *outputDirPtr
+	config.EnableTraces = *enableTracesPtr
 
 	return config
 }
