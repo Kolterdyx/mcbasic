@@ -37,6 +37,13 @@ func (o *Op) Mod(a string, b string, to string) string {
 }
 
 func (o *Op) FixedAdd(a string, b string, to string) string {
+	/*
+	 * a.whole + b.whole = to.whole
+	 * a.fract + b.fract = to.fract
+	 * if to.fract > 10 ^ FixedPointMagnitude then
+	 *     to.whole += 1
+	 *     to.fract -= 10 ^ FixedPointMagnitude
+	 */
 	cmd := ""
 	aw := Cs(a) + ".whole"
 	af := Cs(a) + ".fract"
@@ -64,6 +71,13 @@ func (o *Op) FixedAdd(a string, b string, to string) string {
 }
 
 func (o *Op) FixedSub(a string, b string, to string) string {
+	/*
+	 * a.whole - b.whole = to.whole
+	 * a.fract - b.fract = to.fract
+	 * if to.fract < 0 then
+	 *     to.whole -= 1
+	 *     to.fract += 10 ^ FixedPointMagnitude
+	 */
 	cmd := ""
 	aw := Cs(a) + ".whole"
 	af := Cs(a) + ".fract"
