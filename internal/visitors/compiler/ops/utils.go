@@ -60,5 +60,5 @@ func (o *Op) TraceStorage(storage string, path string, extra string) string {
 }
 
 func (o *Op) TraceScore(varName string, ns string, extra string) string {
-	return o.Trace(fmt.Sprintf("(%s:%s)", ns, varName), fmt.Sprintf("{\"score\":{\"name\":\"%s\",\"objective\":\"%s\"}}]", varName, ns), extra)
+	return o.Trace(fmt.Sprintf("(%s:%s)", ns, varName), fmt.Sprintf("{\"score\":{\"name\":\"%s\",\"objective\":\"%s\"}}", varName, ns), extra)
 }

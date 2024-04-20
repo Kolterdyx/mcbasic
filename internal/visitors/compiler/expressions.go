@@ -180,19 +180,68 @@ func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) interface{} {
 }
 
 func (c *Compiler) VisitSlice(expr expressions.SliceExpr) interface{} {
+	regIndexStart := c.newRegister(ops.RA)
+	regIndexEnd := c.newRegister(ops.RB)
+
 	cmd := ""
 	cmd += "### Slice operation ###\n"
 	cmd += expr.StartIndex.Accept(c).(string)
-	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(ops.RA))
+	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regIndexStart))
+
 	if expr.EndIndex == nil {
-		cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(ops.RB))
-		cmd += c.opHandler.Inc(ops.Cs(ops.RB))
+		cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regIndexEnd))
+		cmd += c.opHandler.Inc(ops.Cs(regIndexEnd))
 	} else {
 		cmd += expr.EndIndex.Accept(c).(string)
-		cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(ops.RB))
+		cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regIndexEnd))
 	}
 	cmd += expr.TargetExpr.Accept(c).(string)
-	cmd += c.opHandler.TraceStorage("mcb:vars", ops.Cs(ops.RX), "RX")
-	cmd += c.opHandler.Slice(ops.Cs(ops.RX), ops.Cs(ops.RA), ops.Cs(ops.RB), ops.Cs(ops.RX))
+
+	// Check index bounds
+	lenReg := c.newRegister(ops.RX)
+
+	errorMsgCmd := ""
+	errorMsgCmd += c.opHandler.Call("print", "")
+	errorMsgCmd += c.opHandler.Return()
+
+	cmd += c.opHandler.SizeString(ops.Cs(ops.RX), ops.Cs(lenReg))
+
+	// If any of the indexes are negative, add the length of the string to them
+	cmd += c.opHandler.ExecCond(
+		fmt.Sprintf("score %s %s matches ..-1", ops.Cs(regIndexStart), c.Namespace),
+		true,
+		c.opHandler.Add(ops.Cs(lenReg), ops.Cs(regIndexStart), ops.Cs(regIndexStart)),
+	)
+	cmd += c.opHandler.ExecCond(
+		fmt.Sprintf("score %s %s matches ..-1", ops.Cs(regIndexEnd), c.Namespace),
+		true,
+		c.opHandler.Add(ops.Cs(lenReg), ops.Cs(regIndexEnd), ops.Cs(regIndexEnd)),
+	)
+
+	// Move data to scoreboards
+	cmd += c.opHandler.MoveScore(ops.Cs(lenReg), ops.Cs(lenReg))
+	cmd += c.opHandler.MoveScore(ops.Cs(regIndexStart), ops.Cs(regIndexStart))
+	cmd += c.opHandler.MoveScore(ops.Cs(regIndexEnd), ops.Cs(regIndexEnd))
+
+	// Check if the start index is greater than the end index
+	cmd += c.opHandler.ExecCond(
+		fmt.Sprintf("score %s %s > %s %s", ops.Cs(regIndexStart), c.Namespace, ops.Cs(regIndexEnd), c.Namespace),
+		true,
+		c.opHandler.LoadArgConst("print", "text", ops.Red.Format+"Start index greater than end index")+errorMsgCmd,
+	)
+
+	cmd += c.opHandler.ExecCond(
+		fmt.Sprintf("score %s %s >= %s %s", ops.Cs(regIndexStart), c.Namespace, ops.Cs(lenReg), c.Namespace),
+		true,
+		c.opHandler.LoadArgConst("print", "text", ops.Red.Format+"Start slice index out of bounds")+errorMsgCmd,
+	)
+	cmd += c.opHandler.ExecCond(
+		fmt.Sprintf("score %s %s > %s %s", ops.Cs(regIndexEnd), c.Namespace, ops.Cs(lenReg), c.Namespace),
+		true,
+		c.opHandler.LoadArgConst("print", "text", ops.Red.Format+"End slice index out of bounds")+errorMsgCmd,
+	)
+
+	// Slice operation
+	cmd += c.opHandler.Slice(ops.Cs(ops.RX), ops.Cs(regIndexStart), ops.Cs(regIndexEnd), ops.Cs(ops.RX))
 	return cmd
 }
