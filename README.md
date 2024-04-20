@@ -18,10 +18,10 @@ This is a list of features that are currently implemented or planned for the fut
   - [x] **If-else statements**.
   - [x] **Recursion**.
   - [ ] **Loops**.
-- [ ] **Operators**:
+- [x] **Operators**:
   - [x] **Arithmetic**.
   - [x] **Comparison**.
-  - [ ] **Logical operators**.
+  - [x] **Logical operators**.
 - [ ] **Data Types**:
   - [x] **Integer**.
   - [x] **Fixed point**.
@@ -58,6 +58,20 @@ func fib(n: int) int {
         return n;
     }
     return fib(n - 1) + fib(n - 2);
+}
+
+func fizbuzz(n: int) {
+    # since for/while loops aren't supported yet, here is a cut down version of the fizzbuzz function
+    # that evaluates a single value at a time instead of all the numbers up to n
+    if (n % 3 == 0 and n % 5 == 0) {
+        print("FizzBuzz");
+    } else if (n % 3 == 0) {
+        print("Fizz");
+    } else if (n % 5 == 0) {
+        print("Buzz");
+    } else {
+        print(n);
+    }
 }
 
 func main() {
