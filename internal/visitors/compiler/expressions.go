@@ -4,19 +4,21 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
-	log "github.com/sirupsen/logrus"
 	"strconv"
 )
 
 func (c *Compiler) VisitLiteral(expr expressions.LiteralExpr) interface{} {
-	if expr.ReturnType() == expressions.NumberType {
+	switch expr.ReturnType() {
+	case expressions.IntType:
 		return c.opHandler.MoveConst(expr.Value.(string), ops.Cs(ops.RX))
-	} else if expr.ReturnType() == expressions.StringType {
+	case expressions.StringType:
 		return c.opHandler.MoveConst(strconv.Quote(expr.Value.(string)), ops.Cs(ops.RX))
-	} else {
-		log.Fatalln("Invalid type in literal expression")
-		return ""
+	case expressions.FixedType:
+		return c.opHandler.MoveConst(expr.Value.(string), ops.Cs(ops.RX))
+	default:
+		c.error(expr.SourceLocation, "Invalid type in literal expression")
 	}
+	return ""
 }
 
 func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
@@ -32,28 +34,18 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 	cmd += expr.Right.Accept(c).(string)
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regRb))
 
-	if expr.Left.ReturnType() != expr.Right.ReturnType() {
-		log.Fatalln("Different types in binary operation")
-	}
 	cmd += "### Binary operation ###\n"
 
 	switch expr.Operator.Type {
-	case tokens.EqualEqual:
-		fallthrough
-	case tokens.BangEqual:
-		fallthrough
-	case tokens.Greater:
-		fallthrough
-	case tokens.GreaterEqual:
-		fallthrough
-	case tokens.Less:
-		fallthrough
-	case tokens.LessEqual:
+	case tokens.EqualEqual, tokens.BangEqual, tokens.Greater, tokens.GreaterEqual, tokens.Less, tokens.LessEqual:
 		cmd += c.Compare(expr, ops.Cs(regRa), ops.Cs(regRb), ops.Cs(ops.RX))
 		return cmd
+	default:
+		// Do nothing
 	}
 
-	if expr.ReturnType() == expressions.NumberType {
+	switch expr.ReturnType() {
+	case expressions.IntType:
 		switch expr.Operator.Type {
 		case tokens.Plus:
 			cmd += c.opHandler.Add(regRa, regRb, ops.RX)
@@ -65,16 +57,32 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 			cmd += c.opHandler.Div(regRa, regRb, ops.RX)
 		case tokens.Percent:
 			cmd += c.opHandler.Mod(regRa, regRb, ops.RX)
+		default:
+			c.error(expr.SourceLocation, "Invalid operator for integers")
 		}
-	} else if expr.ReturnType() == expressions.StringType {
-		log.Fatalln("String operations are not supported yet")
+	case expressions.FixedType:
+		switch expr.Operator.Type {
+		case tokens.Plus:
+			cmd += c.opHandler.FixedAdd(regRa, regRb, ops.RX)
+		case tokens.Minus:
+			cmd += c.opHandler.FixedSub(regRa, regRb, ops.RX)
+		case tokens.Star:
+			cmd += c.opHandler.FixedMul(regRa, regRb, ops.RX)
+		case tokens.Slash:
+			cmd += c.opHandler.FixedDiv(regRa, regRb, ops.RX)
+		default:
+			c.error(expr.SourceLocation, "Invalid operator for fixed point numbers")
+		}
+
+	case expressions.StringType:
+		c.error(expr.SourceLocation, "String operations are not supported yet")
 		//if expr.Operator.Type == tokens.Plus {
 		//	return c.opHandler.Concat(ops.RA, ops.RB, ops.RX)
 		//} else {
 		//	panic("Unknown operator")
 		//}
-	} else {
-		log.Fatalln("Invalid type in binary operation")
+	default:
+		c.error(expr.SourceLocation, "Invalid type combination in binary operation")
 	}
 	return cmd
 }
@@ -101,11 +109,11 @@ func (c *Compiler) VisitFunctionCall(expr expressions.FunctionCallExpr) interfac
 func (c *Compiler) VisitUnary(expr expressions.UnaryExpr) interface{} {
 	cmd := ""
 	switch expr.ReturnType() {
-	case expressions.NumberType:
+	case expressions.IntType:
 		switch expr.Operator.Type {
 		case tokens.Minus:
 			cmd += expressions.BinaryExpr{
-				Left: expressions.LiteralExpr{Value: "0", SourceLocation: expr.SourceLocation, ValueType: expressions.NumberType},
+				Left: expressions.LiteralExpr{Value: "0", SourceLocation: expr.SourceLocation, ValueType: expressions.IntType},
 				Operator: tokens.Token{
 					Type: tokens.Minus,
 				},
@@ -114,7 +122,11 @@ func (c *Compiler) VisitUnary(expr expressions.UnaryExpr) interface{} {
 		case tokens.Bang:
 			cmd += expr.Expression.Accept(c).(string)
 			cmd += c.opHandler.NegateNumber(ops.Cs(ops.RX))
+		default:
+			c.error(expr.SourceLocation, "Invalid operator for integers")
 		}
+	default:
+		c.error(expr.SourceLocation, "Invalid type in unary expression")
 	}
 	return cmd
 }

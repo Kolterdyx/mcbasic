@@ -6,8 +6,10 @@ type ValueType string
 
 const (
 	VoidType   ValueType = ""
-	NumberType ValueType = "number"
-	StringType ValueType = "string"
+	ErrorType  ValueType = "error"
+	IntType    ValueType = "int"
+	StringType ValueType = "str"
+	FixedType  ValueType = "fixed"
 )
 
 type LiteralExpr struct {

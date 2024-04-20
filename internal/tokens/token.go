@@ -17,7 +17,8 @@ func (t Token) String() string {
 const (
 	Undefined TokenType = iota
 	Identifier
-	Number
+	Int
+	Fixed
 	String
 	Plus
 	Minus
@@ -64,8 +65,10 @@ func (t TokenType) String() string {
 		return "Undefined"
 	case Identifier:
 		return "Identifier"
-	case Number:
-		return "Number"
+	case Int:
+		return "Int"
+	case Fixed:
+		return "Fixed"
 	case String:
 		return "String"
 	case Plus:

@@ -23,10 +23,23 @@ func (b BinaryExpr) TType() ExprType {
 }
 
 func (b BinaryExpr) ReturnType() ValueType {
-	switch b.Operator.Type {
-	case tokens.Minus, tokens.Star, tokens.Slash, tokens.Percent, tokens.EqualEqual, tokens.BangEqual, tokens.Greater, tokens.GreaterEqual, tokens.Less, tokens.LessEqual:
-		return NumberType
-	default:
-		return b.Left.ReturnType()
+	switch b.Left.ReturnType() {
+	case IntType:
+		switch b.Right.ReturnType() {
+		case IntType:
+			return IntType
+		default:
+			return ErrorType
+		}
+	case StringType:
+		return StringType
+	case FixedType:
+		switch b.Right.ReturnType() {
+		case FixedType:
+			return FixedType
+		default:
+			return ErrorType
+		}
 	}
+	return b.Left.ReturnType()
 }

@@ -11,19 +11,21 @@ const (
 )
 
 const (
-	RA = "RA"
-	RB = "RB"
+	RA = "$RA"
+	RB = "$RB"
 
-	RX  = "RX"
-	RET = "RET"
+	RX  = "$RX"
+	RET = "$RET"
 
-	RCF  = "RCF"
-	CALL = "CALL"
+	RCF  = "$RCF"
+	CALL = "$CALL"
 )
 
 type Op struct {
-	Namespace string
-	Scope     string
+	Namespace           string
+	EnableTraces        bool
+	FixedPointPrecision int
+	Scope               string
 }
 
 func (o *Op) Macro(argName string) string {

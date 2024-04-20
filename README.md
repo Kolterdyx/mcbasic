@@ -48,11 +48,11 @@ These are some of the quirks of the language that you should be aware of. They m
 ## Example
 
 ```
-func add(a: number, b: number) {
+func add(a: int, b: int) {
     return a + b;
 }
 
-func fib(n: number) {
+func fib(n: int) {
     if (n <= 1) {
         return n;
     }
@@ -60,10 +60,11 @@ func fib(n: number) {
 }
 
 func main() {
-    let x: number = 5;
-    let y: number = 10;
-    let z: number = add(x, y);
-    print("Hello world!");
+    let x: int = 5;
+    let y: int = 10;
+    let z: int = add(x, y);
+    let hello: str = "Hello world!";
+    print(hello);
     print(z);
     print(fib(10));
 }

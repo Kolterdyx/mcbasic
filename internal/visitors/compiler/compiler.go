@@ -45,7 +45,7 @@ type Compiler struct {
 	expressions.ExprVisitor
 	statements.StmtVisitor
 
-	regCounter int
+	regCounters map[string]int
 
 	InitFuncName string
 	TickFuncName string
@@ -54,9 +54,14 @@ type Compiler struct {
 func NewCompiler(config interfaces.ProjectConfig) *Compiler {
 	c := &Compiler{Config: config, InitFuncName: config.Project.Namespace + "/init", TickFuncName: config.Project.Namespace + "/tick"}
 	c.Namespace = config.Project.Namespace
-	c.opHandler = ops.Op{Namespace: c.Namespace}
+	c.opHandler = ops.Op{
+		Namespace:           c.Namespace,
+		EnableTraces:        config.EnableTraces,
+		FixedPointPrecision: config.FixedPointPrecision,
+	}
 	c.functions = make(map[string]Func)
 	c.scope = make(map[string][]TypedIdentifier)
+	c.regCounters = make(map[string]int)
 
 	return c
 }
@@ -81,7 +86,7 @@ func (c *Compiler) Compile(program parser.Program) {
 		}
 		f.Args = append(f.Args, statements.FuncArg{
 			Name: "__call__",
-			Type: expressions.NumberType,
+			Type: expressions.IntType,
 		})
 		c.functions[function.Name.Lexeme] = f
 	}
@@ -183,7 +188,7 @@ func (c *Compiler) createFunction(name string, source string, args []statements.
 	for _, parameter := range args {
 		f.Args = append(f.Args, statements.FuncArg{Name: parameter.Name, Type: parameter.Type})
 	}
-	f.Args = append(f.Args, statements.FuncArg{Name: "__call__", Type: expressions.NumberType})
+	f.Args = append(f.Args, statements.FuncArg{Name: "__call__", Type: expressions.IntType})
 	c.functions[name] = f
 
 	err := os.WriteFile(c.functionsPath+"/"+filename, []byte(source), 0644)
@@ -219,12 +224,12 @@ func (c *Compiler) createFunctionTags() {
 }
 
 func (c *Compiler) error(location interfaces.SourceLocation, message string) {
-	log.Fatalf("Error at %d:%d: %s\n", location.Line+1, location.Column, message)
+	log.Fatalf("Error at %d:%d: %s\n", location.Line+1, location.Column+1, message)
 }
 
 func (c *Compiler) newRegister(regName string) string {
-	c.regCounter++
-	return regName + fmt.Sprintf("_%d", c.regCounter)
+	c.regCounters[regName]++
+	return regName + fmt.Sprintf("_%d", c.regCounters[regName])
 }
 
 func (c *Compiler) addBuiltInFunctionsToScope() {
@@ -258,7 +263,7 @@ func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx
 			// Return false
 			cmd += c.opHandler.MoveConst("0", rx)
 		} else {
-			if expr.Left.ReturnType() == expressions.NumberType {
+			if expr.Left.ReturnType() == expressions.IntType {
 				cmd += c.opHandler.EqNumbers(ra, rb, rx)
 			} else if expr.Left.ReturnType() == expressions.StringType {
 				cmd += c.opHandler.EqStrings(ra, rb, rx)
@@ -269,7 +274,7 @@ func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx
 			// Return true
 			cmd += c.opHandler.MoveConst("1", rx)
 		} else {
-			if expr.Left.ReturnType() == expressions.NumberType {
+			if expr.Left.ReturnType() == expressions.IntType {
 				cmd += c.opHandler.NeqNumbers(ra, rb, rx)
 			} else if expr.Left.ReturnType() == expressions.StringType {
 				cmd += c.opHandler.NeqStrings(ra, rb, rx)
@@ -277,27 +282,27 @@ func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx
 
 		}
 	case tokens.Greater:
-		if expr.Left.ReturnType() != expressions.NumberType {
-			log.Fatalln("Invalid type in binary operation")
+		if expr.Left.ReturnType() != expressions.IntType {
+			c.error(expr.SourceLocation, "Invalid type in binary operation")
 		}
 		cmd += c.opHandler.GtNumbers(ra, rb, rx)
 	case tokens.GreaterEqual:
-		if expr.Left.ReturnType() != expressions.NumberType {
-			log.Fatalln("Invalid type in binary operation")
+		if expr.Left.ReturnType() != expressions.IntType {
+			c.error(expr.SourceLocation, "Invalid type in binary operation")
 		}
 		cmd += c.opHandler.GteNumbers(ra, rb, rx)
 	case tokens.Less:
-		if expr.Left.ReturnType() != expressions.NumberType {
-			log.Fatalln("Invalid type in binary operation")
+		if expr.Left.ReturnType() != expressions.IntType {
+			c.error(expr.SourceLocation, "Invalid type in binary operation")
 		}
 		cmd += c.opHandler.LtNumbers(ra, rb, rx)
 	case tokens.LessEqual:
-		if expr.Left.ReturnType() != expressions.NumberType {
-			log.Fatalln("Invalid type in binary operation")
+		if expr.Left.ReturnType() != expressions.IntType {
+			c.error(expr.SourceLocation, "Invalid type in binary operation")
 		}
 		cmd += c.opHandler.LteNumbers(ra, rb, rx)
 	default:
-		log.Fatalln("Unknown comparison operator")
+		c.error(expr.SourceLocation, "Unknown comparison operator")
 	}
 	return cmd
 }

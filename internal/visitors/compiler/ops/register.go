@@ -2,6 +2,7 @@ package ops
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 )
 
@@ -10,8 +11,14 @@ func (o *Op) Move(from string, to string) string {
 }
 
 func (o *Op) MoveConst(value string, to string) string {
-	if _, err := strconv.Atoi(value); err != nil && !(value[0] == '$' && value[1] == '(' && value[len(value)-1] == ')') && !(value[0] == '"' && value[len(value)-1] == '"') {
+	if _, err := strconv.ParseFloat(value, 64); err != nil && !(value[0] == '$' && value[1] == '(' && value[len(value)-1] == ')') && !(value[0] == '"' && value[len(value)-1] == '"') {
 		value = strconv.Quote(value)
+	}
+	// if the value is a float, add a trailing L to store it as a long
+	n, err := strconv.ParseFloat(value, 64)
+	_, err2 := strconv.ParseInt(value, 10, 64)
+	if err == nil && err2 != nil {
+		value = fmt.Sprintf("%sL", strconv.FormatFloat(n*math.Pow(10, float64(o.FixedPointPrecision)), 'f', -1, 64))
 	}
 	return fmt.Sprintf("data modify storage %s:%s %s set value %s\n", o.Namespace, VarPath, to, value)
 }
@@ -29,5 +36,15 @@ func (o *Op) Inc(varName string) string {
 	cmd += o.MoveScore(varName, varName)
 	cmd += fmt.Sprintf("scoreboard players add %s %s 1\n", varName, o.Namespace)
 	cmd += o.LoadScore(varName, varName)
+	return cmd
+}
+
+func (o *Op) ScaleStore(from string, scale string, to string) string {
+	cmd := ""
+	cmd += o.LoadArg("internal/scale", "scale", scale)
+	cmd += o.LoadArgConst("internal/scale", "value", from)
+	cmd += o.TraceStorage("mcb:args.internal/scale", "", "scalestore")
+	cmd += o.Call("internal/scale", to)
+	cmd += o.TraceStorage("mcb:vars", to, "scalestore")
 	return cmd
 }
