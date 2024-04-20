@@ -31,9 +31,9 @@ This is a list of features that are currently implemented or planned for the fut
   - [ ] **Struct**: User-defined data types.
 - [x] **Comments**: Single-line comments with `#`.
 - [ ] **String operations**:
-  - [ ] **Concatenation**.
+  - [x] **Concatenation**.
   - [ ] **Length**.
-  - [ ] **Substring**.
+  - [ ] **Substring / slicing**.
 
 
 ## Quirks
