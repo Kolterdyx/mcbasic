@@ -28,4 +28,4 @@ jobs:
 
     - name: Build
       id: build
-      run: go build -v . -o mcbasic
+      run: go build -o mcbasic
