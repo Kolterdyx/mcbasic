@@ -40,9 +40,7 @@ func (o *Op) Scale(value string, scale string, to string) string {
 }
 
 func (o *Op) FixedAdd(a string, b string, to string) string {
-
-	cmd := o.Add(Cs(a), Cs(b), Cs(to))
-	return cmd
+	return o.Add(Cs(a), Cs(b), Cs(to))
 }
 
 func (o *Op) FixedSub(a string, b string, to string) string {
