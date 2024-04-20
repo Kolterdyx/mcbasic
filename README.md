@@ -23,11 +23,12 @@ This is a list of features that are currently implemented or planned for the fut
   - [x] **Comparison**.
   - [ ] **Logical operators**.
 - [ ] **Data Types**:
-  - [x] **Number**.
+  - [x] **Integer**.
+  - [x] **Fixed point**.
   - [x] **String**.
-  - [ ] **Array**.
   - [x] **Boolean**: Booleans are represented as numbers, with 0 being false and 1 being true. There isn't a separate boolean type.
-  - [ ] **Structs**: User-defined data types.
+  - [ ] **Array**.
+  - [ ] **Struct**: User-defined data types.
 - [x] **Comments**: Single-line comments with `#`.
 - [ ] **String operations**:
   - [ ] **Concatenation**.
@@ -48,11 +49,11 @@ These are some of the quirks of the language that you should be aware of. They m
 ## Example
 
 ```
-func add(a: int, b: int) {
+func add(a: fixed, b: fixed) fixed {
     return a + b;
 }
 
-func fib(n: int) {
+func fib(n: int) int {
     if (n <= 1) {
         return n;
     }
@@ -60,9 +61,9 @@ func fib(n: int) {
 }
 
 func main() {
-    let x: int = 5;
-    let y: int = 10;
-    let z: int = add(x, y);
+    let x: fixed = 5.51;
+    let y: fixed = 10.73;
+    let z: fixed = add(x, y);
     let hello: str = "Hello world!";
     print(hello);
     print(z);
