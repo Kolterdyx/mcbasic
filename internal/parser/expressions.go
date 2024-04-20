@@ -156,7 +156,6 @@ func (p *Parser) primary() expressions.Expr {
 		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: expressions.IntType, SourceLocation: p.location()}
 	}
 	if p.match(tokens.Fixed) {
-		fmt.Printf("Fixed: %v\n", p.previous().Literal)
 		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: expressions.FixedType, SourceLocation: p.location()}
 	}
 	if p.match(tokens.String) {

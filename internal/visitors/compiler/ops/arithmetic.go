@@ -2,7 +2,6 @@ package ops
 
 import (
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal"
 	"math"
 	"strconv"
 )
@@ -36,71 +35,39 @@ func (o *Op) Mod(a string, b string, to string) string {
 	return o.arithmeticOperation(a, b, to, "%=")
 }
 
+func (o *Op) Scale(value string, scale string, to string) string {
+	return fmt.Sprintf("execute store result storage %s:%s %s double %s run data get storage %s:%s %s\n", o.Namespace, VarPath, Cs(to), scale, o.Namespace, VarPath, Cs(value))
+}
+
 func (o *Op) FixedAdd(a string, b string, to string) string {
-	/*
-	 * a.whole + b.whole = to.whole
-	 * a.fract + b.fract = to.fract
-	 * if to.fract > 10 ^ FixedPointMagnitude then
-	 *     to.whole += 1
-	 *     to.fract -= 10 ^ FixedPointMagnitude
-	 */
-	cmd := ""
-	aw := Cs(a) + ".whole"
-	af := Cs(a) + ".fract"
-	bw := Cs(b) + ".whole"
-	bf := Cs(b) + ".fract"
-	tw := Cs(to) + ".whole"
-	tf := Cs(to) + ".fract"
-	cmd += o.Move(aw, Cs(RX))
-	cmd += o.Move(bw, Cs(RB))
-	cmd += o.Add(RX, RB, tw)
-	cmd += o.Move(af, Cs(RX))
-	cmd += o.Move(bf, Cs(RB))
-	cmd += o.Add(RX, RB, tf)
-	// Carry
-	precisionMagnitude := int(math.Pow(10, internal.FixedPointMagnitude))
-	tmpReg := Cs(RX) + "tmp"
-	cmd += o.MoveScore(tf, tmpReg)
-	carry := ""
-	carry += o.MoveConst("1", Cs(RX))
-	carry += o.Add(tw, Cs(RX), tw)
-	carry += o.MoveConst(strconv.Itoa(precisionMagnitude), Cs(RX))
-	carry += o.Sub(tf, Cs(RX), tf)
-	cmd += o.ExecCond(fmt.Sprintf("score %s %s matches %d..", tmpReg, o.Namespace, precisionMagnitude), true, carry)
+
+	cmd := o.Add(Cs(a), Cs(b), Cs(to))
 	return cmd
 }
 
 func (o *Op) FixedSub(a string, b string, to string) string {
-	/*
-	 * a.whole - b.whole = to.whole
-	 * a.fract - b.fract = to.fract
-	 * if to.fract < 0 then
-	 *     to.whole -= 1
-	 *     to.fract += 10 ^ FixedPointMagnitude
-	 */
+	return o.Sub(Cs(a), Cs(b), Cs(to))
+}
+
+func (o *Op) FixedMul(a string, b string, to string) string {
 	cmd := ""
-	aw := Cs(a) + ".whole"
-	af := Cs(a) + ".fract"
-	bw := Cs(b) + ".whole"
-	bf := Cs(b) + ".fract"
-	tw := Cs(to) + ".whole"
-	tf := Cs(to) + ".fract"
-	cmd += o.MoveFixedConst("0.0", Cs(to))
-	cmd += o.Move(aw, Cs(RX))
-	cmd += o.Move(bw, Cs(RB))
-	cmd += o.Sub(RX, RB, tw)
-	cmd += o.Move(af, Cs(RX))
-	cmd += o.Move(bf, Cs(RB))
-	cmd += o.Sub(RX, RB, tf)
-	// Borrow
-	precisionMagnitude := int(math.Pow(10, internal.FixedPointMagnitude))
-	tmpReg := Cs(RX) + "tmp"
-	cmd += o.MoveScore(tf, tmpReg)
-	borrow := ""
-	borrow += o.MoveConst("1", Cs(RX))
-	borrow += o.Sub(tw, Cs(RX), tw)
-	borrow += o.MoveConst(strconv.Itoa(precisionMagnitude), Cs(RX))
-	borrow += o.Add(tf, Cs(RX), tf)
-	cmd += o.ExecCond(fmt.Sprintf("score %s %s matches ..-1", tmpReg, o.Namespace), true, borrow)
+	cmd += o.Mul(Cs(a), Cs(b), Cs(to))
+	invn := strconv.FormatFloat(1/math.Pow(10, float64(o.FixedPointPrecision)), 'f', -1, 64)
+	cmd += o.Scale(Cs(to), invn, Cs(to))
+	return cmd
+}
+
+func (o *Op) FixedDiv(a string, b string, to string) string {
+	cmd := ""
+	n := strconv.FormatFloat(math.Pow(10, float64(o.FixedPointPrecision)), 'f', -1, 64)
+	// To avoid weird number boundary shenanigans, we can just multiply the numerator by the inverse of the denominator,
+	// instead of scaling up the numerator
+	// a / b = a * (1/b)
+
+	cmd += o.MoveConst("1.0", Cs(RB))
+	cmd += o.Scale(Cs(RB), n, Cs(RB))
+	cmd += o.Div(Cs(RB), Cs(b), Cs(RB))
+	cmd += o.FixedMul(a, Cs(RB), to)
+
 	return cmd
 }

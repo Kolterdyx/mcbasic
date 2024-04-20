@@ -6,6 +6,7 @@ type ValueType string
 
 const (
 	VoidType   ValueType = ""
+	ErrorType  ValueType = "error"
 	IntType    ValueType = "int"
 	StringType ValueType = "str"
 	FixedType  ValueType = "fixed"

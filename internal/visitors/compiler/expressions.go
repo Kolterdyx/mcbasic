@@ -14,7 +14,7 @@ func (c *Compiler) VisitLiteral(expr expressions.LiteralExpr) interface{} {
 	case expressions.StringType:
 		return c.opHandler.MoveConst(strconv.Quote(expr.Value.(string)), ops.Cs(ops.RX))
 	case expressions.FixedType:
-		return c.opHandler.MoveFixedConst(expr.Value.(string), ops.Cs(ops.RX))
+		return c.opHandler.MoveConst(expr.Value.(string), ops.Cs(ops.RX))
 	default:
 		c.error(expr.SourceLocation, "Invalid type in literal expression")
 	}
@@ -34,25 +34,14 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 	cmd += expr.Right.Accept(c).(string)
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regRb))
 
-	if expr.Left.ReturnType() != expr.Right.ReturnType() {
-		c.error(expr.SourceLocation, "Different types in binary operation")
-	}
 	cmd += "### Binary operation ###\n"
 
 	switch expr.Operator.Type {
-	case tokens.EqualEqual:
-		fallthrough
-	case tokens.BangEqual:
-		fallthrough
-	case tokens.Greater:
-		fallthrough
-	case tokens.GreaterEqual:
-		fallthrough
-	case tokens.Less:
-		fallthrough
-	case tokens.LessEqual:
+	case tokens.EqualEqual, tokens.BangEqual, tokens.Greater, tokens.GreaterEqual, tokens.Less, tokens.LessEqual:
 		cmd += c.Compare(expr, ops.Cs(regRa), ops.Cs(regRb), ops.Cs(ops.RX))
 		return cmd
+	default:
+		// Do nothing
 	}
 
 	switch expr.ReturnType() {
@@ -68,21 +57,21 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 			cmd += c.opHandler.Div(regRa, regRb, ops.RX)
 		case tokens.Percent:
 			cmd += c.opHandler.Mod(regRa, regRb, ops.RX)
+		default:
+			c.error(expr.SourceLocation, "Invalid operator for integers")
 		}
 	case expressions.FixedType:
 		switch expr.Operator.Type {
 		case tokens.Plus:
-			cmd += c.opHandler.FixedAdd(regRa, regRb, ops.RO)
-			cmd += c.opHandler.Move(ops.Cs(ops.RO), ops.Cs(ops.RX))
+			cmd += c.opHandler.FixedAdd(regRa, regRb, ops.RX)
 		case tokens.Minus:
-			cmd += c.opHandler.FixedSub(regRa, regRb, ops.RO)
-			cmd += c.opHandler.Move(ops.Cs(ops.RO), ops.Cs(ops.RX))
+			cmd += c.opHandler.FixedSub(regRa, regRb, ops.RX)
 		case tokens.Star:
-			cmd += c.opHandler.FixedMul(regRa, regRb, ops.RO)
-			cmd += c.opHandler.Move(ops.Cs(ops.RO), ops.Cs(ops.RX))
+			cmd += c.opHandler.FixedMul(regRa, regRb, ops.RX)
 		case tokens.Slash:
-			//cmd += c.opHandler.FixedDiv(regRa, regRb, ops.RO)
-			cmd += c.opHandler.Move(ops.Cs(ops.RO), ops.Cs(ops.RX))
+			cmd += c.opHandler.FixedDiv(regRa, regRb, ops.RX)
+		default:
+			c.error(expr.SourceLocation, "Invalid operator for fixed point numbers")
 		}
 
 	case expressions.StringType:
@@ -93,7 +82,7 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 		//	panic("Unknown operator")
 		//}
 	default:
-		c.error(expr.SourceLocation, "Invalid type in binary operation")
+		c.error(expr.SourceLocation, "Invalid type combination in binary operation")
 	}
 	return cmd
 }
@@ -133,7 +122,11 @@ func (c *Compiler) VisitUnary(expr expressions.UnaryExpr) interface{} {
 		case tokens.Bang:
 			cmd += expr.Expression.Accept(c).(string)
 			cmd += c.opHandler.NegateNumber(ops.Cs(ops.RX))
+		default:
+			c.error(expr.SourceLocation, "Invalid operator for integers")
 		}
+	default:
+		c.error(expr.SourceLocation, "Invalid type in unary expression")
 	}
 	return cmd
 }

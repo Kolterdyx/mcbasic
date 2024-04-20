@@ -40,7 +40,7 @@ func (o *Op) LoadArg(funcName, argName string, varName string) string {
 
 func (o *Op) LoadArgConst(funcName, argName string, value string) string {
 	// if value is not numeric, wrap it in quotes
-	if _, err := strconv.Atoi(value); err != nil && value[0] != '$' && value[1] != '(' {
+	if _, err := strconv.Atoi(value); err != nil && !(value[0] == '$' && value[1] == '(' && value[len(value)-1] == ')') {
 		value = strconv.Quote(value)
 	}
 	return fmt.Sprintf("data modify storage %s:%s.%s %s set value %s\n", o.Namespace, ArgPath, funcName, argName, value)

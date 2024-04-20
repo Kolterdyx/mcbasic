@@ -53,7 +53,7 @@ func (o *Op) Trace(desc string, content string, extra string) string {
 
 func (o *Op) TraceStorage(storage string, path string, extra string) string {
 	if path == "" {
-		return o.Trace(fmt.Sprintf("(%s)", storage), fmt.Sprintf("{\"storage\":\"%s\"}", storage), extra)
+		return o.Trace(fmt.Sprintf("(%s)", storage), fmt.Sprintf("{\"storage\":\"%s\",\"nbt\":\"\"}", storage), extra)
 	} else {
 		return o.Trace(fmt.Sprintf("(%s: %s)", storage, path), fmt.Sprintf("{\"storage\":\"%s\",\"nbt\":\"%s\"}", storage, path), extra)
 	}

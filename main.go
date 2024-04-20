@@ -70,6 +70,7 @@ func parseArgs() interfaces.ProjectConfig {
 	projectFilePtr := flag.String("config", "project.toml", "Path to the project config file")
 	outputDirPtr := flag.String("output", "build", "Output directory")
 	enableTracesPtr := flag.Bool("traces", false, "Enable traces")
+	fixedPointPrecision := flag.Int("fpp", 4, "Fixed point precision")
 	flag.Parse()
 
 	// Load config toml file
@@ -77,6 +78,14 @@ func parseArgs() interfaces.ProjectConfig {
 	validateProjectConfig(config)
 	config.OutputDir = *outputDirPtr
 	config.EnableTraces = *enableTracesPtr
+	config.FixedPointPrecision = *fixedPointPrecision
+
+	if *fixedPointPrecision < 0 {
+		log.Fatalln("Fixed point precision must be a positive integer")
+	}
+	if *fixedPointPrecision > 4 {
+		log.Warnln("Fixed point precision greater than 4 may cause overflow")
+	}
 
 	return config
 }

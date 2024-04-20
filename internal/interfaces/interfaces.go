@@ -7,8 +7,9 @@ type ProjectConfig struct {
 		Authors    []string
 		Entrypoint string
 	}
-	OutputDir    string
-	EnableTraces bool
+	OutputDir           string
+	EnableTraces        bool
+	FixedPointPrecision int
 }
 
 type SourceLocation struct {

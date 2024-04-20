@@ -55,8 +55,9 @@ func NewCompiler(config interfaces.ProjectConfig) *Compiler {
 	c := &Compiler{Config: config, InitFuncName: config.Project.Namespace + "/init", TickFuncName: config.Project.Namespace + "/tick"}
 	c.Namespace = config.Project.Namespace
 	c.opHandler = ops.Op{
-		Namespace:    c.Namespace,
-		EnableTraces: config.EnableTraces,
+		Namespace:           c.Namespace,
+		EnableTraces:        config.EnableTraces,
+		FixedPointPrecision: config.FixedPointPrecision,
 	}
 	c.functions = make(map[string]Func)
 	c.scope = make(map[string][]TypedIdentifier)
@@ -156,6 +157,15 @@ func (c *Compiler) createBuiltinFunctions() {
 		expressions.VoidType,
 	)
 	c.createFunction(
+		"internal/scale",
+		fmt.Sprintf("$execute store result storage %s:%s %s double $(scale) run data get storage %s:%s $(value)\n", c.Namespace, ops.VarPath, ops.RET, c.Namespace, ops.VarPath),
+		[]statements.FuncArg{
+			{Name: "value", Type: expressions.StringType},
+			{Name: "scale", Type: expressions.StringType},
+		},
+		expressions.VoidType,
+	)
+	c.createFunction(
 		"internal/init",
 		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
 			c.opHandler.MoveConst("0", ops.CALL)+
@@ -223,7 +233,7 @@ func (c *Compiler) createFunctionTags() {
 }
 
 func (c *Compiler) error(location interfaces.SourceLocation, message string) {
-	log.Fatalf("Error at %d:%d: %s\n", location.Line+1, location.Column, message)
+	log.Fatalf("Error at %d:%d: %s\n", location.Line+1, location.Column+1, message)
 }
 
 func (c *Compiler) newRegister(regName string) string {

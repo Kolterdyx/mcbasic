@@ -2,8 +2,8 @@ package ops
 
 import (
 	"fmt"
+	"math"
 	"strconv"
-	"strings"
 )
 
 func (o *Op) Move(from string, to string) string {
@@ -11,27 +11,16 @@ func (o *Op) Move(from string, to string) string {
 }
 
 func (o *Op) MoveConst(value string, to string) string {
-	if _, err := strconv.Atoi(value); err != nil && !(value[0] == '$' && value[1] == '(' && value[len(value)-1] == ')') && !(value[0] == '"' && value[len(value)-1] == '"') {
+	if _, err := strconv.ParseFloat(value, 64); err != nil && !(value[0] == '$' && value[1] == '(' && value[len(value)-1] == ')') && !(value[0] == '"' && value[len(value)-1] == '"') {
 		value = strconv.Quote(value)
 	}
-	return fmt.Sprintf("data modify storage %s:%s %s set value %s\n", o.Namespace, VarPath, to, value)
-}
-
-func (o *Op) MoveFixedConst(value string, to string) string {
-	vw := to + ".whole"
-	vf := to + ".fract"
-	values := strings.Split(value, ".")
-	if len(values) != 2 {
-		values = append(values, "0")
+	// if the value is a float, add a trailing d
+	n, err := strconv.ParseFloat(value, 64)
+	_, err2 := strconv.ParseInt(value, 10, 64)
+	if err == nil && err2 != nil {
+		value = fmt.Sprintf("%sL", strconv.FormatFloat(n*math.Pow(10, float64(o.FixedPointPrecision)), 'f', -1, 64))
 	}
-	fmt.Printf("values: %v\n", values)
-	cmd := ""
-	w, _ := strconv.ParseInt(values[0], 10, 64)
-	f, _ := strconv.ParseInt(values[1], 10, 64)
-	cmd += fmt.Sprintf("data modify storage %s:%s %s set value {}\n", o.Namespace, VarPath, to)
-	cmd += o.MoveConst(strconv.FormatInt(w, 10), vw)
-	cmd += o.MoveConst(strconv.FormatInt(f, 10), vf)
-	return cmd
+	return fmt.Sprintf("data modify storage %s:%s %s set value %s\n", o.Namespace, VarPath, to, value)
 }
 
 func (o *Op) MoveScore(from string, to string) string {
@@ -47,5 +36,15 @@ func (o *Op) Inc(varName string) string {
 	cmd += o.MoveScore(varName, varName)
 	cmd += fmt.Sprintf("scoreboard players add %s %s 1\n", varName, o.Namespace)
 	cmd += o.LoadScore(varName, varName)
+	return cmd
+}
+
+func (o *Op) ScaleStore(from string, scale string, to string) string {
+	cmd := ""
+	cmd += o.LoadArg("internal/scale", "scale", scale)
+	cmd += o.LoadArgConst("internal/scale", "value", from)
+	cmd += o.TraceStorage("mcb:args.internal/scale", "", "scalestore")
+	cmd += o.Call("internal/scale", to)
+	cmd += o.TraceStorage("mcb:vars", to, "scalestore")
 	return cmd
 }

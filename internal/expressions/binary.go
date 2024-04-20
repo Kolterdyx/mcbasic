@@ -23,5 +23,23 @@ func (b BinaryExpr) TType() ExprType {
 }
 
 func (b BinaryExpr) ReturnType() ValueType {
+	switch b.Left.ReturnType() {
+	case IntType:
+		switch b.Right.ReturnType() {
+		case IntType:
+			return IntType
+		default:
+			return ErrorType
+		}
+	case StringType:
+		return StringType
+	case FixedType:
+		switch b.Right.ReturnType() {
+		case FixedType:
+			return FixedType
+		default:
+			return ErrorType
+		}
+	}
 	return b.Left.ReturnType()
 }
