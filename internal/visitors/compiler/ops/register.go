@@ -14,7 +14,7 @@ func (o *Op) MoveConst(value string, to string) string {
 	if _, err := strconv.ParseFloat(value, 64); err != nil && !(value[0] == '$' && value[1] == '(' && value[len(value)-1] == ')') && !(value[0] == '"' && value[len(value)-1] == '"') {
 		value = strconv.Quote(value)
 	}
-	// if the value is a float, add a trailing d
+	// if the value is a float, add a trailing L to store it as a long
 	n, err := strconv.ParseFloat(value, 64)
 	_, err2 := strconv.ParseInt(value, 10, 64)
 	if err == nil && err2 != nil {
