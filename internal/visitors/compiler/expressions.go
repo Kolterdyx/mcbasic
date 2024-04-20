@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
@@ -128,5 +129,53 @@ func (c *Compiler) VisitUnary(expr expressions.UnaryExpr) interface{} {
 	default:
 		c.error(expr.SourceLocation, "Invalid type in unary expression")
 	}
+	return cmd
+}
+
+func (c *Compiler) VisitGrouping(expr expressions.GroupingExpr) interface{} {
+	return expr.Expression.Accept(c).(string)
+}
+
+func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) interface{} {
+	leftSide := ""
+	rightSide := ""
+
+	regRa := c.newRegister(ops.RA)
+	regRb := c.newRegister(ops.RB)
+
+	cmd := ""
+
+	leftSide += "### Logical operation left side ###\n"
+	leftSide += expr.Left.Accept(c).(string)
+	leftSide += c.opHandler.Move(ops.Cs(ops.RX), regRa)
+	rightSide += "### Logical operation right side ###\n"
+	rightSide += expr.Right.Accept(c).(string)
+	rightSide += c.opHandler.Move(ops.Cs(ops.RX), regRb)
+	rightSide += c.opHandler.MoveScore(regRb, regRb)
+
+	cmd += leftSide
+	switch expr.Operator.Type {
+	case tokens.And:
+		// If left side is false, return false
+		evalRightSide := ""
+		cmd += c.opHandler.MoveScore(regRa, regRa)
+		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), true, c.opHandler.MoveConst("0", ops.Cs(ops.RX)))
+		evalRightSide += rightSide
+		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), true, c.opHandler.MoveConst("0", ops.Cs(ops.RX)))
+		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), false, c.opHandler.Move(regRb, ops.Cs(ops.RX)))
+		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), false, evalRightSide)
+	case tokens.Or:
+		// If left side is true, return true
+		evalRightSide := ""
+		cmd += c.opHandler.MoveScore(regRa, regRa)
+		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), false, c.opHandler.MoveConst("1", ops.Cs(ops.RX)))
+		evalRightSide += rightSide
+		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), true, c.opHandler.MoveConst("0", ops.Cs(ops.RX)))
+		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), false, c.opHandler.Move(regRb, ops.Cs(ops.RX)))
+		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), true, evalRightSide)
+	default:
+		c.error(expr.SourceLocation, "Invalid operator for logical expressions")
+	}
+
 	return cmd
 }
