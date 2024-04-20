@@ -26,6 +26,7 @@ func (p *Parser) Parse() Program {
 	p.functions = append(p.functions,
 		statements.FuncDef{Name: "print", ReturnType: expressions.VoidType, Parameters: []statements.FuncArg{{Name: "text", Type: expressions.VoidType}}},
 		statements.FuncDef{Name: "exec", ReturnType: expressions.VoidType, Parameters: []statements.FuncArg{{Name: "command", Type: expressions.StringType}}},
+		statements.FuncDef{Name: "len", ReturnType: expressions.IntType, Parameters: []statements.FuncArg{{Name: "string", Type: expressions.StringType}}},
 	)
 	for !p.IsAtEnd() {
 		statement := p.statement()

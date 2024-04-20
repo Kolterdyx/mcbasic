@@ -180,6 +180,15 @@ func (c *Compiler) createBuiltinFunctions() {
 		expressions.VoidType,
 	)
 	c.createFunction(
+		"len",
+		fmt.Sprintf("$data modify storage %s:%s %s set value \"$(from)\"\n", c.Namespace, ops.VarPath, ops.RET)+
+			fmt.Sprintf("execute store result storage %s:%s %s int 1 run data get storage %s:%s %s\n", c.Namespace, ops.VarPath, ops.RET, c.Namespace, ops.VarPath, ops.RET),
+		[]statements.FuncArg{
+			{Name: "from", Type: expressions.StringType},
+		},
+		expressions.IntType,
+	)
+	c.createFunction(
 		"internal/init",
 		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
 			c.opHandler.MoveConst("0", ops.CALL)+
@@ -265,6 +274,10 @@ func (c *Compiler) addBuiltInFunctionsToScope() {
 		TypedIdentifier{
 			Name: "exec",
 			Type: expressions.VoidType,
+		},
+		TypedIdentifier{
+			Name: "len",
+			Type: expressions.IntType,
 		})
 }
 
