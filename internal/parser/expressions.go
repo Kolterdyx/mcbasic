@@ -97,6 +97,8 @@ func (p *Parser) value() expressions.Expr {
 		identifier := p.previous()
 		if p.match(tokens.ParenOpen) {
 			return p.functionCall(identifier)
+		} else if p.match(tokens.BracketOpen) {
+			return p.slice(expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: p.getType(identifier)})
 		} else {
 			return expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: p.getType(identifier)}
 		}
@@ -145,6 +147,16 @@ func (p *Parser) functionCall(name tokens.Token) expressions.Expr {
 	return expressions.FunctionCallExpr{Name: name, Arguments: args, SourceLocation: location, Type: returnType}
 }
 
+func (p *Parser) slice(expr expressions.Expr) expressions.Expr {
+	start := p.expression()
+	end := start
+	if p.match(tokens.Colon) {
+		end = p.expression()
+	}
+	p.consume(tokens.BracketClose, "Expected ']' at the end of the slice.")
+	return expressions.SliceExpr{StartIndex: start, EndIndex: end, TargetExpr: expr, SourceLocation: p.location()}
+}
+
 func (p *Parser) primary() expressions.Expr {
 	if p.match(tokens.False) {
 		return expressions.LiteralExpr{Value: 0, ValueType: expressions.IntType, SourceLocation: p.location()}
@@ -159,7 +171,11 @@ func (p *Parser) primary() expressions.Expr {
 		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: expressions.FixedType, SourceLocation: p.location()}
 	}
 	if p.match(tokens.String) {
-		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: expressions.StringType, SourceLocation: p.location()}
+		if p.match(tokens.BracketOpen) {
+			return p.slice(expressions.LiteralExpr{Value: p.peekCount(-2).Literal, ValueType: expressions.StringType, SourceLocation: p.location()})
+		} else {
+			return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: expressions.StringType, SourceLocation: p.location()}
+		}
 	}
 	if p.match(tokens.ParenOpen) {
 		expr := p.expression()

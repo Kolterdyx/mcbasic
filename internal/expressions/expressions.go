@@ -10,16 +10,18 @@ const (
 	VariableExprType     ExprType = "Variable"
 	FunctionCallExprType ExprType = "FunctionCall"
 	LogicalExprType      ExprType = "Logical"
+	SliceExprType        ExprType = "Slice"
 )
 
 type ExprVisitor interface {
 	VisitBinary(b BinaryExpr) interface{}
 	VisitGrouping(g GroupingExpr) interface{}
 	VisitLiteral(l LiteralExpr) interface{}
-	VisitUnary(l UnaryExpr) interface{}
-	VisitVariable(l VariableExpr) interface{}
-	VisitFunctionCall(l FunctionCallExpr) interface{}
+	VisitUnary(u UnaryExpr) interface{}
+	VisitVariable(v VariableExpr) interface{}
+	VisitFunctionCall(f FunctionCallExpr) interface{}
 	VisitLogical(l LogicalExpr) interface{}
+	VisitSlice(s SliceExpr) interface{}
 }
 
 type Expr interface {

@@ -178,3 +178,16 @@ func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) interface{} {
 
 	return cmd
 }
+
+func (c *Compiler) VisitSlice(expr expressions.SliceExpr) interface{} {
+	cmd := ""
+	cmd += "### Slice operation ###\n"
+	cmd += expr.StartIndex.Accept(c).(string)
+	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(ops.RA))
+	cmd += expr.EndIndex.Accept(c).(string)
+	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(ops.RB))
+	cmd += expr.TargetExpr.Accept(c).(string)
+	cmd += c.opHandler.TraceStorage("mcb:vars", ops.Cs(ops.RX), "RX")
+	cmd += c.opHandler.Slice(ops.Cs(ops.RX), ops.Cs(ops.RA), ops.Cs(ops.RB), ops.Cs(ops.RX))
+	return cmd
+}

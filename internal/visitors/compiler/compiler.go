@@ -168,8 +168,22 @@ func (c *Compiler) createBuiltinFunctions() {
 		expressions.VoidType,
 	)
 	c.createFunction(
+		"internal/slice",
+		`$data modify storage $(storage) $(res) set string storage $(storage) $(from) $(start) $(end)`,
+		[]statements.FuncArg{
+			{Name: "storage", Type: expressions.StringType},
+			{Name: "res", Type: expressions.StringType},
+			{Name: "from", Type: expressions.StringType},
+			{Name: "start", Type: expressions.IntType},
+			{Name: "end", Type: expressions.IntType},
+		},
+		expressions.VoidType,
+	)
+	c.createFunction(
 		"internal/init",
 		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
+			c.opHandler.MoveConst("0", ops.CALL)+
+			c.opHandler.MoveScore(ops.CALL, ops.CALL)+
 			c.opHandler.LoadArgConst("print", "text", "MCB pack loaded")+
 			c.opHandler.Call("print", "")+
 			c.opHandler.Call("main", ""),

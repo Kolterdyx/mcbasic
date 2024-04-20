@@ -70,17 +70,17 @@ func (s *Scanner) scanToken() {
 		s.addToken(tokens.Slash)
 	case '%':
 		s.addToken(tokens.Percent)
+	case '[':
+		s.addToken(tokens.BracketOpen)
+	case ']':
+		s.addToken(tokens.BracketClose)
 	case '#':
 		s.scanComment()
 	case '\n':
 		s.line++
 		s.pos = 0
 		fallthrough
-	case ' ':
-		fallthrough
-	case '\r':
-		fallthrough
-	case '\t':
+	case ' ', '\r', '\t':
 		break
 	case '=':
 		if s.match('=') {
