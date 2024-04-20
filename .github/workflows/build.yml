@@ -28,6 +28,7 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: mcbasic
+        token: ${{ secrets.MCBASIC_RELEASE_GITHUB_TOKEN }}
 
   build-windows:
     runs-on: windows-latest
@@ -48,3 +49,4 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: mcbasic.exe
+        token: ${{ secrets.MCBASIC_RELEASE_GITHUB_TOKEN }}
