@@ -157,15 +157,6 @@ func (c *Compiler) createBuiltinFunctions() {
 		expressions.VoidType,
 	)
 	c.createFunction(
-		"internal/scale",
-		fmt.Sprintf("$execute store result storage %s:%s %s double $(scale) run data get storage %s:%s $(value)\n", c.Namespace, ops.VarPath, ops.RET, c.Namespace, ops.VarPath),
-		[]statements.FuncArg{
-			{Name: "value", Type: expressions.StringType},
-			{Name: "scale", Type: expressions.StringType},
-		},
-		expressions.VoidType,
-	)
-	c.createFunction(
 		"internal/init",
 		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
 			c.opHandler.MoveConst("0", ops.CALL)+
