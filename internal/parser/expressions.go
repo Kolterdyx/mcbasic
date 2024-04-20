@@ -149,7 +149,7 @@ func (p *Parser) functionCall(name tokens.Token) expressions.Expr {
 
 func (p *Parser) slice(expr expressions.Expr) expressions.Expr {
 	start := p.expression()
-	end := start
+	var end expressions.Expr
 	if p.match(tokens.Colon) {
 		end = p.expression()
 	}
