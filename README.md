@@ -1,4 +1,4 @@
-[![build](https://github.com/Kolterdyx/mcbasic/actions/workflows/go.yml/badge.svg)](https://github.com/Kolterdyx/mcbasic/actions/workflows/go.yml)
+[![build](https://github.com/Kolterdyx/mcbasic/actions/workflows/build.yml/badge.svg)](https://github.com/Kolterdyx/mcbasic/actions/workflows/build.yml)
 
 # MCBasic
 
