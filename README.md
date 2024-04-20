@@ -26,7 +26,7 @@ This is a list of features that are currently implemented or planned for the fut
   - [x] **Integer**.
   - [x] **Fixed point**.
   - [x] **String**.
-  - [x] **Boolean**: Booleans are represented as numbers, with 0 being false and 1 being true. There isn't a separate boolean type.
+  - [x] **Boolean**: Booleans do not have a type. Other types are evaluated to be truthy or falsy. Falsy values are `0`, `0.0`, `""`.
   - [ ] **Array**.
   - [ ] **Struct**: User-defined data types.
 - [x] **Comments**: Single-line comments with `#`.
@@ -46,9 +46,61 @@ These are some of the quirks of the language that you should be aware of. They m
 - **Recursive functions**: Recursive functions have not been thoroughly tested and may not work as expected.
 
 
+## Usage
+
+First you need to install the compiler. It's a standalone binary, so you can download it and run it from anywhere.
+
+### Project setup
+
+Create a new directory for your project and create a file called `project.toml` with the following content:
+
+```toml
+[project]
+name = "My project"
+namespace = "my_project"
+description = "A description of your project"
+version = "0.1.0"
+entrypoint = "main.mcb"
+```
+
+This file is used to store metadata about your project, and it tells the compiler where to start compiling your code and
+how to generate the pack.mcmeta file.
+
+### Writing code
+
+Create a new file called `main.mcb` with the following content:
+
+```python # Python is used for syntax highlighting, but the language is not Python
+func main() {
+    print("Hello, world!");
+}
+```
+
+This is the entry point of your program. The `main` function is called when the datapack is loaded.
+
+### Compiling
+
+Run the following command inside the directory to compile your code:
+
+```sh
+./mcbasic
+```
+
+This will generate a new directory called `build` with the compiled datapack inside.
+You can then move this directory to your Minecraft world's datapacks folder.
+
+> **Note**: The compiler will overwrite the `build` directory every time you compile your code. Make sure to back up any changes you make to the datapack.
+> You can also specify a different output directory by passing the `-output` flag to the compiler.
+
+### Running
+
+Load the datapack in your Minecraft world and join or reload the world to see the output of your program.
+if you are joining a world, the message may appear before you join the world. You can always run the command `/function <your_namespace>:main` to see the output again.
+
+
 ## Example
 
-```
+```python # Python is used for syntax highlighting, but the language is not Python
 func add(a: fixed, b: fixed) fixed {
     return a + b;
 }
@@ -89,6 +141,9 @@ func main() {
     
     # Other types can be appended to strings. The string must be on the left side of the operation for this to work
     print("10th fib: " + fib(10));
+    
+    # You can also run raw commands with the built-in exec function
+    exec("say Hello, world!");
     
     # You can also slice strings
     print(hello[0:5]);
