@@ -4,12 +4,7 @@
 name: build
 
 on:
-  push:
-    branches: [ "master" ]
-    paths:
-      - '**.go'
-      - '**.mod'
-      - '**.sum'
+  workflow_dispatch:
   pull_request:
     branches: [ "master" ]
     paths:
