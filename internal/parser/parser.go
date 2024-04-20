@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
@@ -31,7 +30,6 @@ func (p *Parser) Parse() Program {
 	for !p.IsAtEnd() {
 		statement := p.statement()
 		if statement == nil {
-			fmt.Println("Error in statement")
 			continue
 		}
 		if statement.TType() != statements.FunctionDeclarationStmtType {

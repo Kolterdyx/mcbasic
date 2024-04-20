@@ -91,16 +91,22 @@ func (p *Parser) functionDeclaration() statements.Stmt {
 			}
 			argName := p.consume(tokens.Identifier, "Expected parameter name.")
 			p.consume(tokens.Colon, "Expected type declaration.")
-			if !p.match(tokens.IntType, tokens.StringType) {
+			if !p.match(tokens.IntType, tokens.StringType, tokens.FixedType) {
 				p.error(p.peek(), "Expected parameter type.")
 				return nil
 			}
 			type_ := p.previous()
 			var valueType expressions.ValueType
-			if type_.Type == tokens.StringType {
+			switch type_.Type {
+			case tokens.StringType:
 				valueType = expressions.StringType
-			} else {
+			case tokens.IntType:
 				valueType = expressions.IntType
+			case tokens.FixedType:
+				valueType = expressions.FixedType
+			default:
+				p.error(type_, "Expected parameter type.")
+				return nil
 			}
 			parameters = append(parameters, statements.FuncArg{Name: argName.Lexeme, Type: valueType})
 			if !p.match(tokens.Comma) {
@@ -114,7 +120,10 @@ func (p *Parser) functionDeclaration() statements.Stmt {
 		returnType = expressions.IntType
 	} else if p.match(tokens.StringType) {
 		returnType = expressions.StringType
+	} else if p.match(tokens.FixedType) {
+		returnType = expressions.FixedType
 	}
+
 	// Add all parameters to the current scope
 	for _, arg := range parameters {
 		p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{Name: arg.Name, Type: arg.Type})

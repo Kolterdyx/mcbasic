@@ -204,5 +204,6 @@ func (p *Parser) primary() expressions.Expr {
 	}
 
 	p.error(p.peek(), "Expected expression.")
+	p.synchronize()
 	return nil
 }
