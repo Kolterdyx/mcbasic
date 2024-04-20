@@ -90,6 +90,7 @@ func parseArgs() interfaces.ProjectConfig {
 	if *versionPtr {
 		fmt.Printf("MCBasic version %s\n", version)
 		fmt.Println("Created by Kolterdyx")
+		fmt.Println("https://github.com/Kolterdyx/mcbasic")
 		os.Exit(0)
 	}
 
