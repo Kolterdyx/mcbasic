@@ -62,3 +62,12 @@ func (o *Op) TraceStorage(storage string, path string, extra string) string {
 func (o *Op) TraceScore(varName string, ns string, extra string) string {
 	return o.Trace(fmt.Sprintf("(%s:%s)", ns, varName), fmt.Sprintf("{\"score\":{\"name\":\"%s\",\"objective\":\"%s\"}}", varName, ns), extra)
 }
+
+func (o *Op) Exception(message string) string {
+	cmd := ""
+	cmd += o.LoadArgConst("print", "text", fmt.Sprintf("%sException: %s", Red.Format, message))
+	cmd += o.Call("print", "")
+	// TODO: Implement schedule clear
+	cmd += o.Return()
+	return cmd
+}

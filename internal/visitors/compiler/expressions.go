@@ -200,10 +200,6 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) interface{} {
 	// Check index bounds
 	lenReg := c.newRegister(ops.RX)
 
-	errorMsgCmd := ""
-	errorMsgCmd += c.opHandler.Call("print", "")
-	errorMsgCmd += c.opHandler.Return()
-
 	cmd += c.opHandler.SizeString(ops.Cs(ops.RX), ops.Cs(lenReg))
 
 	// If any of the indexes are negative, add the length of the string to them
@@ -227,18 +223,18 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) interface{} {
 	cmd += c.opHandler.ExecCond(
 		fmt.Sprintf("score %s %s > %s %s", ops.Cs(regIndexStart), c.Namespace, ops.Cs(regIndexEnd), c.Namespace),
 		true,
-		c.opHandler.LoadArgConst("print", "text", ops.Red.Format+"Start index greater than end index")+errorMsgCmd,
+		c.opHandler.Exception("Start index greater than end index"),
 	)
 
 	cmd += c.opHandler.ExecCond(
 		fmt.Sprintf("score %s %s >= %s %s", ops.Cs(regIndexStart), c.Namespace, ops.Cs(lenReg), c.Namespace),
 		true,
-		c.opHandler.LoadArgConst("print", "text", ops.Red.Format+"Start slice index out of bounds")+errorMsgCmd,
+		c.opHandler.Exception("Start slice index out of bounds"),
 	)
 	cmd += c.opHandler.ExecCond(
 		fmt.Sprintf("score %s %s > %s %s", ops.Cs(regIndexEnd), c.Namespace, ops.Cs(lenReg), c.Namespace),
 		true,
-		c.opHandler.LoadArgConst("print", "text", ops.Red.Format+"End slice index out of bounds")+errorMsgCmd,
+		c.opHandler.Exception("End slice index out of bounds"),
 	)
 
 	// Slice operation
