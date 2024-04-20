@@ -26,12 +26,14 @@ func (p *Parser) statement() statements.Stmt {
 			return p.expressionStatement()
 		}
 	}
-
 	return p.expressionStatement()
 }
 
 func (p *Parser) expressionStatement() statements.Stmt {
 	value := p.expression()
+	if value == nil {
+		return nil
+	}
 	p.consume(tokens.Semicolon, "Expected ';' after value.")
 	return statements.ExpressionStmt{Expression: value}
 }
@@ -48,14 +50,19 @@ func (p *Parser) letDeclaration() statements.Stmt {
 		varType = expressions.FixedType
 	} else {
 		p.error(p.peek(), "Expected variable type.")
+		return nil
 	}
 	var initializer expressions.Expr
 	if p.match(tokens.Equal) {
 		initializer = p.expression()
+		if initializer == nil {
+			return nil
+		}
 	}
 	p.consume(tokens.Semicolon, "Expected ';' after variable declaration.")
-	if (initializer != nil && initializer.ReturnType() != varType) || (initializer == nil && varType == expressions.StringType) {
+	if initializer != nil && initializer.ReturnType() != varType {
 		p.error(p.peekCount(-2), fmt.Sprintf("Cannot assign %s to %s.", initializer.ReturnType(), varType))
+		return nil
 	}
 	p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{Name: name.Lexeme, Type: varType})
 	return statements.VariableDeclarationStmt{Name: name, Type: varType, Initializer: initializer}
@@ -65,6 +72,9 @@ func (p *Parser) variableAssignment() statements.Stmt {
 	name := p.previous()
 	p.consume(tokens.Equal, "Expected '=' after variable name.")
 	value := p.expression()
+	if value == nil {
+		return nil
+	}
 	p.consume(tokens.Semicolon, "Expected ';' after value.")
 	return statements.VariableAssignmentStmt{Name: name, Value: value}
 }
@@ -77,11 +87,13 @@ func (p *Parser) functionDeclaration() statements.Stmt {
 		for {
 			if len(parameters) >= 255 {
 				p.error(p.peek(), "Cannot have more than 255 parameters.")
+				return nil
 			}
 			argName := p.consume(tokens.Identifier, "Expected parameter name.")
 			p.consume(tokens.Colon, "Expected type declaration.")
 			if !p.match(tokens.IntType, tokens.StringType) {
 				p.error(p.peek(), "Expected parameter type.")
+				return nil
 			}
 			type_ := p.previous()
 			var valueType expressions.ValueType
@@ -118,7 +130,12 @@ func (p *Parser) block(checkBraces ...bool) statements.BlockStmt {
 		p.consume(tokens.BraceOpen, "Expected '{' before block.")
 	}
 	for !p.check(tokens.BraceClose) && !p.IsAtEnd() {
-		stmts = append(stmts, p.statement())
+		stmt := p.statement()
+		if stmt == nil {
+			p.synchronize()
+			continue
+		}
+		stmts = append(stmts)
 	}
 	if len(checkBraces) == 0 || checkBraces[0] {
 		p.consume(tokens.BraceClose, "Expected '}' after block.")

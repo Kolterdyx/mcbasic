@@ -5,7 +5,7 @@ import "github.com/Kolterdyx/mcbasic/internal/interfaces"
 type ValueType string
 
 const (
-	VoidType   ValueType = ""
+	VoidType   ValueType = "void"
 	ErrorType  ValueType = "error"
 	IntType    ValueType = "int"
 	StringType ValueType = "str"

@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/expressions"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	log "github.com/sirupsen/logrus"
 )
@@ -50,16 +52,15 @@ func (p *Parser) previous() tokens.Token {
 
 func (p *Parser) error(token tokens.Token, message string) {
 	if token.Type == tokens.Eof {
-		p.report(token.Line+1, token.Column, " at end", message)
+		p.report(token.Line, token.Column, " at end", message)
 	} else {
-		p.report(token.Line+1, token.Column, " at '"+token.Lexeme+"'", message)
+		p.report(token.Line, token.Column, " at '"+token.Lexeme+"'", message)
 	}
-	p.synchronize()
 }
 
 func (p *Parser) report(line int, pos int, s string, message string) {
 	p.HadError = true
-	log.Errorf("[Position %d:%d] Error%s: %s\n", line, pos, s, message)
+	log.Errorf("[Position %d:%d] Error%s: %s\n", line+1, pos+1, s, message)
 }
 
 func (p *Parser) consume(tokenType tokens.TokenType, message string) tokens.Token {
@@ -71,12 +72,42 @@ func (p *Parser) consume(tokenType tokens.TokenType, message string) tokens.Toke
 }
 
 func (p *Parser) synchronize() {
-	p.advance()
-
 	for !p.IsAtEnd() {
 		if p.match(tokens.Semicolon, tokens.BraceClose) {
 			return
 		}
 		p.advance()
 	}
+}
+
+func (p *Parser) stepBack() {
+	p.current--
+}
+
+func (p *Parser) location() interfaces.SourceLocation {
+	return interfaces.SourceLocation{Line: p.previous().Line, Column: p.previous().Column}
+}
+
+func (p *Parser) peekCount(offset int) tokens.Token {
+	if p.current+offset >= len(p.Tokens) {
+		return p.Tokens[len(p.Tokens)-1]
+	}
+	return p.Tokens[p.current+offset]
+}
+
+func (p *Parser) getType(name tokens.Token) expressions.ValueType {
+	// Search the variable in the current scope
+	for _, v := range p.variables {
+		for _, def := range v {
+			if def.Name == name.Lexeme {
+				return def.Type
+			}
+		}
+	}
+	for _, f := range p.functions {
+		if f.Name == name.Lexeme {
+			return f.ReturnType
+		}
+	}
+	return ""
 }

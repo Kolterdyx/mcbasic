@@ -1,8 +1,8 @@
 package parser
 
 import (
+	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
-	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	log "github.com/sirupsen/logrus"
@@ -31,6 +31,7 @@ func (p *Parser) Parse() Program {
 	for !p.IsAtEnd() {
 		statement := p.statement()
 		if statement == nil {
+			fmt.Println("Error in statement")
 			continue
 		}
 		if statement.TType() != statements.FunctionDeclarationStmtType {
@@ -41,19 +42,4 @@ func (p *Parser) Parse() Program {
 		p.functions = append(p.functions, statements.FuncDef{Name: funcStmt.Name.Lexeme, ReturnType: funcStmt.ReturnType, Parameters: funcStmt.Parameters})
 	}
 	return Program{Functions: functions}
-}
-
-func (p *Parser) stepBack() {
-	p.current--
-}
-
-func (p *Parser) location() interfaces.SourceLocation {
-	return interfaces.SourceLocation{Line: p.previous().Line, Column: p.previous().Column}
-}
-
-func (p *Parser) peekCount(offset int) tokens.Token {
-	if p.current+offset >= len(p.Tokens) {
-		return p.Tokens[len(p.Tokens)-1]
-	}
-	return p.Tokens[p.current+offset]
 }

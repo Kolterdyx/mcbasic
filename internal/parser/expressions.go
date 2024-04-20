@@ -95,12 +95,17 @@ func (p *Parser) unary() expressions.Expr {
 func (p *Parser) value() expressions.Expr {
 	if p.match(tokens.Identifier) {
 		identifier := p.previous()
+		identifierType := p.getType(identifier)
+		if identifierType == "" {
+			p.error(identifier, "Undeclared identifier")
+			return nil
+		}
 		if p.match(tokens.ParenOpen) {
 			return p.functionCall(identifier)
 		} else if p.match(tokens.BracketOpen) {
-			return p.slice(expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: p.getType(identifier)})
+			return p.slice(expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: identifierType})
 		} else {
-			return expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: p.getType(identifier)}
+			return expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: identifierType}
 		}
 	}
 	return p.primary()
@@ -111,9 +116,14 @@ func (p *Parser) functionCall(name tokens.Token) expressions.Expr {
 	args := make([]expressions.Expr, 0)
 	if !p.check(tokens.ParenClose) {
 		for {
-			args = append(args, p.expression())
+			exp := p.expression()
+			if exp == nil {
+				return nil
+			}
+			args = append(args, exp)
 			if len(args) >= 255 {
 				p.error(p.peek(), "Cannot have more than 255 arguments.")
+				return nil
 			}
 			if !p.match(tokens.Comma) {
 				break
@@ -143,15 +153,22 @@ func (p *Parser) functionCall(name tokens.Token) expressions.Expr {
 	}
 	if !found {
 		p.error(name, fmt.Sprintf("Function %s not found.", name.Lexeme))
+		return nil
 	}
 	return expressions.FunctionCallExpr{Name: name, Arguments: args, SourceLocation: location, Type: returnType}
 }
 
 func (p *Parser) slice(expr expressions.Expr) expressions.Expr {
 	start := p.expression()
+	if start == nil {
+		return nil
+	}
 	var end expressions.Expr
 	if p.match(tokens.Colon) {
 		end = p.expression()
+		if end == nil {
+			return nil
+		}
 	}
 	p.consume(tokens.BracketClose, "Expected ']' at the end of the slice.")
 	return expressions.SliceExpr{StartIndex: start, EndIndex: end, TargetExpr: expr, SourceLocation: p.location()}
@@ -179,23 +196,13 @@ func (p *Parser) primary() expressions.Expr {
 	}
 	if p.match(tokens.ParenOpen) {
 		expr := p.expression()
+		if expr != nil {
+			return nil
+		}
 		p.consume(tokens.ParenClose, "Expected ')' after expression.")
 		return expressions.GroupingExpr{Expression: expr, SourceLocation: p.location()}
 	}
 
 	p.error(p.peek(), "Expected expression.")
 	return nil
-}
-
-func (p *Parser) getType(name tokens.Token) expressions.ValueType {
-	// Search the variable in the current scope
-	for _, v := range p.variables {
-		for _, def := range v {
-			if def.Name == name.Lexeme {
-				return def.Type
-			}
-		}
-	}
-	p.error(name, "Variable not found")
-	return ""
 }
