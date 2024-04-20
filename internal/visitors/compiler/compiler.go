@@ -157,11 +157,21 @@ func (c *Compiler) createBuiltinFunctions() {
 		expressions.VoidType,
 	)
 	c.createFunction(
+		"internal/concat",
+		`$data modify storage $(storage) $(res) set value "$(a)$(b)"`,
+		[]statements.FuncArg{
+			{Name: "storage", Type: expressions.StringType},
+			{Name: "res", Type: expressions.StringType},
+			{Name: "a", Type: expressions.StringType},
+			{Name: "b", Type: expressions.VoidType},
+		},
+		expressions.VoidType,
+	)
+	c.createFunction(
 		"internal/init",
 		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
-			c.opHandler.MoveConst("0", ops.CALL)+
-			c.opHandler.MoveScore(ops.CALL, ops.CALL)+
 			c.opHandler.LoadArgConst("print", "text", "MCB pack loaded")+
+			c.opHandler.Call("print", "")+
 			c.opHandler.Call("main", ""),
 		[]statements.FuncArg{},
 		expressions.VoidType,

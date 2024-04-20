@@ -78,10 +78,10 @@ func main() {
     let x: fixed = 5.51;
     let y: fixed = 10.73;
     let z: fixed = add(x, y);
-    let hello: str = "Hello world!";
+    let hello: str = "Hello" + " world!";
     print(hello);
     print(z);
-    print(fib(10));
+    print("10th fib: " + fib(10));
 }
 ```
 

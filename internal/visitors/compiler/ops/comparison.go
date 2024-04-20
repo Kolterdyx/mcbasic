@@ -66,8 +66,8 @@ func (o *Op) EqStrings(ra string, rb string, rx string) string {
 	ralen := ra + "len"
 	rblen := rb + "len"
 	cmd += o.MoveConst("1", rx)
-	cmd += o.LenString(ra, ralen)
-	cmd += o.LenString(rb, rblen)
+	cmd += o.SizeString(ra, ralen)
+	cmd += o.SizeString(rb, rblen)
 	cmd += o.MoveScore(ralen, ralen)
 	cmd += o.MoveScore(rblen, rblen)
 	cmd += o.ExecCond(

@@ -76,12 +76,11 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 		}
 
 	case expressions.StringType:
-		c.error(expr.SourceLocation, "String operations are not supported yet")
-		//if expr.Operator.Type == tokens.Plus {
-		//	return c.opHandler.Concat(ops.RA, ops.RB, ops.RX)
-		//} else {
-		//	panic("Unknown operator")
-		//}
+		if expr.Operator.Type == tokens.Plus {
+			cmd += c.opHandler.Concat(ops.Cs(regRa), ops.Cs(regRb), ops.Cs(ops.RX))
+		} else {
+			c.error(expr.SourceLocation, "Invalid operator for strings")
+		}
 	default:
 		c.error(expr.SourceLocation, "Invalid type combination in binary operation")
 	}
