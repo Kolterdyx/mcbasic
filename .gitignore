@@ -2,6 +2,7 @@
 *.mcmeta
 *.json
 *.txt
+!version.txt
 mcbasic
 .idea
 build

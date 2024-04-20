@@ -1,7 +1,9 @@
 package main
 
 import (
+	"embed"
 	"flag"
+	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/Kolterdyx/mcbasic/internal"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
@@ -10,6 +12,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 )
+
+//go:embed version.txt
+var f embed.FS
 
 func main() {
 
@@ -67,11 +72,26 @@ func loadProject(file string) interfaces.ProjectConfig {
 
 func parseArgs() interfaces.ProjectConfig {
 	// Parse command line arguments
+
+	versionPtr := flag.Bool("version", false, "Print version")
+
 	projectFilePtr := flag.String("config", "project.toml", "Path to the project config file")
 	outputDirPtr := flag.String("output", "build", "Output directory")
 	enableTracesPtr := flag.Bool("traces", false, "Enable traces")
 	fixedPointPrecision := flag.Int("fpp", 4, "Fixed point precision")
 	flag.Parse()
+
+	data, _ := f.ReadFile("version.txt")
+	if data == nil {
+		log.Warnln("Version file not found")
+	}
+	version := string(data)
+
+	if *versionPtr {
+		fmt.Printf("MCBasic version %s\n", version)
+		fmt.Println("Created by Kolterdyx")
+		os.Exit(0)
+	}
 
 	// Load config toml file
 	config := loadProject(*projectFilePtr)
