@@ -144,7 +144,7 @@ func (p *Parser) block(checkBraces ...bool) statements.BlockStmt {
 			p.synchronize()
 			continue
 		}
-		stmts = append(stmts)
+		stmts = append(stmts, stmt)
 	}
 	if len(checkBraces) == 0 || checkBraces[0] {
 		p.consume(tokens.BraceClose, "Expected '}' after block.")
