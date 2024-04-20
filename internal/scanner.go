@@ -19,13 +19,13 @@ type Scanner struct {
 	pos      int
 }
 
-func (s *Scanner) report(line int, where string, message string) {
-	log.Errorf("[line %d] Error %s: %s\n", line, where, message)
+func (s *Scanner) report(line int, column int, message string) {
+	log.Errorf("[Position %d:%d] Error: %s\n", line+1, column+1, message)
 	s.HadError = true
 }
 
 func (s *Scanner) error(line int, message string) {
-	s.report(line+1, "at "+strconv.Itoa(s.pos), message)
+	s.report(line, s.pos, message)
 }
 
 func (s *Scanner) Scan(source string) []tokens.Token {
