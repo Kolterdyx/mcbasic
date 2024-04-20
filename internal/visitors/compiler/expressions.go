@@ -168,7 +168,7 @@ func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) interface{} {
 		// If left side is true, return true
 		evalRightSide := ""
 		cmd += c.opHandler.MoveScore(regRa, regRa)
-		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), false, c.opHandler.MoveConst("1", ops.Cs(ops.RX)))
+		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), false, c.opHandler.Move(regRa, ops.Cs(ops.RX)))
 		evalRightSide += rightSide
 		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), true, c.opHandler.MoveConst("0", ops.Cs(ops.RX)))
 		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), false, c.opHandler.Move(regRb, ops.Cs(ops.RX)))
