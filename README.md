@@ -53,6 +53,7 @@ func add(a: fixed, b: fixed) fixed {
     return a + b;
 }
 
+# Recursion is possible! Careful not to hit the maxCommandChainLength or the maxCommandForkCount limit 
 func fib(n: int) int {
     if (n <= 1) {
         return n;
@@ -78,10 +79,24 @@ func main() {
     let x: fixed = 5.51;
     let y: fixed = 10.73;
     let z: fixed = add(x, y);
+    
+    # string concatenation
     let hello: str = "Hello" + " world!";
+    
+    # print function can take any argument type
     print(hello);
     print(z);
+    
+    # Other types can be appended to strings. The string must be on the left side of the operation for this to work
     print("10th fib: " + fib(10));
+    
+    # You can also slice strings
+    print(hello[0:5]);
+    # Even with literals and negative indices
+    print("Hello world!"[-6:-1]);
+    # Expressions can be used as indices. The result must be an integer
+    print(hello[0:5 + 1]);
+    # Out of bounds exceptions are checked
 }
 ```
 
