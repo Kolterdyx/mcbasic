@@ -180,5 +180,6 @@ func (p *Parser) getType(name tokens.Token) expressions.ValueType {
 			}
 		}
 	}
-	panic("Variable not found")
+	p.error(name, "Variable not found")
+	return ""
 }
