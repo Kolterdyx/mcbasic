@@ -23,13 +23,13 @@ jobs:
 
     - name: Build
       id: build
-      run: go build -o mcbasic
+      run: go build -o mcbasic-linux-amd64
 
     - name: Release
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: mcbasic
+        files: mcbasic-linux-amd64
         token: ${{ secrets.MCBASIC_RELEASE_GITHUB_TOKEN }}
 
   build-windows:
@@ -44,11 +44,11 @@ jobs:
 
     - name: Build
       id: build
-      run: go build -o mcbasic.exe
+      run: go build -o mcbasic-windows-amd64.exe
 
     - name: Release
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: mcbasic.exe
+        files: mcbasic-windows-amd64.exe
         token: ${{ secrets.MCBASIC_RELEASE_GITHUB_TOKEN }}
