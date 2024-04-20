@@ -96,7 +96,10 @@ func main() {
     print("Hello world!"[-6:-1]);
     # Expressions can be used as indices. The result must be an integer
     print(hello[0:5 + 1]);
-    # Out of bounds exceptions are checked
+    # Out of bounds exceptions are checked, and errors are logged to the chat
+    # Negative indices are also checked
+    # print(hello[0:100]);  # This will return out of the main function and print an error message
+    # print(hello[0:-100]);  # This will return out of the main function and print an error message
 }
 ```
 
