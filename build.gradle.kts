@@ -25,6 +25,10 @@ kotlin {
         commonMain.dependencies {
             implementation("com.github.ajalt.clikt:clikt:4.4.0")
         }
+        linuxMain.dependencies {
+        }
+        mingwMain.dependencies {
+        }
     }
 }
 
