@@ -1,0 +1,19 @@
+platform: linux
+
+inputs:
+  - name: source-code
+
+outputs:
+  - name: image
+
+image_resource:
+  type: registry-image
+  source:
+    repository: concourse/oci-build-task
+
+params:
+  CONTEXT: source-code/ci/resources/linux
+  UNPACK_ROOTFS: true
+
+run:
+  path: build

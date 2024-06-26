@@ -1,0 +1,9 @@
+platform: windows
+
+inputs:
+  - name: source-code
+
+run:
+  path: gradlew.bat
+  dir: source-code
+  args: ["windowsBinaries"]

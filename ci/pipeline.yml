@@ -1,0 +1,25 @@
+resources:
+  - name: source-code
+    type: git
+    source:
+      uri: https://github.com/Kolterdyx/mcbasic.git
+
+jobs:
+  - name: build-linux
+    plan:
+      - get: source-code
+        trigger: true
+      - task: create-image
+        privileged: true
+        file: source-code/ci/tasks/linux/create-image.yml
+        output_mapping:
+          image: image
+      - task: build
+        image: image
+        file: source-code/ci/tasks/linux/build.yml
+  - name: build-windows
+    plan:
+      - get: source-code
+        trigger: true
+      - task: build
+        file: source-code/ci/tasks/windows/build.yml
