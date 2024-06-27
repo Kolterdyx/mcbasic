@@ -1,5 +1,3 @@
-![build](https://concourse.koltserver.net/api/v1/teams/main/pipelines/mcbasic/jobs/build-linux/badge)
-
 # MCBasic
 
 MCBasic is a statically typed scripting language with a mixture of C syntax and Python features.
