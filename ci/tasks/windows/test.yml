@@ -1,0 +1,12 @@
+platform: windows
+
+inputs:
+  - name: source-code
+
+caches:
+  - path: source-code/.gradle
+
+run:
+  path: ./gradlew.bat
+  dir: source-code
+  args: ["--stacktrace", "--info", "windowsTest"]
