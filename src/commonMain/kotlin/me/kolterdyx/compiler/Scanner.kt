@@ -29,6 +29,7 @@ class Scanner(
             '.' -> addToken(TokenType.DOT)
             '-' -> addToken(TokenType.MINUS)
             '+' -> addToken(TokenType.PLUS)
+            '%' -> addToken(TokenType.PERCENT)
             ';' -> addToken(TokenType.SEMICOLON)
             '*' -> addToken(TokenType.STAR)
             '!' -> addToken(if (match('=')) TokenType.BANG_EQUAL else TokenType.BANG)
@@ -67,24 +68,10 @@ class Scanner(
 
         // See if the identifier is a reserved word.
         val text = source.substring(start, current)
-        val type = when (text) {
-            "and" -> TokenType.AND
-            "class" -> TokenType.CLASS
-            "else" -> TokenType.ELSE
-            "false" -> TokenType.FALSE
-            "func" -> TokenType.FUNC
-            "for" -> TokenType.FOR
-            "if" -> TokenType.IF
-            "null" -> TokenType.NULL
-            "or" -> TokenType.OR
-            "return" -> TokenType.RETURN
-            "true" -> TokenType.TRUE
-            "var" -> TokenType.VAR
-            "while" -> TokenType.WHILE
-            else -> TokenType.IDENTIFIER
-        }
-
-        addToken(type)
+        val type = Constants.Keywords[text] ?: TokenType.IDENTIFIER
+        if (type == TokenType.TRUE || type == TokenType.FALSE) {
+            addToken(TokenType.BOOLEAN, type == TokenType.TRUE)
+        } else addToken(type)
     }
 
     private fun number() {

@@ -13,11 +13,11 @@ enum class TokenType {
     LESS, LESS_EQUAL,
 
     // Literals.
-    IDENTIFIER, STRING, INT, FLOAT,
+    IDENTIFIER, STRING, INT, FLOAT, BOOLEAN,
 
     // Keywords.
     AND, CLASS, ELSE, FALSE, FUNC, FOR, IF, NULL, OR,
-    RETURN, TRUE, VAR, WHILE,
+    RETURN, TRUE, VAR, WHILE, VALUETYPE, BREAK,
 
     EOF,
 }

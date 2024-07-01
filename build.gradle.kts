@@ -1,5 +1,6 @@
 plugins {
     kotlin("multiplatform") version "2.0.0"
+    id("io.kotest.multiplatform") version "5.9.1"
 }
 
 group = "me.kolterdyx"
@@ -25,9 +26,10 @@ kotlin {
         commonMain.dependencies {
             implementation("com.github.ajalt.clikt:clikt:4.4.0")
         }
-        linuxMain.dependencies {
-        }
-        mingwMain.dependencies {
+        commonTest.dependencies {
+            implementation("io.kotest:kotest-framework-engine:5.9.1")
+            implementation("io.kotest:kotest-assertions-core:5.9.1")
+            implementation("io.kotest:kotest-property:5.9.1")
         }
     }
 }
