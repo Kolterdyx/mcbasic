@@ -7,6 +7,6 @@ caches:
   - path: source-code/.gradle
 
 run:
-  path: ./gradlew.bat
+  path: gradlew.bat
   dir: source-code
   args: ["--stacktrace", "--info", "windowsTest"]

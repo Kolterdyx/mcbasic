@@ -17,9 +17,14 @@ jobs:
       - task: build
         image: image
         file: source-code/ci/tasks/linux/build.yml
+      - task: test
+        image: image
+        file: source-code/ci/tasks/linux/test.yml
   - name: build-windows
     plan:
       - get: source-code
         trigger: true
       - task: build
         file: source-code/ci/tasks/windows/build.yml
+      - task: test
+        file: source-code/ci/tasks/linux/test.yml
