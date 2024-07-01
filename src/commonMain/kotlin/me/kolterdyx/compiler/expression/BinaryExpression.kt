@@ -2,7 +2,7 @@ package me.kolterdyx.compiler.expression
 
 import me.kolterdyx.compiler.Token
 import me.kolterdyx.compiler.ValueType
-import me.kolterdyx.compiler.ast.ExprVisitor
+import me.kolterdyx.compiler.ast.ExpressionVisitor
 
 fun checkCompatibility(left: ValueType, right: ValueType): ValueType {
     val isCompatible = when (left) {
@@ -21,7 +21,7 @@ class BinaryExpression(
     val operator: Token,
     val right: Expression
 ) : Expression(checkCompatibility(left.valueType, right.valueType)) {
-    override fun <R> accept(visitor: ExprVisitor<R>): R {
-        return visitor.visitBinaryExpr(this)
+    override fun <R> accept(visitor: ExpressionVisitor<R>): R {
+        return visitor.visitBinary(this)
     }
 }

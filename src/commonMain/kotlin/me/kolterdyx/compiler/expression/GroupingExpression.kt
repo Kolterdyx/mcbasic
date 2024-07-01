@@ -1,11 +1,11 @@
 package me.kolterdyx.compiler.expression
 
-import me.kolterdyx.compiler.ast.ExprVisitor
+import me.kolterdyx.compiler.ast.ExpressionVisitor
 
 class GroupingExpression(
     val expression: Expression
 ) : Expression(expression.valueType) {
-    override fun <R> accept(visitor: ExprVisitor<R>): R {
-        return visitor.visitGroupingExpr(this)
+    override fun <R> accept(visitor: ExpressionVisitor<R>): R {
+        return visitor.visitGrouping(this)
     }
 }

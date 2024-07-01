@@ -5,13 +5,13 @@ import me.kolterdyx.compiler.expression.GroupingExpression
 import me.kolterdyx.compiler.expression.LiteralExpression
 import me.kolterdyx.compiler.expression.UnaryExpression
 
-interface ExprVisitor<R> {
+interface ExpressionVisitor<R> {
 
-    fun visitBinaryExpr(expr: BinaryExpression): R
+    fun visitBinary(expr: BinaryExpression): R
 
-    fun visitUnaryExpr(expr: UnaryExpression): R
+    fun visitUnary(expr: UnaryExpression): R
 
-    fun visitLiteralExpr(expr: LiteralExpression): R
+    fun visitLiteral(expr: LiteralExpression): R
 
-    fun visitGroupingExpr(expr: GroupingExpression): R
+    fun visitGrouping(expr: GroupingExpression): R
 }
