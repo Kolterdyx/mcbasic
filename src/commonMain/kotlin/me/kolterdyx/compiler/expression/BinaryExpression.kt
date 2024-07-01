@@ -16,11 +16,11 @@ fun checkCompatibility(left: ValueType, right: ValueType): ValueType {
     return left
 }
 
-class BinaryExpr(
-    val left: Expr,
+class BinaryExpression(
+    val left: Expression,
     val operator: Token,
-    val right: Expr
-) : Expr(checkCompatibility(left.valueType, right.valueType)) {
+    val right: Expression
+) : Expression(checkCompatibility(left.valueType, right.valueType)) {
     override fun <R> accept(visitor: ExprVisitor<R>): R {
         return visitor.visitBinaryExpr(this)
     }

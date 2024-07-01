@@ -1,17 +1,17 @@
 package me.kolterdyx.compiler.ast
 
-import me.kolterdyx.compiler.expression.BinaryExpr
-import me.kolterdyx.compiler.expression.GroupingExpr
-import me.kolterdyx.compiler.expression.LiteralExpr
-import me.kolterdyx.compiler.expression.UnaryExpr
+import me.kolterdyx.compiler.expression.BinaryExpression
+import me.kolterdyx.compiler.expression.GroupingExpression
+import me.kolterdyx.compiler.expression.LiteralExpression
+import me.kolterdyx.compiler.expression.UnaryExpression
 
 interface ExprVisitor<R> {
 
-    fun visitBinaryExpr(expr: BinaryExpr): R
+    fun visitBinaryExpr(expr: BinaryExpression): R
 
-    fun visitUnaryExpr(expr: UnaryExpr): R
+    fun visitUnaryExpr(expr: UnaryExpression): R
 
-    fun visitLiteralExpr(expr: LiteralExpr): R
+    fun visitLiteralExpr(expr: LiteralExpression): R
 
-    fun visitGroupingExpr(expr: GroupingExpr): R
+    fun visitGroupingExpr(expr: GroupingExpression): R
 }
