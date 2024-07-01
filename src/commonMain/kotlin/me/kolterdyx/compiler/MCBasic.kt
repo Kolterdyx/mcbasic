@@ -2,7 +2,6 @@ package me.kolterdyx.compiler
 
 class MCBasic {
 
-
     var hadError: Boolean = false
         private set
 
@@ -12,12 +11,10 @@ class MCBasic {
 
         val scanner = Scanner(source)
         val tokens = scanner.scanTokens()
-
-
     }
 
     private fun error(position: Pair<Int, Int>, message: String) {
-        println { "Error at [${position.first}:${position.second}]: $message" }
+        println("Error at [${position.first}:${position.second}]: $message")
         hadError = true
     }
 

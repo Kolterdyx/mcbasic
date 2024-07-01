@@ -6,7 +6,7 @@ import me.kolterdyx.compiler.ast.ExprVisitor
 class UnaryExpr(
     val operator: Token,
     val right: Expr
-) : Expr() {
+) : Expr(right.valueType) {
     override fun <R> accept(visitor: ExprVisitor<R>): R {
         return visitor.visitUnaryExpr(this)
     }
