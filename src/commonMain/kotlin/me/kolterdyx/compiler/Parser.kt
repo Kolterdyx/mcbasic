@@ -1,26 +1,25 @@
-package me.kolterdyx.compiler.parser
+package me.kolterdyx.compiler
 
-import me.kolterdyx.compiler.Token
-import me.kolterdyx.compiler.TokenType
 import me.kolterdyx.compiler.exception.ParseException
 import me.kolterdyx.compiler.expression.BinaryExpression
 import me.kolterdyx.compiler.expression.Expression
 import me.kolterdyx.compiler.expression.LiteralExpression
+import me.kolterdyx.compiler.statement.Statement
 
-class ExpressionParser(
+class Parser(
     private var current: Int = 0
-) : Parser<List<Token>, List<Expression>> {
+) {
 
     private var tokens: MutableList<Token> = mutableListOf()
 
-    override fun parse(data: List<Token>): List<Expression> {
+    fun parse(data: List<Token>): Statement {
         val expressions = mutableListOf<Expression>()
         tokens = data.toMutableList()
         current = 0
         while (!isAtEnd()) {
             expressions.add(parseExpression())
         }
-        return expressions
+        return Statement.Empty()
     }
 
     private fun parseExpression(): Expression {

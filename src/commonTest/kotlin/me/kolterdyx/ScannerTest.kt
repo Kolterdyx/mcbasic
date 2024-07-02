@@ -30,6 +30,7 @@ class ScannerTest : FunSpec({
             row("or", TokenType.OR, null),
             row("if", TokenType.IF, null),
             row("else", TokenType.ELSE, null),
+            row("break", TokenType.BREAK, null),
             row("while", TokenType.WHILE, null),
             row("for", TokenType.FOR, null),
             row("func", TokenType.FUNC, null),

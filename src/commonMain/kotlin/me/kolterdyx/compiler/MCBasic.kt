@@ -1,8 +1,5 @@
 package me.kolterdyx.compiler
 
-import me.kolterdyx.compiler.parser.ExpressionParser
-import me.kolterdyx.compiler.parser.MCBasicParser
-import me.kolterdyx.compiler.parser.StatementParser
 
 class MCBasic {
 
@@ -17,10 +14,7 @@ class MCBasic {
         val tokens = scanner.scanTokens()
         println(tokens)
 
-        val parser = MCBasicParser(
-            ExpressionParser(),
-            StatementParser()
-        )
+        val parser = Parser()
         try {
             parser.parse(tokens)
         } catch (e: Exception) {

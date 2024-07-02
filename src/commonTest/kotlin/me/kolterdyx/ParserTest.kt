@@ -10,9 +10,9 @@ import me.kolterdyx.compiler.TokenType
 import me.kolterdyx.compiler.exception.ParseException
 import me.kolterdyx.compiler.expression.BinaryExpression
 import me.kolterdyx.compiler.expression.LiteralExpression
-import me.kolterdyx.compiler.parser.ExpressionParser
+import me.kolterdyx.compiler.Parser
 
-class ExpressionParserTest : FunSpec({
+class ParserTest : FunSpec({
     test("Binary expressions") {
         forAll(
             row(TokenType.INT, TokenType.INT, TokenType.PLUS),
@@ -70,7 +70,7 @@ class ExpressionParserTest : FunSpec({
                 Token(operator, "", null, Pair(1, 2)),
                 LiteralExpression(Token(right, "1", 1, Pair(1, 3))),
             )
-            val parser = ExpressionParser()
+            val parser = Parser()
             val expression = parser.parse(tokens)
             expression[0] shouldBe expected
         }
@@ -89,7 +89,7 @@ class ExpressionParserTest : FunSpec({
                 Token(right, "1", 1, Pair(1, 3)),
                 Token(TokenType.EOF, "", null, Pair(1, 4)),
             )
-            val parser = ExpressionParser()
+            val parser = Parser()
             shouldThrow<ParseException> {
                 parser.parse(tokens)
             }
