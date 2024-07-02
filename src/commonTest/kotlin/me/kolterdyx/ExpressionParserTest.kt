@@ -68,7 +68,7 @@ class ExpressionParserTest : FunSpec({
             val expected = BinaryExpression(
                 LiteralExpression(Token(left, "1", 1, Pair(1, 1))),
                 Token(operator, "", null, Pair(1, 2)),
-                LiteralExpression(Token(left, "1", 1, Pair(1, 3))),
+                LiteralExpression(Token(right, "1", 1, Pair(1, 3))),
             )
             val parser = ExpressionParser()
             val expression = parser.parse(tokens)
