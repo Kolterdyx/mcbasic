@@ -15,25 +15,12 @@ object Constants {
             TokenType.STAR,
             TokenType.SLASH,
             TokenType.PERCENT,
-            TokenType.EQUAL_EQUAL,
-            TokenType.BANG_EQUAL,
-            TokenType.GREATER,
-            TokenType.GREATER_EQUAL,
-            TokenType.LESS,
-            TokenType.LESS_EQUAL
         ),
         ValueType.FLOAT to setOf(
             TokenType.PLUS,
             TokenType.MINUS,
             TokenType.STAR,
             TokenType.SLASH,
-            TokenType.PERCENT,
-            TokenType.EQUAL_EQUAL,
-            TokenType.BANG_EQUAL,
-            TokenType.GREATER,
-            TokenType.GREATER_EQUAL,
-            TokenType.LESS,
-            TokenType.LESS_EQUAL
         ),
     )
 
@@ -44,26 +31,12 @@ object Constants {
             TokenType.MINUS,
             TokenType.STAR,
             TokenType.SLASH,
-            TokenType.PERCENT,
-            TokenType.EQUAL_EQUAL,
-            TokenType.BANG_EQUAL,
-            TokenType.GREATER,
-            TokenType.GREATER_EQUAL,
-            TokenType.LESS,
-            TokenType.LESS_EQUAL
         ),
         ValueType.FLOAT to setOf(
             TokenType.PLUS,
             TokenType.MINUS,
             TokenType.STAR,
             TokenType.SLASH,
-            TokenType.PERCENT,
-            TokenType.EQUAL_EQUAL,
-            TokenType.BANG_EQUAL,
-            TokenType.GREATER,
-            TokenType.GREATER_EQUAL,
-            TokenType.LESS,
-            TokenType.LESS_EQUAL
         ),
     )
 
@@ -135,5 +108,13 @@ class BinaryExpression(
         if (this === other) return true
         if (other !is BinaryExpression) return false
         return this.left == other.left && this.operator == other.operator && this.right == other.right
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + left.hashCode()
+        result = 31 * result + operator.hashCode()
+        result = 31 * result + right.hashCode()
+        return result
     }
 }

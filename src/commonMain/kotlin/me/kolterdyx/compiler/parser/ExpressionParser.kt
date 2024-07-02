@@ -71,15 +71,13 @@ class ExpressionParser(
         if (match(TokenType.BANG, TokenType.MINUS)) {
             val operator = previous()
             val right = unary()
-            return BinaryExpression(LiteralExpression(tokens[current].literal), operator, right)
+            return BinaryExpression(LiteralExpression(tokens[current]), operator, right)
         }
         return primary()
     }
 
     private fun primary(): Expression {
-        if (match(TokenType.FALSE)) return LiteralExpression(false)
-        if (match(TokenType.TRUE)) return LiteralExpression(true)
-        if (match(TokenType.INT, TokenType.FLOAT, TokenType.STRING)) return LiteralExpression(previous().literal)
+        if (match(TokenType.INT, TokenType.FLOAT, TokenType.STRING, TokenType.BOOLEAN)) return LiteralExpression(previous())
         if (match(TokenType.LEFT_PAREN)) {
             val expr = parseExpression()
             if (!match(TokenType.RIGHT_PAREN)) error("Expected ')' after expression")
