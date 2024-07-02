@@ -15,6 +15,12 @@ object Constants {
             TokenType.STAR,
             TokenType.SLASH,
             TokenType.PERCENT,
+            TokenType.EQUAL_EQUAL,
+            TokenType.BANG_EQUAL,
+            TokenType.GREATER,
+            TokenType.GREATER_EQUAL,
+            TokenType.LESS,
+            TokenType.LESS_EQUAL,
         ),
         ValueType.FLOAT to setOf(
             TokenType.PLUS,
@@ -37,6 +43,12 @@ object Constants {
             TokenType.MINUS,
             TokenType.STAR,
             TokenType.SLASH,
+            TokenType.EQUAL_EQUAL,
+            TokenType.BANG_EQUAL,
+            TokenType.GREATER,
+            TokenType.GREATER_EQUAL,
+            TokenType.LESS,
+            TokenType.LESS_EQUAL,
         ),
     )
 

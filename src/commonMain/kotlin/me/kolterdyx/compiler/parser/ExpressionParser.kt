@@ -59,7 +59,7 @@ class ExpressionParser(
 
     private fun multiplication(): Expression {
         var expr = unary()
-        while (match(TokenType.SLASH, TokenType.STAR)) {
+        while (match(TokenType.SLASH, TokenType.STAR, TokenType.PERCENT)) {
             val operator = previous()
             val right = unary()
             expr = BinaryExpression(expr, operator, right)
