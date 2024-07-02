@@ -7,22 +7,19 @@ import me.kolterdyx.compiler.expression.LiteralExpression
 import me.kolterdyx.compiler.statement.Statement
 
 class Parser(
+    private val tokens: List<Token>,
     private var current: Int = 0
 ) {
 
-    private var tokens: MutableList<Token> = mutableListOf()
-
-    fun parse(data: List<Token>): Statement {
+    fun parse(): Statement {
         val expressions = mutableListOf<Expression>()
-        tokens = data.toMutableList()
-        current = 0
         while (!isAtEnd()) {
-            expressions.add(parseExpression())
+            expressions.add(expression())
         }
         return Statement.Empty()
     }
 
-    private fun parseExpression(): Expression {
+    fun expression(): Expression {
         return equality()
     }
 
@@ -78,7 +75,7 @@ class Parser(
     private fun primary(): Expression {
         if (match(TokenType.INT, TokenType.FLOAT, TokenType.STRING, TokenType.BOOLEAN)) return LiteralExpression(previous())
         if (match(TokenType.LEFT_PAREN)) {
-            val expr = parseExpression()
+            val expr = expression()
             if (!match(TokenType.RIGHT_PAREN)) error("Expected ')' after expression")
             return expr
         }

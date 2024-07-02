@@ -70,9 +70,9 @@ class ParserTest : FunSpec({
                 Token(operator, "", null, Pair(1, 2)),
                 LiteralExpression(Token(right, "1", 1, Pair(1, 3))),
             )
-            val parser = Parser()
-            val expression = parser.parse(tokens)
-            expression[0] shouldBe expected
+            val parser = Parser(tokens)
+            val expression = parser.expression()
+            expression shouldBe expected
         }
     }
 
@@ -89,9 +89,9 @@ class ParserTest : FunSpec({
                 Token(right, "1", 1, Pair(1, 3)),
                 Token(TokenType.EOF, "", null, Pair(1, 4)),
             )
-            val parser = Parser()
+            val parser = Parser(tokens)
             shouldThrow<ParseException> {
-                parser.parse(tokens)
+                parser.expression()
             }
         }
     }

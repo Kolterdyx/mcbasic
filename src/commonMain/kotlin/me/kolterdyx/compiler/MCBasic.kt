@@ -14,9 +14,9 @@ class MCBasic {
         val tokens = scanner.scanTokens()
         println(tokens)
 
-        val parser = Parser()
+        val parser = Parser(tokens)
         try {
-            parser.parse(tokens)
+            parser.parse()
         } catch (e: Exception) {
             println(e)
         }
