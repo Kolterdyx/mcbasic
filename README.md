@@ -1,4 +1,4 @@
-![](https://concourse.koltserver.net/api/v1/teams/main/pipelines/mcbasic/jobs/build-linux/badge)
+![build](https://concourse.koltserver.net/api/v1/teams/main/pipelines/mcbasic/jobs/build-linux/badge)
 
 # MCBasic
 
