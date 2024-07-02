@@ -1,3 +1,5 @@
+![](https://concourse.koltserver.net/api/v1/teams/main/pipelines/mcbasic/jobs/build-linux/badge)
+
 # MCBasic
 
 MCBasic is a statically typed scripting language with a mixture of C syntax and Python features.
@@ -8,12 +10,11 @@ This project is still WIP and is not fit for actual use.
 
 ## Progress
 
-### Development is currently halted
-Minecraft 1.20.5 introduced quite a lot of changes to how datapacks work, and even more breaking changes are
-coming in the upcoming 1.21 update. Development will continue when the dust settles after the 1.21 release
-(Mojang tends to release extra features as patches, so I'll wait until something like 1.21.2 or 1.21.3 comes out)
+### Re-implementation
 
-You can see the planned features and the progress [here](https://vikunja.koltserver.net/share/bSs9qZmSjmzsuzylrCxyoin4cLHEMEY7mPSDYm0S/auth?view=kanban)
+Dure to the latest changes in the Minecraft datapack format and the new data-driven features, I decided to rewrite the compiler from scratch.
+ In order to allow the community to contribute to the project, I decided to change the language to Kotlin, which is based on Java, so
+Minecraft modders can easily understand the code.
 
 
 ## Contributing
