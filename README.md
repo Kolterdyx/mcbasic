@@ -1,4 +1,6 @@
-![build](https://concourse.koltserver.net/api/v1/teams/main/pipelines/mcbasic/jobs/build-linux/badge)
+
+[<img src="https://concourse.koltserver.net/api/v1/teams/main/pipelines/mcbasic/jobs/build-linux/badge" alt="Linux pipeline status">](https://concourse.koltserver.net/teams/main/pipelines/mcbasic/jobs/build-linux "Linux pipeline status")
+[<img src="https://concourse.koltserver.net/api/v1/teams/main/pipelines/mcbasic/jobs/build-windows/badge" alt="Windows pipeline status">](https://concourse.koltserver.net/teams/main/pipelines/mcbasic/jobs/build-windows "Windows pipeline status")
 
 # MCBasic
 
