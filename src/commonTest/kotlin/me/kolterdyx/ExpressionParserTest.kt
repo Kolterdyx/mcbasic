@@ -13,23 +13,64 @@ import me.kolterdyx.compiler.parser.ExpressionParser
 class ExpressionParserTest : FunSpec({
     test("Binary Expressions") {
         forAll(
-            row(
-                listOf(
-                    Token(TokenType.INT, "1", 1, Pair(1, 0)),
-                    Token(TokenType.PLUS, "+", null, Pair(1, 1)),
-                    Token(TokenType.INT, "2", 2, Pair(1, 2)),
-                    Token(TokenType.EOF, "", null, Pair(1, 3)),
-                ),
-                BinaryExpression(
-                    LiteralExpression(1),
-                    Token(TokenType.PLUS, "+", null, Pair(1, 1)),
-                    LiteralExpression(2)
-                )
-            ),
-        ) { input, expected ->
-             val parser = ExpressionParser()
-             val expression = parser.parse(input)
-             expression[0] shouldBe expected
+            row(TokenType.INT, TokenType.INT, TokenType.PLUS),
+            row(TokenType.INT, TokenType.INT, TokenType.MINUS),
+            row(TokenType.INT, TokenType.INT, TokenType.STAR),
+            row(TokenType.INT, TokenType.INT, TokenType.SLASH),
+            row(TokenType.INT, TokenType.INT, TokenType.PERCENT),
+            row(TokenType.INT, TokenType.INT, TokenType.EQUAL_EQUAL),
+            row(TokenType.INT, TokenType.INT, TokenType.BANG_EQUAL),
+            row(TokenType.INT, TokenType.INT, TokenType.GREATER),
+            row(TokenType.INT, TokenType.INT, TokenType.GREATER_EQUAL),
+            row(TokenType.INT, TokenType.INT, TokenType.LESS),
+            row(TokenType.INT, TokenType.INT, TokenType.LESS_EQUAL),
+
+            row(TokenType.FLOAT, TokenType.FLOAT, TokenType.PLUS),
+            row(TokenType.FLOAT, TokenType.FLOAT, TokenType.MINUS),
+            row(TokenType.FLOAT, TokenType.FLOAT, TokenType.STAR),
+            row(TokenType.FLOAT, TokenType.FLOAT, TokenType.SLASH),
+            row(TokenType.FLOAT, TokenType.FLOAT, TokenType.EQUAL_EQUAL),
+            row(TokenType.FLOAT, TokenType.FLOAT, TokenType.BANG_EQUAL),
+            row(TokenType.FLOAT, TokenType.FLOAT, TokenType.GREATER),
+            row(TokenType.FLOAT, TokenType.FLOAT, TokenType.GREATER_EQUAL),
+            row(TokenType.FLOAT, TokenType.FLOAT, TokenType.LESS),
+            row(TokenType.FLOAT, TokenType.FLOAT, TokenType.LESS_EQUAL),
+
+            row(TokenType.INT, TokenType.FLOAT, TokenType.PLUS),
+            row(TokenType.INT, TokenType.FLOAT, TokenType.MINUS),
+            row(TokenType.INT, TokenType.FLOAT, TokenType.STAR),
+            row(TokenType.INT, TokenType.FLOAT, TokenType.SLASH),
+
+            row(TokenType.FLOAT, TokenType.INT, TokenType.PLUS),
+            row(TokenType.FLOAT, TokenType.INT, TokenType.MINUS),
+            row(TokenType.FLOAT, TokenType.INT, TokenType.STAR),
+            row(TokenType.FLOAT, TokenType.INT, TokenType.SLASH),
+
+            row(TokenType.STRING, TokenType.STRING, TokenType.PLUS),
+            row(TokenType.STRING, TokenType.STRING, TokenType.EQUAL_EQUAL),
+            row(TokenType.STRING, TokenType.STRING, TokenType.BANG_EQUAL),
+            row(TokenType.STRING, TokenType.INT, TokenType.PLUS),
+            row(TokenType.STRING, TokenType.FLOAT, TokenType.PLUS),
+            row(TokenType.STRING, TokenType.BOOLEAN, TokenType.PLUS),
+
+            row(TokenType.BOOLEAN, TokenType.BOOLEAN, TokenType.EQUAL_EQUAL),
+            row(TokenType.BOOLEAN, TokenType.BOOLEAN, TokenType.BANG_EQUAL),
+        ) { left, right, operator ->
+
+            val tokens = mutableListOf(
+                Token(left, "1", 1, Pair(1, 1)),
+                Token(operator, "", null, Pair(1, 2)),
+                Token(right, "1", 1, Pair(1, 3)),
+                Token(TokenType.EOF, "", null, Pair(1, 4)),
+            )
+            val expected = BinaryExpression(
+                LiteralExpression(1),
+                Token(operator, "", null, Pair(1, 2)),
+                LiteralExpression(1)
+            )
+            val parser = ExpressionParser()
+            val expression = parser.parse(tokens)
+            expression[0] shouldBe expected
         }
     }
 })
