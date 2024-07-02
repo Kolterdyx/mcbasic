@@ -1,17 +1,19 @@
 package me.kolterdyx
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.data.forAll
 import io.kotest.data.row
 import io.kotest.matchers.shouldBe
 import me.kolterdyx.compiler.Token
 import me.kolterdyx.compiler.TokenType
+import me.kolterdyx.compiler.exception.ParseException
 import me.kolterdyx.compiler.expression.BinaryExpression
 import me.kolterdyx.compiler.expression.LiteralExpression
 import me.kolterdyx.compiler.parser.ExpressionParser
 
 class ExpressionParserTest : FunSpec({
-    test("Binary Expressions") {
+    test("Binary expressions") {
         forAll(
             row(TokenType.INT, TokenType.INT, TokenType.PLUS),
             row(TokenType.INT, TokenType.INT, TokenType.MINUS),
@@ -64,13 +66,33 @@ class ExpressionParserTest : FunSpec({
                 Token(TokenType.EOF, "", null, Pair(1, 4)),
             )
             val expected = BinaryExpression(
-                LiteralExpression(1),
+                LiteralExpression(Token(left, "1", 1, Pair(1, 1))),
                 Token(operator, "", null, Pair(1, 2)),
-                LiteralExpression(1)
+                LiteralExpression(Token(left, "1", 1, Pair(1, 3))),
             )
             val parser = ExpressionParser()
             val expression = parser.parse(tokens)
             expression[0] shouldBe expected
+        }
+    }
+
+    test("Invalid binary expressions") {
+        forAll(
+            row(TokenType.INT, TokenType.STRING, TokenType.PLUS),
+            row(TokenType.INT, TokenType.STRING, TokenType.MINUS),
+            row(TokenType.INT, TokenType.FLOAT, TokenType.EQUAL_EQUAL),
+        ) { left, right, operator ->
+
+            val tokens = mutableListOf(
+                Token(left, "1", 1, Pair(1, 1)),
+                Token(operator, "", null, Pair(1, 2)),
+                Token(right, "1", 1, Pair(1, 3)),
+                Token(TokenType.EOF, "", null, Pair(1, 4)),
+            )
+            val parser = ExpressionParser()
+            shouldThrow<ParseException> {
+                parser.parse(tokens)
+            }
         }
     }
 })
