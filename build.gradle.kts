@@ -13,12 +13,16 @@ repositories {
 kotlin {
     linuxX64("linux") {
         binaries {
-            executable("mcbasic")
+            executable("mcbasic") {
+                runTask?.args("build")
+            }
         }
     }
     mingwX64("windows") {
         binaries {
-            executable("mcbasic")
+            executable("mcbasic"){
+                runTask?.args("build")
+            }
         }
     }
     applyDefaultHierarchyTemplate()

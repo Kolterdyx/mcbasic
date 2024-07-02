@@ -18,4 +18,22 @@ class LiteralExpression(
     override fun <R> accept(visitor: ExpressionVisitor<R>): R {
         return visitor.visitLiteral(this)
     }
+
+    override fun toString(): String {
+        return "LiteralExpression($value)"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is LiteralExpression) return false
+        if (!super.equals(other)) return false
+        if (value != other.value) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + (value?.hashCode() ?: 0)
+        return result
+    }
 }

@@ -11,16 +11,21 @@ class MCBasic {
 
     fun tokenize() {
 
-        val source: String = ""
+        val source: String = "1 + 2"
 
         val scanner = Scanner(source)
         val tokens = scanner.scanTokens()
+        println(tokens)
 
         val parser = MCBasicParser(
             ExpressionParser(),
             StatementParser()
         )
-        parser.parse(tokens)
+        try {
+            parser.parse(tokens)
+        } catch (e: Exception) {
+            println(e)
+        }
     }
 
     private fun error(position: Pair<Int, Int>, message: String) {

@@ -2,11 +2,12 @@ package me.kolterdyx.compiler
 
 class Scanner(
     private var source: String,
-    private var tokens: MutableList<Token> = mutableListOf(),
-    private var current: Int = 0,
-    private var start: Int = 0,
-    private var position: Pair<Int, Int> = Pair(1, 0),
 ) {
+    private var tokens: MutableList<Token> = mutableListOf()
+    private var current: Int = 0
+    private var start: Int = 0
+    private var position: Pair<Int, Int> = Pair(1, 0)
+
     fun scanTokens(): List<Token> {
 
         while (!isAtEnd()) {
@@ -137,7 +138,7 @@ class Scanner(
     }
 
     private fun addToken(type: TokenType, literal: Any?) {
-        val text = source.substring(start, current)
+        val text = if (type == TokenType.EOF) "" else source.substring(start, current)
         tokens.add(Token(type, text, literal, position))
     }
 

@@ -126,4 +126,14 @@ class BinaryExpression(
     override fun <R> accept(visitor: ExpressionVisitor<R>): R {
         return visitor.visitBinary(this)
     }
+
+    override fun toString(): String {
+        return "BinaryExpression($left, $operator, $right)"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is BinaryExpression) return false
+        return this.left == other.left && this.operator == other.operator && this.right == other.right
+    }
 }

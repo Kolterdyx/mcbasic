@@ -15,17 +15,12 @@ class ExpressionParser(
 
     override fun parse(data: List<Token>): List<Expression> {
         val expressions = mutableListOf<Expression>()
-        val tokens = data.toMutableList()
-        while (tokens.isNotEmpty()) {
-            expressions.add(parseExpression(tokens))
+        tokens = data.toMutableList()
+        current = 0
+        while (!isAtEnd()) {
+            expressions.add(parseExpression())
         }
         return expressions
-    }
-
-    private fun parseExpression(tokens: MutableList<Token>): Expression {
-        this.tokens = tokens
-        current = 0
-        return parseExpression()
     }
 
     private fun parseExpression(): Expression {
