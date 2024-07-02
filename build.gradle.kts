@@ -14,14 +14,24 @@ kotlin {
     linuxX64("linux") {
         binaries {
             executable("mcbasic") {
-                runTask?.args("build")
+                val args = providers.gradleProperty("runArgs")
+                if (runTask != null) {
+                    runTask!!.argumentProviders.add(CommandLineArgumentProvider {
+                        (args.orNull?.split(' ') as MutableList<String> ?: mutableListOf<String>())
+                    })
+                }
             }
         }
     }
     mingwX64("windows") {
         binaries {
-            executable("mcbasic"){
-                runTask?.args("build")
+            executable("mcbasic") {
+                val args = providers.gradleProperty("runArgs")
+                if (runTask != null) {
+                    runTask!!.argumentProviders.add(CommandLineArgumentProvider {
+                        (args.orNull?.split(' ') as MutableList<String> ?: mutableListOf<String>())
+                    })
+                }
             }
         }
     }
