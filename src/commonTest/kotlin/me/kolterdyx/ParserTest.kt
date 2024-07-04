@@ -11,6 +11,7 @@ import me.kolterdyx.compiler.exception.ParseException
 import me.kolterdyx.compiler.expression.BinaryExpression
 import me.kolterdyx.compiler.expression.LiteralExpression
 import me.kolterdyx.compiler.Parser
+import me.kolterdyx.compiler.expression.UnaryExpression
 
 class ParserTest : FunSpec({
     test("Binary expressions") {
@@ -79,6 +80,7 @@ class ParserTest : FunSpec({
     test("Invalid binary expressions") {
         forAll(
             row(TokenType.INT, TokenType.STRING, TokenType.PLUS),
+            row(TokenType.INT, TokenType.BOOLEAN, TokenType.PLUS),
             row(TokenType.INT, TokenType.STRING, TokenType.MINUS),
             row(TokenType.INT, TokenType.FLOAT, TokenType.EQUAL_EQUAL),
         ) { left, right, operator ->
@@ -93,6 +95,30 @@ class ParserTest : FunSpec({
             shouldThrow<ParseException> {
                 parser.expression()
             }
+        }
+    }
+
+    test("Unary expressions") {
+        forAll(
+            row(TokenType.PLUS, TokenType.INT),
+            row(TokenType.MINUS, TokenType.INT),
+            row(TokenType.PLUS, TokenType.FLOAT),
+            row(TokenType.MINUS, TokenType.FLOAT),
+            row(TokenType.BANG, TokenType.BOOLEAN),
+        ) { operator, right ->
+
+            val tokens = mutableListOf(
+                Token(operator, "", null, Pair(1, 1)),
+                Token(right, "1", 1, Pair(1, 2)),
+                Token(TokenType.EOF, "", null, Pair(1, 3)),
+            )
+            val expected = UnaryExpression(
+                Token(operator, "", null, Pair(1, 1)),
+                LiteralExpression(Token(right, "1", 1, Pair(1, 2))),
+            )
+            val parser = Parser(tokens)
+            val expression = parser.expression()
+            expression shouldBe expected
         }
     }
 })

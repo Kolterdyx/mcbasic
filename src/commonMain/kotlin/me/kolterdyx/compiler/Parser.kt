@@ -4,6 +4,7 @@ import me.kolterdyx.compiler.exception.ParseException
 import me.kolterdyx.compiler.expression.BinaryExpression
 import me.kolterdyx.compiler.expression.Expression
 import me.kolterdyx.compiler.expression.LiteralExpression
+import me.kolterdyx.compiler.expression.UnaryExpression
 import me.kolterdyx.compiler.statement.Statement
 
 class Parser(
@@ -64,10 +65,10 @@ class Parser(
     }
 
     private fun unary(): Expression {
-        if (match(TokenType.BANG, TokenType.MINUS)) {
+        if (match(*UnaryExpression.ValidOperators)) {
             val operator = previous()
             val right = unary()
-            return BinaryExpression(LiteralExpression(tokens[current]), operator, right)
+            return UnaryExpression(operator, right)
         }
         return primary()
     }

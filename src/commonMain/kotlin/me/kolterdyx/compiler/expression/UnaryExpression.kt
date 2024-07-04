@@ -1,12 +1,42 @@
 package me.kolterdyx.compiler.expression
 
 import me.kolterdyx.compiler.Token
+import me.kolterdyx.compiler.TokenType
+import me.kolterdyx.compiler.ValueType
 import me.kolterdyx.compiler.ast.ExpressionVisitor
 
 class UnaryExpression(
     val operator: Token,
     val right: Expression
 ) : Expression(right.valueType) {
+
+    init {
+        if (operator.type !in ValidOperators) {
+            throw IllegalArgumentException("Invalid operator: $operator")
+        }
+        if (right.valueType !in ValidCombinations[operator.type]!!) {
+            throw IllegalArgumentException("Invalid combination: $operator and ${right.valueType}")
+        }
+    }
+
+    companion object {
+        val ValidCombinations = mapOf(
+            TokenType.MINUS to setOf(
+                ValueType.INT,
+                ValueType.FLOAT
+            ),
+            TokenType.PLUS to setOf(
+                ValueType.INT,
+                ValueType.FLOAT
+            ),
+            TokenType.BANG to setOf(
+                ValueType.BOOLEAN
+            )
+        )
+
+        val ValidOperators = ValidCombinations.keys.toTypedArray()
+    }
+
     override fun <R> accept(visitor: ExpressionVisitor<R>): R {
         return visitor.visitUnary(this)
     }
