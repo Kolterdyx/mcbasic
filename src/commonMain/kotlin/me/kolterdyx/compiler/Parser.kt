@@ -1,10 +1,7 @@
 package me.kolterdyx.compiler
 
 import me.kolterdyx.compiler.exception.ParseException
-import me.kolterdyx.compiler.expression.BinaryExpression
-import me.kolterdyx.compiler.expression.Expression
-import me.kolterdyx.compiler.expression.LiteralExpression
-import me.kolterdyx.compiler.expression.UnaryExpression
+import me.kolterdyx.compiler.expression.*
 import me.kolterdyx.compiler.statement.Statement
 
 class Parser(
@@ -78,7 +75,7 @@ class Parser(
         if (match(TokenType.LEFT_PAREN)) {
             val expr = expression()
             if (!match(TokenType.RIGHT_PAREN)) error("Expected ')' after expression")
-            return expr
+            return GroupingExpression(expr)
         }
         error("Expected expression")
     }

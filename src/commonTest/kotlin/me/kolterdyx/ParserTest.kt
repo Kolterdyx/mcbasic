@@ -11,6 +11,7 @@ import me.kolterdyx.compiler.exception.ParseException
 import me.kolterdyx.compiler.expression.BinaryExpression
 import me.kolterdyx.compiler.expression.LiteralExpression
 import me.kolterdyx.compiler.Parser
+import me.kolterdyx.compiler.expression.GroupingExpression
 import me.kolterdyx.compiler.expression.UnaryExpression
 
 class ParserTest : FunSpec({
@@ -116,6 +117,69 @@ class ParserTest : FunSpec({
                 Token(operator, "", null, Pair(1, 1)),
                 LiteralExpression(Token(right, "1", 1, Pair(1, 2))),
             )
+            val parser = Parser(tokens)
+            val expression = parser.expression()
+            expression shouldBe expected
+        }
+    }
+
+    test("Invalid unary expressions") {
+        forAll(
+            row(TokenType.PLUS, TokenType.BOOLEAN),
+            row(TokenType.MINUS, TokenType.BOOLEAN),
+            row(TokenType.BANG, TokenType.INT),
+            row(TokenType.BANG, TokenType.FLOAT),
+            row(TokenType.BANG, TokenType.STRING),
+        ) { operator, right ->
+
+            val tokens = mutableListOf(
+                Token(operator, "", null, Pair(1, 1)),
+                Token(right, "1", 1, Pair(1, 2)),
+                Token(TokenType.EOF, "", null, Pair(1, 3)),
+            )
+            val parser = Parser(tokens)
+            shouldThrow<ParseException> {
+                parser.expression()
+            }
+        }
+    }
+
+    test("Literal expression") {
+        forAll(
+            row(TokenType.INT, 1),
+            row(TokenType.FLOAT, 1.0),
+            row(TokenType.STRING, "\"string\""),
+            row(TokenType.BOOLEAN, true),
+            row(TokenType.BOOLEAN, false),
+        ) { valueType, literal ->
+
+            val tokens = mutableListOf(
+                Token(valueType, literal.toString(), literal, Pair(1, 1)),
+                Token(TokenType.EOF, "", null, Pair(1, 2)),
+            )
+            val expected = LiteralExpression(Token(valueType, literal.toString(), literal, Pair(1, 1)))
+            val parser = Parser(tokens)
+            val expression = parser.expression()
+            expression shouldBe expected
+        }
+    }
+
+    test("Grouping expression") {
+        forAll(
+            row(TokenType.INT, 1),
+            row(TokenType.FLOAT, 1.0),
+            row(TokenType.STRING, "\"string\""),
+            row(TokenType.BOOLEAN, true),
+            row(TokenType.BOOLEAN, false),
+        ) { valueType, literal ->
+
+            val tokens = mutableListOf(
+                Token(TokenType.LEFT_PAREN, "(", null, Pair(1, 1)),
+                Token(valueType, literal.toString(), literal, Pair(1, 2)),
+                Token(TokenType.RIGHT_PAREN, ")", null, Pair(1, 3)),
+                Token(TokenType.EOF, "", null, Pair(1, 4)),
+            )
+            val expected = GroupingExpression(LiteralExpression(Token(valueType, literal.toString(), literal, Pair(1, 2))))
             val parser = Parser(tokens)
             val expression = parser.expression()
             expression shouldBe expected

@@ -4,6 +4,7 @@ import me.kolterdyx.compiler.Token
 import me.kolterdyx.compiler.TokenType
 import me.kolterdyx.compiler.ValueType
 import me.kolterdyx.compiler.ast.ExpressionVisitor
+import me.kolterdyx.compiler.exception.ParseException
 
 class UnaryExpression(
     val operator: Token,
@@ -12,10 +13,10 @@ class UnaryExpression(
 
     init {
         if (operator.type !in ValidOperators) {
-            throw IllegalArgumentException("Invalid operator: $operator")
+            throw ParseException(operator, "Invalid operator: $operator")
         }
         if (right.valueType !in ValidCombinations[operator.type]!!) {
-            throw IllegalArgumentException("Invalid combination: $operator and ${right.valueType}")
+            throw ParseException(operator, "Invalid combination: $operator and ${right.valueType}")
         }
     }
 
