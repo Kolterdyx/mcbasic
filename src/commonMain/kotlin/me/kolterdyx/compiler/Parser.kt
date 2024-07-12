@@ -2,23 +2,80 @@ package me.kolterdyx.compiler
 
 import me.kolterdyx.compiler.exception.ParseException
 import me.kolterdyx.compiler.expression.*
+import me.kolterdyx.compiler.statement.BlockStatement
+import me.kolterdyx.compiler.statement.ExpressionStatement
 import me.kolterdyx.compiler.statement.Statement
+import me.kolterdyx.compiler.statement.VariableDeclarationStatement
 
 class Parser(
     private val tokens: List<Token>,
     private var current: Int = 0
 ) {
 
-    fun parse(): Statement {
-        val expressions = mutableListOf<Expression>()
+    fun parse(): List<Statement> {
+        val statements = mutableListOf<Statement>()
         while (!isAtEnd()) {
-            expressions.add(expression())
+            statements.add(declaration())
         }
-        return Statement.Empty()
+        return statements
     }
 
+    private fun statement(): Statement {
+        if (match(TokenType.LEFT_BRACE)) return block()
+        return expressionStatement()
+    }
+
+    private fun block(): Statement {
+        val statements = mutableListOf<Statement>()
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            statements.add(declaration())
+        }
+        if (!match(TokenType.RIGHT_BRACE)) error("Expected '}' after block")
+        return BlockStatement(statements)
+    }
+
+    private fun declaration(): Statement {
+        try {
+            if (match(TokenType.VALUETYPE))
+                return varDeclaration()
+            return statement()
+        } catch (e: ParseException) {
+            synchronize()
+            return Statement.Empty()
+        }
+    }
+
+    private fun varDeclaration(): Statement {
+        val type = previous()
+        val name = consume(TokenType.IDENTIFIER, "Expected variable name")
+        val initializer = if (match(TokenType.EQUAL)) expression() else null
+        consume(TokenType.SEMICOLON, "Expected variable name")
+        return VariableDeclarationStatement(name, type, initializer)
+    }
+
+    private fun expressionStatement(): Statement {
+        val expr = expression()
+        if (!match(TokenType.SEMICOLON)) error("Expected ';'")
+        return ExpressionStatement(expr)
+    }
+
+    /* Expressions */
+
     fun expression(): Expression {
-        return equality()
+        return assignment()
+    }
+
+    private fun assignment(): Expression {
+        val expr = equality()
+        if (match(TokenType.EQUAL)) {
+            val value = assignment()
+            if (expr is VariableExpression) {
+                val name = expr.name
+                return AssignmentExpression(name, value)
+            }
+            error("Invalid assignment target")
+        }
+        return expr
     }
 
     private fun equality(): Expression {
@@ -78,6 +135,19 @@ class Parser(
             return GroupingExpression(expr)
         }
         error("Expected expression")
+    }
+
+    /* Utilities */
+
+    private fun synchronize() {
+        TODO("Not yet implemented")
+    }
+
+    private fun consume(identifier: TokenType, errorMsg: String): Token {
+        if (match(identifier)) {
+            return previous()
+        }
+        error(errorMsg)
     }
 
     private fun error(message: String): Nothing {

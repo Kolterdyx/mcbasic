@@ -1,9 +1,6 @@
 package me.kolterdyx.compiler.ast
 
-import me.kolterdyx.compiler.expression.BinaryExpression
-import me.kolterdyx.compiler.expression.GroupingExpression
-import me.kolterdyx.compiler.expression.LiteralExpression
-import me.kolterdyx.compiler.expression.UnaryExpression
+import me.kolterdyx.compiler.expression.*
 
 interface ExpressionVisitor<R> {
 
@@ -14,4 +11,8 @@ interface ExpressionVisitor<R> {
     fun visitLiteral(expr: LiteralExpression): R
 
     fun visitGrouping(expr: GroupingExpression): R
+
+    fun visitVariable(expr: VariableExpression): R
+
+    fun visitAssignment(expr: AssignmentExpression): R
 }
