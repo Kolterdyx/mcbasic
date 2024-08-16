@@ -14,7 +14,7 @@ This project is still WIP and is not fit for actual use.
 
 ### Re-implementation
 
-Dure to the latest changes in the Minecraft datapack format and the new data-driven features, I decided to rewrite the compiler from scratch.
+Due to the latest changes in the Minecraft datapack format and the new data-driven features, I decided to rewrite the compiler from scratch.
  In order to allow the community to contribute to the project, I decided to change the language to Kotlin, which is based on Java, so
 Minecraft modders can easily understand the code.
 
