@@ -17,73 +17,73 @@ class BinaryExpression(
     companion object {
         private val ValidIntOperators = mapOf(
             ValueType.INT to setOf(
-                TokenType.PLUS,
-                TokenType.MINUS,
-                TokenType.STAR,
-                TokenType.SLASH,
-                TokenType.PERCENT,
-                TokenType.EQUAL_EQUAL,
-                TokenType.BANG_EQUAL,
-                TokenType.GREATER,
-                TokenType.GREATER_EQUAL,
-                TokenType.LESS,
-                TokenType.LESS_EQUAL,
+                TokenType.OP_PLUS,
+                TokenType.OP_MINUS,
+                TokenType.OP_STAR,
+                TokenType.OP_SLASH,
+                TokenType.OP_PERCENT,
+                TokenType.OP_EQUAL_EQUAL,
+                TokenType.OP_BANG_EQUAL,
+                TokenType.OP_GREATER,
+                TokenType.OP_GREATER_EQUAL,
+                TokenType.OP_LESS,
+                TokenType.OP_LESS_EQUAL,
             ),
             ValueType.FLOAT to setOf(
-                TokenType.PLUS,
-                TokenType.MINUS,
-                TokenType.STAR,
-                TokenType.SLASH,
+                TokenType.OP_PLUS,
+                TokenType.OP_MINUS,
+                TokenType.OP_STAR,
+                TokenType.OP_SLASH,
             ),
         )
         private val ValidIntRightHandTypes = ValidIntOperators.keys
 
         private val ValidFloatOperators = mapOf(
             ValueType.INT to setOf(
-                TokenType.PLUS,
-                TokenType.MINUS,
-                TokenType.STAR,
-                TokenType.SLASH,
+                TokenType.OP_PLUS,
+                TokenType.OP_MINUS,
+                TokenType.OP_STAR,
+                TokenType.OP_SLASH,
             ),
             ValueType.FLOAT to setOf(
-                TokenType.PLUS,
-                TokenType.MINUS,
-                TokenType.STAR,
-                TokenType.SLASH,
-                TokenType.EQUAL_EQUAL,
-                TokenType.BANG_EQUAL,
-                TokenType.GREATER,
-                TokenType.GREATER_EQUAL,
-                TokenType.LESS,
-                TokenType.LESS_EQUAL,
+                TokenType.OP_PLUS,
+                TokenType.OP_MINUS,
+                TokenType.OP_STAR,
+                TokenType.OP_SLASH,
+                TokenType.OP_EQUAL_EQUAL,
+                TokenType.OP_BANG_EQUAL,
+                TokenType.OP_GREATER,
+                TokenType.OP_GREATER_EQUAL,
+                TokenType.OP_LESS,
+                TokenType.OP_LESS_EQUAL,
             ),
         )
         private val ValidFloatRightHandTypes = ValidFloatOperators.keys
 
         private val ValidStringOperators = mapOf(
             ValueType.STRING to setOf(
-                TokenType.PLUS,
-                TokenType.EQUAL_EQUAL,
-                TokenType.BANG_EQUAL
+                TokenType.OP_PLUS,
+                TokenType.OP_EQUAL_EQUAL,
+                TokenType.OP_BANG_EQUAL
             ),
             ValueType.INT to setOf(
-                TokenType.PLUS,
+                TokenType.OP_PLUS,
             ),
             ValueType.FLOAT to setOf(
-                TokenType.PLUS,
+                TokenType.OP_PLUS,
             ),
             ValueType.BOOLEAN to setOf(
-                TokenType.PLUS,
+                TokenType.OP_PLUS,
             )
         )
         private val ValidStringRightHandTypes = ValidStringOperators.keys
 
         private val ValidBooleanOperators = mapOf(
             ValueType.BOOLEAN to setOf(
-                TokenType.AND,
-                TokenType.OR,
-                TokenType.EQUAL_EQUAL,
-                TokenType.BANG_EQUAL
+                TokenType.KW_AND,
+                TokenType.KW_OR,
+                TokenType.OP_EQUAL_EQUAL,
+                TokenType.OP_BANG_EQUAL
             )
         )
         private val ValidBooleanRightHandTypes = ValidBooleanOperators.keys

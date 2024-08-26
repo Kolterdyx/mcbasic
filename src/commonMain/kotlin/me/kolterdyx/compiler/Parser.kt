@@ -21,22 +21,22 @@ class Parser(
     }
 
     private fun statement(): Statement {
-        if (match(TokenType.LEFT_BRACE)) return block()
+        if (match(TokenType.P_LEFT_BRACE)) return block()
         return expressionStatement()
     }
 
     private fun block(): Statement {
         val statements = mutableListOf<Statement>()
-        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+        while (!check(TokenType.P_RIGHT_BRACE) && !isAtEnd()) {
             statements.add(declaration())
         }
-        if (!match(TokenType.RIGHT_BRACE)) error("Expected '}' after block")
+        if (!match(TokenType.P_RIGHT_BRACE)) error("Expected '}' after block")
         return BlockStatement(statements)
     }
 
     private fun declaration(): Statement {
         try {
-            if (match(TokenType.VALUETYPE))
+            if (match(TokenType.KW_VALUETYPE))
                 return varDeclaration()
             return statement()
         } catch (e: ParseException) {
@@ -47,15 +47,15 @@ class Parser(
 
     private fun varDeclaration(): Statement {
         val type = previous()
-        val name = consume(TokenType.IDENTIFIER, "Expected variable name")
-        val initializer = if (match(TokenType.EQUAL)) expression() else null
-        consume(TokenType.SEMICOLON, "Expected variable name")
+        val name = consume(TokenType.LIT_IDENTIFIER, "Expected variable name")
+        val initializer = if (match(TokenType.OP_EQUAL)) expression() else null
+        consume(TokenType.P_SEMICOLON, "Expected variable name")
         return VariableDeclarationStatement(name, type, initializer)
     }
 
     private fun expressionStatement(): Statement {
         val expr = expression()
-        if (!match(TokenType.SEMICOLON)) error("Expected ';'")
+        if (!match(TokenType.P_SEMICOLON)) error("Expected ';'")
         return ExpressionStatement(expr)
     }
 
@@ -67,7 +67,7 @@ class Parser(
 
     private fun assignment(): Expression {
         val expr = equality()
-        if (match(TokenType.EQUAL)) {
+        if (match(TokenType.OP_EQUAL)) {
             val value = assignment()
             if (expr is VariableExpression) {
                 val name = expr.name
@@ -80,7 +80,7 @@ class Parser(
 
     private fun equality(): Expression {
         var expr = comparison()
-        while (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
+        while (match(TokenType.OP_BANG_EQUAL, TokenType.OP_EQUAL_EQUAL)) {
             val operator = previous()
             val right = comparison()
             expr = BinaryExpression(expr, operator, right)
@@ -90,7 +90,7 @@ class Parser(
 
     private fun comparison(): Expression {
         var expr = addition()
-        while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
+        while (match(TokenType.OP_GREATER, TokenType.OP_GREATER_EQUAL, TokenType.OP_LESS, TokenType.OP_LESS_EQUAL)) {
             val operator = previous()
             val right = addition()
             expr = BinaryExpression(expr, operator, right)
@@ -100,7 +100,7 @@ class Parser(
 
     private fun addition(): Expression {
         var expr = multiplication()
-        while (match(TokenType.MINUS, TokenType.PLUS)) {
+        while (match(TokenType.OP_MINUS, TokenType.OP_PLUS)) {
             val operator = previous()
             val right = multiplication()
             expr = BinaryExpression(expr, operator, right)
@@ -110,7 +110,7 @@ class Parser(
 
     private fun multiplication(): Expression {
         var expr = unary()
-        while (match(TokenType.SLASH, TokenType.STAR, TokenType.PERCENT)) {
+        while (match(TokenType.OP_SLASH, TokenType.OP_STAR, TokenType.OP_PERCENT)) {
             val operator = previous()
             val right = unary()
             expr = BinaryExpression(expr, operator, right)
@@ -128,10 +128,10 @@ class Parser(
     }
 
     private fun primary(): Expression {
-        if (match(TokenType.INT, TokenType.FLOAT, TokenType.STRING, TokenType.BOOLEAN)) return LiteralExpression(previous())
-        if (match(TokenType.LEFT_PAREN)) {
+        if (match(TokenType.LIT_INT, TokenType.LIT_FLOAT, TokenType.LIT_STRING, TokenType.LIT_BOOLEAN)) return LiteralExpression(previous())
+        if (match(TokenType.P_LEFT_PAREN)) {
             val expr = expression()
-            if (!match(TokenType.RIGHT_PAREN)) error("Expected ')' after expression")
+            if (!match(TokenType.P_RIGHT_PAREN)) error("Expected ')' after expression")
             return GroupingExpression(expr)
         }
         error("Expected expression")
@@ -140,7 +140,16 @@ class Parser(
     /* Utilities */
 
     private fun synchronize() {
-        TODO("Not yet implemented")
+        advance()
+        while (!isAtEnd()) {
+            if (previous().type == TokenType.P_SEMICOLON) return
+            when (peek().type) {
+                TokenType.KW_VALUETYPE -> return
+                TokenType.P_LEFT_BRACE -> return
+                TokenType.P_EOF -> return
+                else -> advance()
+            }
+        }
     }
 
     private fun consume(identifier: TokenType, errorMsg: String): Token {
@@ -183,6 +192,6 @@ class Parser(
     }
 
     private fun isAtEnd(): Boolean {
-        return peek().type == TokenType.EOF
+        return peek().type == TokenType.P_EOF
     }
 }

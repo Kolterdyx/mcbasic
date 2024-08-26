@@ -16,33 +16,33 @@ class Scanner(
             scanToken()
         }
 
-        addToken(TokenType.EOF)
+        addToken(TokenType.P_EOF)
         return tokens
     }
 
     private fun scanToken() {
         when (val c = advance()) {
-            '(' -> addToken(TokenType.LEFT_PAREN)
-            ')' -> addToken(TokenType.RIGHT_PAREN)
-            '{' -> addToken(TokenType.LEFT_BRACE)
-            '}' -> addToken(TokenType.RIGHT_BRACE)
-            ',' -> addToken(TokenType.COMMA)
-            '.' -> addToken(TokenType.DOT)
-            '-' -> addToken(TokenType.MINUS)
-            '+' -> addToken(TokenType.PLUS)
-            '%' -> addToken(TokenType.PERCENT)
-            ';' -> addToken(TokenType.SEMICOLON)
-            '*' -> addToken(TokenType.STAR)
-            '!' -> addToken(if (match('=')) TokenType.BANG_EQUAL else TokenType.BANG)
-            '=' -> addToken(if (match('=')) TokenType.EQUAL_EQUAL else TokenType.EQUAL)
-            '<' -> addToken(if (match('=')) TokenType.LESS_EQUAL else TokenType.LESS)
-            '>' -> addToken(if (match('=')) TokenType.GREATER_EQUAL else TokenType.GREATER)
+            '(' -> addToken(TokenType.P_LEFT_PAREN)
+            ')' -> addToken(TokenType.P_RIGHT_PAREN)
+            '{' -> addToken(TokenType.P_LEFT_BRACE)
+            '}' -> addToken(TokenType.P_RIGHT_BRACE)
+            ',' -> addToken(TokenType.P_COMMA)
+            '.' -> addToken(TokenType.P_DOT)
+            '-' -> addToken(TokenType.OP_MINUS)
+            '+' -> addToken(TokenType.OP_PLUS)
+            '%' -> addToken(TokenType.OP_PERCENT)
+            ';' -> addToken(TokenType.P_SEMICOLON)
+            '*' -> addToken(TokenType.OP_STAR)
+            '!' -> addToken(if (match('=')) TokenType.OP_BANG_EQUAL else TokenType.OP_BANG)
+            '=' -> addToken(if (match('=')) TokenType.OP_EQUAL_EQUAL else TokenType.OP_EQUAL)
+            '<' -> addToken(if (match('=')) TokenType.OP_LESS_EQUAL else TokenType.OP_LESS)
+            '>' -> addToken(if (match('=')) TokenType.OP_GREATER_EQUAL else TokenType.OP_GREATER)
             '/' -> {
                 if (match('/')) {
                     // A comment goes until the end of the line.
                     while (peek() != '\n' && !isAtEnd()) advance()
                 } else {
-                    addToken(TokenType.SLASH)
+                    addToken(TokenType.OP_SLASH)
                 }
             }
 
@@ -69,9 +69,9 @@ class Scanner(
 
         // See if the identifier is a reserved word.
         val text = source.substring(start, current)
-        val type = Constants.Keywords[text] ?: TokenType.IDENTIFIER
-        if (type == TokenType.TRUE || type == TokenType.FALSE) {
-            addToken(TokenType.BOOLEAN, type == TokenType.TRUE)
+        val type = Constants.Keywords[text] ?: TokenType.LIT_IDENTIFIER
+        if (type == TokenType.KW_TRUE || type == TokenType.KW_FALSE) {
+            addToken(TokenType.LIT_BOOLEAN, type == TokenType.KW_TRUE)
         } else addToken(type)
     }
 
@@ -79,7 +79,7 @@ class Scanner(
         while (peek().isDigit()) advance()
 
         if (peek() != '.' || !peekNext().isDigit()) {
-            addToken(TokenType.INT, source.substring(start, current).toInt())
+            addToken(TokenType.LIT_INT, source.substring(start, current).toInt())
             return
         }
 
@@ -92,7 +92,7 @@ class Scanner(
         }
 
         addToken(
-            TokenType.FLOAT,
+            TokenType.LIT_FLOAT,
             source.substring(start, current).toDouble()
         )
     }
@@ -118,7 +118,7 @@ class Scanner(
 
         // Trim the surrounding quotes.
         val value = source.substring(start + 1, current - 1)
-        addToken(TokenType.STRING, value)
+        addToken(TokenType.LIT_STRING, value)
     }
 
     private fun peek(): Char {
@@ -138,7 +138,7 @@ class Scanner(
     }
 
     private fun addToken(type: TokenType, literal: Any?) {
-        val text = if (type == TokenType.EOF) "" else source.substring(start, current)
+        val text = if (type == TokenType.P_EOF) "" else source.substring(start, current)
         tokens.add(Token(type, text, literal, position))
     }
 

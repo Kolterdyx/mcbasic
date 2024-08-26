@@ -8,10 +8,10 @@ import me.kolterdyx.compiler.exception.ParseException
 
 fun getLiteralValueType(token: Token): ValueType {
     return when {
-        token.type == TokenType.INT -> ValueType.INT
-        token.type == TokenType.FLOAT -> ValueType.FLOAT
-        token.type == TokenType.STRING -> ValueType.STRING
-        token.type == TokenType.BOOLEAN -> ValueType.BOOLEAN
+        token.type == TokenType.LIT_INT -> ValueType.INT
+        token.type == TokenType.LIT_FLOAT -> ValueType.FLOAT
+        token.type == TokenType.LIT_STRING -> ValueType.STRING
+        token.type == TokenType.LIT_BOOLEAN -> ValueType.BOOLEAN
         else -> throw ParseException(token, "Invalid literal type: ${token.type}")
     }
 }
@@ -37,7 +37,7 @@ class LiteralExpression(
 
     override fun hashCode(): Int {
         var result = super.hashCode()
-        result = 31 * result + (value?.hashCode() ?: 0)
+        result = 31 * result + value.hashCode()
         return result
     }
 }

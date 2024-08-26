@@ -22,15 +22,15 @@ class UnaryExpression(
 
     companion object {
         val ValidCombinations = mapOf(
-            TokenType.MINUS to setOf(
+            TokenType.OP_MINUS to setOf(
                 ValueType.INT,
                 ValueType.FLOAT
             ),
-            TokenType.PLUS to setOf(
+            TokenType.OP_PLUS to setOf(
                 ValueType.INT,
                 ValueType.FLOAT
             ),
-            TokenType.BANG to setOf(
+            TokenType.OP_BANG to setOf(
                 ValueType.BOOLEAN
             )
         )
