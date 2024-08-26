@@ -1,10 +1,9 @@
 package me.kolterdyx.compiler.ast
 
-import me.kolterdyx.compiler.expression.BinaryExpression
-import me.kolterdyx.compiler.expression.GroupingExpression
-import me.kolterdyx.compiler.expression.LiteralExpression
-import me.kolterdyx.compiler.expression.UnaryExpression
+import me.kolterdyx.compiler.expression.*
+import me.kolterdyx.compiler.statement.BlockStatement
 import me.kolterdyx.compiler.statement.ExpressionStatement
+import me.kolterdyx.compiler.statement.VariableDeclarationStatement
 
 class AstPrinter :
     ExpressionVisitor<String>,
@@ -31,12 +30,28 @@ class AstPrinter :
         return "(${expr.expression.accept(this)})"
     }
 
+    override fun visitVariable(expr: VariableExpression): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun visitAssignment(expr: AssignmentExpression): String {
+        TODO("Not yet implemented")
+    }
+
     // End Expression Visitor
 
     // Statement Visitor
 
     override fun visitExpression(statement: ExpressionStatement): String {
         return statement.expression.accept(this)
+    }
+
+    override fun visitVariableDeclaration(statement: VariableDeclarationStatement): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun visitBlock(statement: BlockStatement): String {
+        TODO("Not yet implemented")
     }
 
     // End Statement Visitor
