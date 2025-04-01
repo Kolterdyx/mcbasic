@@ -52,9 +52,9 @@ func (p *Parser) previous() tokens.Token {
 
 func (p *Parser) error(token tokens.Token, message string) {
 	if token.Type == tokens.Eof {
-		p.report(token.Line, token.Column, " at end", message)
+		p.report(token.Row, token.Col, " at end", message)
 	} else {
-		p.report(token.Line, token.Column, " at '"+token.Lexeme+"'", message)
+		p.report(token.Row, token.Col, " at '"+token.Lexeme+"'", message)
 	}
 }
 
@@ -85,7 +85,7 @@ func (p *Parser) stepBack() {
 }
 
 func (p *Parser) location() interfaces.SourceLocation {
-	return interfaces.SourceLocation{Line: p.previous().Line, Column: p.previous().Column}
+	return interfaces.SourceLocation{Row: p.previous().Row, Col: p.previous().Col}
 }
 
 func (p *Parser) peekCount(offset int) tokens.Token {

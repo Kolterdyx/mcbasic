@@ -1,13 +1,14 @@
 package tokens
 
+import "github.com/Kolterdyx/mcbasic/internal/interfaces"
+
 type TokenType int
 
 type Token struct {
+	interfaces.SourceLocation
 	Type    TokenType
 	Lexeme  string
 	Literal string
-	Line    int
-	Column  int
 }
 
 func (t Token) String() string {
@@ -48,7 +49,7 @@ const (
 	True
 	False
 	Let
-	Def
+	Func
 	And
 	Or
 	If
@@ -133,8 +134,8 @@ func (t TokenType) String() string {
 		return "Eof"
 	case Let:
 		return "Let"
-	case Def:
-		return "Def"
+	case Func:
+		return "Func"
 	case True:
 		return "True"
 	case False:
@@ -152,7 +153,7 @@ func (t TokenType) String() string {
 
 var Keywords = map[string]TokenType{
 	"let":    Let,
-	"func":   Def,
+	"func":   Func,
 	"if":     If,
 	"else":   Else,
 	"and":    And,

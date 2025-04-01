@@ -10,7 +10,7 @@ import (
 func (p *Parser) statement() statements.Stmt {
 	if p.match(tokens.Let) {
 		return p.letDeclaration()
-	} else if p.match(tokens.Def) {
+	} else if p.match(tokens.Func) {
 		return p.functionDeclaration()
 	} else if p.match(tokens.While) {
 		return p.whileStatement()

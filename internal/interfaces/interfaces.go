@@ -15,6 +15,6 @@ type ProjectConfig struct {
 }
 
 type SourceLocation struct {
-	Line   int
-	Column int
+	Row int
+	Col int
 }

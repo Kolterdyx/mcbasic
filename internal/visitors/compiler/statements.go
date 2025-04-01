@@ -52,11 +52,12 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 }
 
 func (c *Compiler) VisitBlock(stmt statements.BlockStmt) interface{} {
-	cmd := ""
+	section := ""
 	for _, s := range stmt.Statements {
-		cmd += s.Accept(c).(string)
+		section += s.Accept(c).(string)
 	}
-	return cmd
+	//c.currentFunctionSections = append(c.currentFunctionSections, section)
+	return section // c.opHandler.CallSection(c.currentFunction.Name.Lexeme, len(c.currentFunctionSections)-1)
 }
 
 func (c *Compiler) VisitExpression(stmt statements.ExpressionStmt) interface{} {

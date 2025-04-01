@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	log "github.com/sirupsen/logrus"
 	"strconv"
@@ -15,8 +16,8 @@ type Scanner struct {
 	start    int
 	current  int
 	tokens   []tokens.Token
-	line     int
-	pos      int
+	row      int
+	col      int
 }
 
 func (s *Scanner) report(line int, column int, message string) {
@@ -25,7 +26,7 @@ func (s *Scanner) report(line int, column int, message string) {
 }
 
 func (s *Scanner) error(line int, message string) {
-	s.report(line, s.pos, message)
+	s.report(line, s.col, message)
 }
 
 func (s *Scanner) Scan(source string) []tokens.Token {
@@ -77,8 +78,8 @@ func (s *Scanner) scanToken() {
 	case '#':
 		s.scanComment()
 	case '\n':
-		s.line++
-		s.pos = 0
+		s.row++
+		s.col = 0
 		fallthrough
 	case ' ', '\r', '\t':
 		break
@@ -118,9 +119,9 @@ func (s *Scanner) scanToken() {
 			break
 		}
 		if c < 32 || c > 126 {
-			s.error(s.line, "Unexpected character: "+fmt.Sprintf("'%d'", c))
+			s.error(s.row, "Unexpected character: "+fmt.Sprintf("'%d'", c))
 		} else {
-			s.error(s.line, "Unexpected character: "+string(c))
+			s.error(s.row, "Unexpected character: "+string(c))
 		}
 	}
 
@@ -150,7 +151,7 @@ func (s *Scanner) peek() byte {
 
 func (s *Scanner) advance() byte {
 	s.current++
-	s.pos++
+	s.col++
 	return s.source[s.current-1]
 }
 
@@ -160,17 +161,25 @@ func (s *Scanner) addToken(tokenType tokens.TokenType) {
 
 func (s *Scanner) addTokenWithLiteral(tokenType tokens.TokenType, literal string) {
 	text := s.source[s.start:s.current]
-	s.tokens = append(s.tokens, tokens.Token{Type: tokenType, Lexeme: text, Literal: literal, Line: s.line, Column: s.pos})
+	s.tokens = append(s.tokens, tokens.Token{
+		Type:    tokenType,
+		Lexeme:  text,
+		Literal: literal,
+		SourceLocation: interfaces.SourceLocation{
+			Row: s.row,
+			Col: s.col,
+		},
+	})
 }
 
 func (s *Scanner) scanString() {
-	stringStartLine := s.line
+	stringStartLine := s.row
 
 	for !s.endOfString() && !s.isAtEnd() && s.peek() != '\n' {
 		s.advance()
 	}
 	if s.isAtEnd() || s.peek() == '\n' {
-		s.error(s.line, "Unterminated string at line "+fmt.Sprintf("%d", stringStartLine+1))
+		s.error(s.row, "Unterminated string at row "+fmt.Sprintf("%d", stringStartLine+1))
 		return
 	}
 	s.advance()
@@ -182,7 +191,7 @@ func (s *Scanner) scanComment() {
 	for s.peek() != '\n' && !s.isAtEnd() {
 		s.advance()
 	}
-	s.line++
+	s.row++
 }
 
 func (s *Scanner) scanNumber() {
@@ -197,7 +206,7 @@ func (s *Scanner) scanNumber() {
 		num, _ := strconv.ParseFloat(s.source[s.start:s.current], 64)
 		s.addTokenWithLiteral(tokens.Fixed, strconv.FormatFloat(num, 'f', -1, 64))
 	} else if unicode.IsLetter(rune(s.peek())) {
-		s.error(s.line, "Unexpected character: "+string(s.peek()))
+		s.error(s.row, "Unexpected character: "+string(s.peek()))
 	} else {
 		num, _ := strconv.Atoi(s.source[s.start:s.current])
 		s.addTokenWithLiteral(tokens.Int, strconv.Itoa(num))
