@@ -218,19 +218,20 @@ func (c *Compiler) createBuiltinFunctions() {
 	//)
 }
 
-func (c *Compiler) createFunction(name string, source string, args []statements.FuncArg, returnType expressions.ValueType) {
-	if name == c.LoadFuncName || name == c.TickFuncName {
+func (c *Compiler) createFunction(fullName string, source string, args []statements.FuncArg, returnType expressions.ValueType) {
+	if fullName == c.LoadFuncName || fullName == c.TickFuncName {
 		return
 	}
 
 	// If the function name is in the format of "namespace:function", get the namespace from the name
-	if name == "" {
+	if fullName == "" {
 		c.error(interfaces.SourceLocation{}, "Function name cannot be empty")
 		return
 	}
 	namespace := c.Namespace
-	if strings.Contains(name, ":") {
-		parts := strings.Split(name, ":")
+	name := fullName
+	if strings.Contains(fullName, ":") {
+		parts := strings.Split(fullName, ":")
 		if len(parts) != 2 {
 			c.error(interfaces.SourceLocation{}, "Invalid function name format")
 			return
@@ -249,7 +250,8 @@ func (c *Compiler) createFunction(name string, source string, args []statements.
 		f.Args = append(f.Args, statements.FuncArg{Name: parameter.Name, Type: parameter.Type})
 	}
 	f.Args = append(f.Args, statements.FuncArg{Name: "__call__", Type: expressions.IntType})
-	c.functions[name] = f
+	c.functions[fullName] = f
+	log.Debugf("Creating function: %s", fullName)
 
 	err := os.WriteFile(c.getFuncPath(namespace)+"/"+filename, []byte(source), 0644)
 	if err != nil {

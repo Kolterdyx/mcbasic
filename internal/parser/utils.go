@@ -5,6 +5,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	log "github.com/sirupsen/logrus"
+	"strings"
 )
 
 func (p *Parser) match(tokenTypes ...tokens.TokenType) bool {
@@ -102,7 +103,12 @@ func (p *Parser) getType(name tokens.Token) expressions.ValueType {
 		}
 	}
 	for _, f := range p.functions {
-		if f.Name == name.Lexeme {
+
+		split := strings.Split(f.Name, ":")
+		if len(split) != 2 {
+			log.Fatalf("Invalid function name: %s", f.Name)
+		}
+		if split[1] == name.Lexeme {
 			return f.ReturnType
 		}
 	}

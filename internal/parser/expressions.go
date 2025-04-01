@@ -5,6 +5,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	log "github.com/sirupsen/logrus"
 )
 
 func (p *Parser) expression() expressions.Expr {
@@ -96,9 +97,9 @@ func (p *Parser) unary() expressions.Expr {
 func (p *Parser) value() expressions.Expr {
 
 	var namespaceIdentifier *tokens.Token
+	prev := p.previous()
 	if p.match(tokens.Colon) {
-		i := p.previous()
-		namespaceIdentifier = &i
+		namespaceIdentifier = &prev
 	}
 	if p.match(tokens.Identifier) {
 		identifier := p.previous()
@@ -141,9 +142,16 @@ func (p *Parser) functionCall(namespace *tokens.Token, name tokens.Token) expres
 	}
 	p.consume(tokens.ParenClose, "Expected ')' after arguments.")
 	// Find the function in the current scope
+
+	lexeme := name.Lexeme
+	if namespace != nil {
+		lexeme = fmt.Sprintf("%s:%s", namespace.Lexeme, name.Lexeme)
+	}
+
 	var funcDef *statements.FuncDef = nil
 	for _, f := range p.functions {
-		if f.Name == name.Lexeme {
+		log.Debugf("Checking function %s against %s", f.Name, lexeme)
+		if f.Name == lexeme {
 			if len(f.Parameters) != len(args) {
 				p.error(name, fmt.Sprintf("Expected %d arguments, got %d.", len(f.Parameters), len(args)))
 				return nil
@@ -162,7 +170,13 @@ func (p *Parser) functionCall(namespace *tokens.Token, name tokens.Token) expres
 		p.error(name, fmt.Sprintf("Function %s not found.", name.Lexeme))
 		return nil
 	}
-	return expressions.FunctionCallExpr{Name: name, Arguments: args, SourceLocation: location, Type: funcDef.ReturnType}
+
+	return expressions.FunctionCallExpr{Name: tokens.Token{
+		Type:           tokens.Identifier,
+		Lexeme:         lexeme,
+		Literal:        name.Literal,
+		SourceLocation: name.SourceLocation,
+	}, Arguments: args, SourceLocation: location, Type: funcDef.ReturnType}
 }
 
 func (p *Parser) slice(expr expressions.Expr) expressions.Expr {
