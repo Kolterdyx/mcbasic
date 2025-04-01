@@ -13,6 +13,7 @@ type FuncArg struct {
 type FuncDef struct {
 	Name       string
 	Parameters []FuncArg
+	IsBuiltIn  bool
 	ReturnType expressions.ValueType
 }
 

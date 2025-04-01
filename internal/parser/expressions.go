@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
+	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 )
 
@@ -93,15 +94,23 @@ func (p *Parser) unary() expressions.Expr {
 }
 
 func (p *Parser) value() expressions.Expr {
+
+	var namespaceIdentifier *tokens.Token
+	if p.match(tokens.Colon) {
+		i := p.previous()
+		namespaceIdentifier = &i
+	}
 	if p.match(tokens.Identifier) {
 		identifier := p.previous()
 		identifierType := p.getType(identifier)
+
 		if identifierType == "" {
 			p.error(identifier, "Undeclared identifier")
 			return nil
 		}
+
 		if p.match(tokens.ParenOpen) {
-			return p.functionCall(identifier)
+			return p.functionCall(namespaceIdentifier, identifier)
 		} else if p.match(tokens.BracketOpen) {
 			return p.slice(expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: identifierType})
 		} else {
@@ -111,7 +120,7 @@ func (p *Parser) value() expressions.Expr {
 	return p.primary()
 }
 
-func (p *Parser) functionCall(name tokens.Token) expressions.Expr {
+func (p *Parser) functionCall(namespace *tokens.Token, name tokens.Token) expressions.Expr {
 	location := p.location()
 	args := make([]expressions.Expr, 0)
 	if !p.check(tokens.ParenClose) {
@@ -132,8 +141,7 @@ func (p *Parser) functionCall(name tokens.Token) expressions.Expr {
 	}
 	p.consume(tokens.ParenClose, "Expected ')' after arguments.")
 	// Find the function in the current scope
-	var returnType expressions.ValueType
-	found := false
+	var funcDef *statements.FuncDef = nil
 	for _, f := range p.functions {
 		if f.Name == name.Lexeme {
 			if len(f.Parameters) != len(args) {
@@ -146,16 +154,15 @@ func (p *Parser) functionCall(name tokens.Token) expressions.Expr {
 					return nil
 				}
 			}
-			returnType = f.ReturnType
-			found = true
+			funcDef = &f
 			break
 		}
 	}
-	if !found {
+	if funcDef == nil {
 		p.error(name, fmt.Sprintf("Function %s not found.", name.Lexeme))
 		return nil
 	}
-	return expressions.FunctionCallExpr{Name: name, Arguments: args, SourceLocation: location, Type: returnType}
+	return expressions.FunctionCallExpr{Name: name, Arguments: args, SourceLocation: location, Type: funcDef.ReturnType}
 }
 
 func (p *Parser) slice(expr expressions.Expr) expressions.Expr {

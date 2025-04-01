@@ -8,10 +8,10 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
-	cp "github.com/otiai10/copy"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type Func struct {
@@ -30,8 +30,9 @@ type Compiler struct {
 	Namespace    string
 	DatapackRoot string
 
-	functionsPath string
-	tagsPath      string
+	mcbFuncPath string
+	funcPath    string
+	tagsPath    string
 
 	currentFunction statements.FunctionDeclarationStmt
 	currentScope    string
@@ -47,12 +48,12 @@ type Compiler struct {
 
 	regCounters map[string]int
 
-	InitFuncName string
+	LoadFuncName string
 	TickFuncName string
 }
 
 func NewCompiler(config interfaces.ProjectConfig) *Compiler {
-	c := &Compiler{Config: config, InitFuncName: config.Project.Namespace + "/init", TickFuncName: config.Project.Namespace + "/tick"}
+	c := &Compiler{Config: config, LoadFuncName: config.Project.Namespace + "/init", TickFuncName: config.Project.Namespace + "/tick"}
 	c.Namespace = config.Project.Namespace
 	c.opHandler = ops.Op{
 		Namespace:           c.Namespace,
@@ -99,24 +100,22 @@ func (c *Compiler) Compile(program parser.Program) {
 	for _, f := range program.Functions {
 		f.Accept(c)
 	}
-	err = cp.Copy(c.DatapackRoot, "/home/kolterdyx/.minecraft/saves/Test/datapacks/"+c.Config.Project.Name)
-	if err != nil {
-		log.Fatalln(err)
-	}
 }
 
 func (c *Compiler) createDirectoryTree() error {
 	c.Namespace = c.Config.Project.Namespace
 	c.DatapackRoot, _ = filepath.Abs(c.Config.OutputDir + "/" + c.Config.Project.Name)
 	log.Infof("Compiling to %s\n", c.DatapackRoot)
-	c.functionsPath = c.DatapackRoot + "/data/" + c.Namespace + "/function"
+	c.funcPath = c.getFuncPath(c.Namespace)
+	c.mcbFuncPath = c.getFuncPath("mcb")
 	c.tagsPath = c.DatapackRoot + "/data/minecraft/tags"
 
 	errs := []error{
-		os.MkdirAll(c.functionsPath, 0755),
-		os.MkdirAll(c.functionsPath+"/internal", 0755),
+		os.MkdirAll(c.funcPath, 0755),
+		os.MkdirAll(c.funcPath+"/internal", 0755),
+		os.MkdirAll(c.mcbFuncPath, 0755),
+		os.MkdirAll(c.mcbFuncPath+"/internal", 0755),
 		os.MkdirAll(c.tagsPath, 0755),
-		os.MkdirAll(c.functionsPath+"/builtin", 0755),
 	}
 	for _, err := range errs {
 		if err != nil {
@@ -145,7 +144,7 @@ func (c *Compiler) createPackMeta() {
 
 func (c *Compiler) createBuiltinFunctions() {
 	c.createFunction(
-		"print",
+		"mcb:print",
 		`$tellraw @a {text:'$(text)'}`,
 		[]statements.FuncArg{
 			{Name: "text", Type: expressions.StringType},
@@ -153,7 +152,7 @@ func (c *Compiler) createBuiltinFunctions() {
 		expressions.VoidType,
 	)
 	c.createFunction(
-		"log",
+		"mcb:log",
 		`$tellraw @a[tag=mcblog] {text:'$(text)',color:dark_gray,italic:true}`,
 		[]statements.FuncArg{
 			{Name: "text", Type: expressions.StringType},
@@ -161,7 +160,7 @@ func (c *Compiler) createBuiltinFunctions() {
 		expressions.VoidType,
 	)
 	c.createFunction(
-		"exec",
+		"mcb:exec",
 		`$execute run $(command)`,
 		[]statements.FuncArg{
 			{Name: "command", Type: expressions.StringType},
@@ -169,7 +168,7 @@ func (c *Compiler) createBuiltinFunctions() {
 		expressions.VoidType,
 	)
 	c.createFunction(
-		"internal/concat",
+		"mcb:internal/concat",
 		`$data modify storage $(storage) $(res) set value "$(a)$(b)"`,
 		[]statements.FuncArg{
 			{Name: "storage", Type: expressions.StringType},
@@ -180,7 +179,7 @@ func (c *Compiler) createBuiltinFunctions() {
 		expressions.VoidType,
 	)
 	c.createFunction(
-		"internal/slice",
+		"mcb:internal/slice",
 		`$data modify storage $(storage) $(res) set string storage $(storage) $(from) $(start) $(end)`,
 		[]statements.FuncArg{
 			{Name: "storage", Type: expressions.StringType},
@@ -192,7 +191,7 @@ func (c *Compiler) createBuiltinFunctions() {
 		expressions.VoidType,
 	)
 	c.createFunction(
-		"len",
+		"mcb:len",
 		fmt.Sprintf("$data modify storage %s:%s %s set value \"$(from)\"\n", c.Namespace, ops.VarPath, ops.RET)+
 			fmt.Sprintf("execute store result storage %s:%s %s int 1 run data get storage %s:%s %s\n", c.Namespace, ops.VarPath, ops.RET, c.Namespace, ops.VarPath, ops.RET),
 		[]statements.FuncArg{
@@ -201,7 +200,7 @@ func (c *Compiler) createBuiltinFunctions() {
 		expressions.IntType,
 	)
 	c.createFunction(
-		"internal/init",
+		"mcb:internal/init",
 		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
 			c.opHandler.MoveConst("0", ops.CALL)+
 			c.opHandler.MoveScore(ops.CALL, ops.CALL)+
@@ -220,11 +219,27 @@ func (c *Compiler) createBuiltinFunctions() {
 }
 
 func (c *Compiler) createFunction(name string, source string, args []statements.FuncArg, returnType expressions.ValueType) {
-	filename := name + ".mcfunction"
-
-	if name == c.InitFuncName || name == c.TickFuncName {
+	if name == c.LoadFuncName || name == c.TickFuncName {
 		return
 	}
+
+	// If the function name is in the format of "namespace:function", get the namespace from the name
+	if name == "" {
+		c.error(interfaces.SourceLocation{}, "Function name cannot be empty")
+		return
+	}
+	namespace := c.Namespace
+	if strings.Contains(name, ":") {
+		parts := strings.Split(name, ":")
+		if len(parts) != 2 {
+			c.error(interfaces.SourceLocation{}, "Invalid function name format")
+			return
+		}
+		name = parts[1]
+		namespace = parts[0]
+	}
+	filename := name + ".mcfunction"
+
 	f := Func{
 		Name:       name,
 		Args:       make([]statements.FuncArg, 0),
@@ -236,7 +251,7 @@ func (c *Compiler) createFunction(name string, source string, args []statements.
 	f.Args = append(f.Args, statements.FuncArg{Name: "__call__", Type: expressions.IntType})
 	c.functions[name] = f
 
-	err := os.WriteFile(c.functionsPath+"/"+filename, []byte(source), 0644)
+	err := os.WriteFile(c.getFuncPath(namespace)+"/"+filename, []byte(source), 0644)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -358,4 +373,8 @@ func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx
 		c.error(expr.SourceLocation, "Unknown comparison operator")
 	}
 	return cmd
+}
+
+func (c *Compiler) getFuncPath(namespace string) string {
+	return fmt.Sprintf("%s/data/%s/function", c.DatapackRoot, namespace)
 }

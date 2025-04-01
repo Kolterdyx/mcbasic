@@ -33,10 +33,7 @@ func (p *Parser) check(tokenType tokens.TokenType) bool {
 }
 
 func (p *Parser) peek() tokens.Token {
-	if p.IsAtEnd() {
-		return p.Tokens[len(p.Tokens)-1]
-	}
-	return p.Tokens[p.current]
+	return p.peekCount(0)
 }
 
 func (p *Parser) advance() tokens.Token {

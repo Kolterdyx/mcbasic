@@ -8,6 +8,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
+	"github.com/Kolterdyx/mcbasic/internal/visitors"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -40,6 +41,7 @@ func main() {
 		os.Exit(1)
 	}
 	log.Debug("Tokens scanned successfully")
+
 	parser_ := parser.Parser{Tokens: tokens}
 	program := parser_.Parse()
 	if parser_.HadError {
@@ -52,6 +54,9 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	d := visitors.DebugVisitor{}
+	program.Visit(d)
 
 	c := compiler.NewCompiler(config)
 	c.Compile(program)

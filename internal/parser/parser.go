@@ -23,10 +23,10 @@ func (p *Parser) Parse() Program {
 	p.functions = make([]statements.FuncDef, 0)
 	p.variables = make(map[string][]statements.VarDef)
 	p.functions = append(p.functions,
-		statements.FuncDef{Name: "print", ReturnType: expressions.VoidType, Parameters: []statements.FuncArg{{Name: "text", Type: expressions.VoidType}}},
-		statements.FuncDef{Name: "log", ReturnType: expressions.VoidType, Parameters: []statements.FuncArg{{Name: "text", Type: expressions.VoidType}}},
-		statements.FuncDef{Name: "exec", ReturnType: expressions.VoidType, Parameters: []statements.FuncArg{{Name: "command", Type: expressions.StringType}}},
-		statements.FuncDef{Name: "len", ReturnType: expressions.IntType, Parameters: []statements.FuncArg{{Name: "string", Type: expressions.StringType}}},
+		statements.FuncDef{Name: "print", ReturnType: expressions.VoidType, Parameters: []statements.FuncArg{{Name: "text", Type: expressions.VoidType}}, IsBuiltIn: true},
+		statements.FuncDef{Name: "log", ReturnType: expressions.VoidType, Parameters: []statements.FuncArg{{Name: "text", Type: expressions.VoidType}}, IsBuiltIn: true},
+		statements.FuncDef{Name: "exec", ReturnType: expressions.VoidType, Parameters: []statements.FuncArg{{Name: "command", Type: expressions.StringType}}, IsBuiltIn: true},
+		statements.FuncDef{Name: "len", ReturnType: expressions.IntType, Parameters: []statements.FuncArg{{Name: "string", Type: expressions.StringType}}, IsBuiltIn: true},
 	)
 	for !p.IsAtEnd() {
 		statement := p.statement()
@@ -35,6 +35,7 @@ func (p *Parser) Parse() Program {
 		}
 		if statement.TType() != statements.FunctionDeclarationStmtType {
 			log.Errorf("Only function declarations are allowed at the top level. Found: %s\n", statement.TType())
+			continue
 		}
 		funcStmt := statement.(statements.FunctionDeclarationStmt)
 		functions = append(functions, funcStmt)

@@ -5,6 +5,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	log "github.com/sirupsen/logrus"
 )
 
 func (p *Parser) statement() statements.Stmt {
@@ -41,7 +42,6 @@ func (p *Parser) expressionStatement() statements.Stmt {
 func (p *Parser) letDeclaration() statements.Stmt {
 	name := p.consume(tokens.Identifier, "Expected variable name.")
 	var varType expressions.ValueType
-	p.consume(tokens.Colon, "Expected type declaration.")
 	if p.match(tokens.IntType) {
 		varType = expressions.IntType
 	} else if p.match(tokens.StringType) {
@@ -90,9 +90,9 @@ func (p *Parser) functionDeclaration() statements.Stmt {
 				return nil
 			}
 			argName := p.consume(tokens.Identifier, "Expected parameter name.")
-			p.consume(tokens.Colon, "Expected type declaration.")
 			if !p.match(tokens.IntType, tokens.StringType, tokens.FixedType) {
 				p.error(p.peek(), "Expected parameter type.")
+				p.synchronize()
 				return nil
 			}
 			type_ := p.previous()
@@ -139,6 +139,7 @@ func (p *Parser) block(checkBraces ...bool) statements.BlockStmt {
 		p.consume(tokens.BraceOpen, "Expected '{' before block.")
 	}
 	for !p.check(tokens.BraceClose) && !p.IsAtEnd() {
+		log.Debug("Parsing statement ", p.peek())
 		stmt := p.statement()
 		if stmt == nil {
 			p.synchronize()
