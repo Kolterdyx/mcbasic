@@ -109,7 +109,7 @@ func (c *Compiler) createDirectoryTree() error {
 	c.Namespace = c.Config.Project.Namespace
 	c.DatapackRoot, _ = filepath.Abs(c.Config.OutputDir + "/" + c.Config.Project.Name)
 	log.Infof("Compiling to %s\n", c.DatapackRoot)
-	c.functionsPath = c.DatapackRoot + "/data/" + c.Namespace + "/functions"
+	c.functionsPath = c.DatapackRoot + "/data/" + c.Namespace + "/function"
 	c.tagsPath = c.DatapackRoot + "/data/minecraft/tags"
 
 	errs := []error{
@@ -130,7 +130,7 @@ func (c *Compiler) createPackMeta() {
 	packMcmeta := fmt.Sprintf(`{
 	"pack": {
 		"description": "%s",
-		"pack_format": 26
+		"pack_format": 71
 	},
 	"meta": {
 		"name": "%s",
@@ -146,7 +146,15 @@ func (c *Compiler) createPackMeta() {
 func (c *Compiler) createBuiltinFunctions() {
 	c.createFunction(
 		"print",
-		`$tellraw @a {"text":"$(text)"}`,
+		`$tellraw @a {text:'$(text)'}`,
+		[]statements.FuncArg{
+			{Name: "text", Type: expressions.StringType},
+		},
+		expressions.VoidType,
+	)
+	c.createFunction(
+		"log",
+		`$tellraw @a[tag=mcblog] {text:'$(text)',color:dark_gray,italic:true}`,
 		[]statements.FuncArg{
 			{Name: "text", Type: expressions.StringType},
 		},
@@ -246,15 +254,15 @@ func (c *Compiler) createFunctionTags() {
 		"%s"
 	]
 }`
-	err := os.MkdirAll(c.tagsPath+"/functions", 0755)
+	err := os.MkdirAll(c.tagsPath+"/function", 0755)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	err = os.WriteFile(c.tagsPath+"/functions/load.json", []byte(fmt.Sprintf(loadTag, c.Namespace+":internal/init")), 0644)
+	err = os.WriteFile(c.tagsPath+"/function/load.json", []byte(fmt.Sprintf(loadTag, c.Namespace+":internal/init")), 0644)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	err = os.WriteFile(c.tagsPath+"/functions/tick.json", []byte(fmt.Sprintf(tickTag, c.Namespace+":internal/tick")), 0644)
+	err = os.WriteFile(c.tagsPath+"/function/tick.json", []byte(fmt.Sprintf(tickTag, c.Namespace+":internal/tick")), 0644)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -271,6 +279,10 @@ func (c *Compiler) newRegister(regName string) string {
 
 func (c *Compiler) addBuiltInFunctionsToScope() {
 	c.scope[c.currentScope] = append(c.scope[c.currentScope],
+		TypedIdentifier{
+			Name: "log",
+			Type: expressions.VoidType,
+		},
 		TypedIdentifier{
 			Name: "print",
 			Type: expressions.VoidType,

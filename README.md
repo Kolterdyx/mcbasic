@@ -3,7 +3,7 @@
 # MCBasic
 
 MCBasic is a statically typed scripting language with a mixture of C syntax and Python features.
-It compiles to a datapack for Minecraft 1.20.4 and above.
+It compiles to a datapack for Minecraft 1.21.5. Other versions might or might not work, idk, Mojang keeps introducing breaking changes ¯\\\_(ツ)_/¯.
 
 This project is still WIP and is not fit for actual use.
 
@@ -131,20 +131,23 @@ func main() {
     let x: fixed = 5.51;
     let y: fixed = 10.73;
     let z: fixed = add(x, y);
-    
+
     # string concatenation
     let hello: str = "Hello" + " world!";
-    
+
     # print function can take any argument type
     print(hello);
     print(z);
-    
+
+	# logs will only be shown to players with the 'mcblog' tag
+	log("This is a log message");
+
     # Other types can be appended to strings. The string must be on the left side of the operation for this to work
     print("10th fib: " + fib(10));
     
     # You can also run raw commands with the built-in exec function
     exec("say Hello, world!");
-    
+
     # You can also slice strings
     print(hello[0:5]);
     # Even with literals and negative indices
