@@ -10,7 +10,7 @@ type VariableExpr struct {
 	interfaces.SourceLocation
 
 	Name tokens.Token
-	Type ValueType
+	Type interfaces.ValueType
 }
 
 func (v VariableExpr) Accept(visitor ExprVisitor) interface{} {
@@ -21,6 +21,6 @@ func (v VariableExpr) TType() ExprType {
 	return VariableExprType
 }
 
-func (v VariableExpr) ReturnType() ValueType {
+func (v VariableExpr) ReturnType() interfaces.ValueType {
 	return v.Type
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler"
 	log "github.com/sirupsen/logrus"
 	"os"
+	"path"
 )
 
 //go:embed version.txt
@@ -50,7 +51,7 @@ func main() {
 	log.Debug("Program parsed successfully")
 
 	// Remove the contents of the output directory
-	err := os.RemoveAll(config.OutputDir)
+	err := os.RemoveAll(path.Join(config.OutputDir, config.Project.Name))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -83,7 +84,6 @@ func parseArgs() interfaces.ProjectConfig {
 	projectFilePtr := flag.String("config", "project.toml", "Path to the project config file")
 	outputDirPtr := flag.String("output", "build", "Output directory")
 	enableTracesPtr := flag.Bool("traces", false, "Enable traces")
-	fixedPointPrecision := flag.Int("fpp", 4, "Fixed point precision")
 	flag.Parse()
 
 	data, _ := f.ReadFile("version.txt")
@@ -104,14 +104,6 @@ func parseArgs() interfaces.ProjectConfig {
 	validateProjectConfig(config)
 	config.OutputDir = *outputDirPtr
 	config.EnableTraces = *enableTracesPtr
-	config.FixedPointPrecision = *fixedPointPrecision
-
-	if *fixedPointPrecision < 0 {
-		log.Fatalln("Fixed point precision must be a positive integer")
-	}
-	if *fixedPointPrecision > 4 {
-		log.Warnln("Fixed point precision greater than 4 may cause overflow")
-	}
 
 	return config
 }

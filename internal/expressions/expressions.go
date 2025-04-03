@@ -1,5 +1,7 @@
 package expressions
 
+import "github.com/Kolterdyx/mcbasic/internal/interfaces"
+
 type ExprType string
 
 const (
@@ -27,5 +29,5 @@ type ExprVisitor interface {
 type Expr interface {
 	Accept(v ExprVisitor) interface{}
 	TType() ExprType
-	ReturnType() ValueType
+	ReturnType() interfaces.ValueType
 }

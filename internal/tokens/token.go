@@ -19,7 +19,7 @@ const (
 	Undefined TokenType = iota
 	Identifier
 	Int
-	Fixed
+	Double
 	String
 	Plus
 	Minus
@@ -58,7 +58,7 @@ const (
 	Return
 
 	IntType
-	FixedType
+	DoubleType
 	StringType
 )
 
@@ -70,8 +70,8 @@ func (t TokenType) String() string {
 		return "Identifier"
 	case Int:
 		return "Int"
-	case Fixed:
-		return "Fixed"
+	case Double:
+		return "Double"
 	case String:
 		return "String"
 	case Plus:
@@ -142,8 +142,8 @@ func (t TokenType) String() string {
 		return "False"
 	case IntType:
 		return "IntType"
-	case FixedType:
-		return "FixedType"
+	case DoubleType:
+		return "DoubleType"
 	case StringType:
 		return "StringType"
 	default:
@@ -162,7 +162,7 @@ var Keywords = map[string]TokenType{
 	"false":  False,
 	"while":  While,
 	"int":    IntType,
-	"fixed":  FixedType,
+	"double": DoubleType,
 	"str":    StringType,
 	"return": Return,
 }

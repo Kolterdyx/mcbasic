@@ -204,7 +204,7 @@ func (s *Scanner) scanNumber() {
 			s.advance()
 		}
 		num, _ := strconv.ParseFloat(s.source[s.start:s.current], 64)
-		s.addTokenWithLiteral(tokens.Fixed, strconv.FormatFloat(num, 'f', -1, 64))
+		s.addTokenWithLiteral(tokens.Double, strconv.FormatFloat(num, 'f', -1, 64))
 	} else if unicode.IsLetter(rune(s.peek())) {
 		s.error(s.row, "Unexpected character: "+string(s.peek()))
 	} else {

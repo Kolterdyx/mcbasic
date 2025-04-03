@@ -10,19 +10,20 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	log "github.com/sirupsen/logrus"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
 
 type Func struct {
 	Name       string
-	Args       []statements.FuncArg
-	ReturnType expressions.ValueType
+	Args       []interfaces.FuncArg
+	ReturnType interfaces.ValueType
 }
 
 type TypedIdentifier struct {
 	Name string
-	Type expressions.ValueType
+	Type interfaces.ValueType
 }
 
 type Compiler struct {
@@ -56,9 +57,8 @@ func NewCompiler(config interfaces.ProjectConfig) *Compiler {
 	c := &Compiler{Config: config, LoadFuncName: config.Project.Namespace + "/init", TickFuncName: config.Project.Namespace + "/tick"}
 	c.Namespace = config.Project.Namespace
 	c.opHandler = ops.Op{
-		Namespace:           c.Namespace,
-		EnableTraces:        config.EnableTraces,
-		FixedPointPrecision: config.FixedPointPrecision,
+		Namespace:    c.Namespace,
+		EnableTraces: config.EnableTraces,
 	}
 	c.functions = make(map[string]Func)
 	c.scope = make(map[string][]TypedIdentifier)
@@ -76,16 +76,16 @@ func (c *Compiler) Compile(program parser.Program) {
 	for _, function := range program.Functions {
 		f := Func{
 			Name:       function.Name.Lexeme,
-			Args:       make([]statements.FuncArg, 0),
+			Args:       make([]interfaces.FuncArg, 0),
 			ReturnType: function.ReturnType,
 		}
 		for _, parameter := range function.Parameters {
-			f.Args = append(f.Args, statements.FuncArg{
+			f.Args = append(f.Args, interfaces.FuncArg{
 				Name: parameter.Name,
 				Type: parameter.Type,
 			})
 		}
-		f.Args = append(f.Args, statements.FuncArg{
+		f.Args = append(f.Args, interfaces.FuncArg{
 			Name: "__call__",
 			Type: expressions.IntType,
 		})
@@ -104,7 +104,7 @@ func (c *Compiler) Compile(program parser.Program) {
 
 func (c *Compiler) createDirectoryTree() error {
 	c.Namespace = c.Config.Project.Namespace
-	c.DatapackRoot, _ = filepath.Abs(c.Config.OutputDir + "/" + c.Config.Project.Name)
+	c.DatapackRoot, _ = filepath.Abs(path.Join(c.Config.OutputDir, c.Config.Project.Name))
 	log.Infof("Compiling to %s\n", c.DatapackRoot)
 	c.funcPath = c.getFuncPath(c.Namespace)
 	c.mcbFuncPath = c.getFuncPath("mcb")
@@ -146,7 +146,7 @@ func (c *Compiler) createBuiltinFunctions() {
 	c.createFunction(
 		"mcb:print",
 		`$tellraw @a {text:'$(text)'}`,
-		[]statements.FuncArg{
+		[]interfaces.FuncArg{
 			{Name: "text", Type: expressions.StringType},
 		},
 		expressions.VoidType,
@@ -154,7 +154,7 @@ func (c *Compiler) createBuiltinFunctions() {
 	c.createFunction(
 		"mcb:log",
 		`$tellraw @a[tag=mcblog] {text:'$(text)',color:dark_gray,italic:true}`,
-		[]statements.FuncArg{
+		[]interfaces.FuncArg{
 			{Name: "text", Type: expressions.StringType},
 		},
 		expressions.VoidType,
@@ -162,7 +162,7 @@ func (c *Compiler) createBuiltinFunctions() {
 	c.createFunction(
 		"mcb:exec",
 		`$execute run $(command)`,
-		[]statements.FuncArg{
+		[]interfaces.FuncArg{
 			{Name: "command", Type: expressions.StringType},
 		},
 		expressions.VoidType,
@@ -170,7 +170,7 @@ func (c *Compiler) createBuiltinFunctions() {
 	c.createFunction(
 		"mcb:internal/concat",
 		`$data modify storage $(storage) $(res) set value "$(a)$(b)"`,
-		[]statements.FuncArg{
+		[]interfaces.FuncArg{
 			{Name: "storage", Type: expressions.StringType},
 			{Name: "res", Type: expressions.StringType},
 			{Name: "a", Type: expressions.StringType},
@@ -181,7 +181,7 @@ func (c *Compiler) createBuiltinFunctions() {
 	c.createFunction(
 		"mcb:internal/slice",
 		`$data modify storage $(storage) $(res) set string storage $(storage) $(from) $(start) $(end)`,
-		[]statements.FuncArg{
+		[]interfaces.FuncArg{
 			{Name: "storage", Type: expressions.StringType},
 			{Name: "res", Type: expressions.StringType},
 			{Name: "from", Type: expressions.StringType},
@@ -194,7 +194,7 @@ func (c *Compiler) createBuiltinFunctions() {
 		"mcb:len",
 		fmt.Sprintf("$data modify storage %s:%s %s set value \"$(from)\"\n", c.Namespace, ops.VarPath, ops.RET)+
 			fmt.Sprintf("execute store result storage %s:%s %s int 1 run data get storage %s:%s %s\n", c.Namespace, ops.VarPath, ops.RET, c.Namespace, ops.VarPath, ops.RET),
-		[]statements.FuncArg{
+		[]interfaces.FuncArg{
 			{Name: "from", Type: expressions.StringType},
 		},
 		expressions.IntType,
@@ -207,18 +207,18 @@ func (c *Compiler) createBuiltinFunctions() {
 			c.opHandler.LoadArgConst("print", "text", "MCB pack loaded")+
 			c.opHandler.Call("print", "")+
 			c.opHandler.Call("main", ""),
-		[]statements.FuncArg{},
+		[]interfaces.FuncArg{},
 		expressions.VoidType,
 	)
 	c.createFunction(
 		"internal/tick",
 		c.opHandler.Call("tick", ""),
-		[]statements.FuncArg{},
+		[]interfaces.FuncArg{},
 		expressions.VoidType,
 	)
 }
 
-func (c *Compiler) createFunction(fullName string, source string, args []statements.FuncArg, returnType expressions.ValueType) {
+func (c *Compiler) createFunction(fullName string, source string, args []interfaces.FuncArg, returnType interfaces.ValueType) {
 	if fullName == c.LoadFuncName || fullName == c.TickFuncName {
 		return
 	}
@@ -243,13 +243,13 @@ func (c *Compiler) createFunction(fullName string, source string, args []stateme
 
 	f := Func{
 		Name:       name,
-		Args:       make([]statements.FuncArg, 0),
+		Args:       make([]interfaces.FuncArg, 0),
 		ReturnType: returnType,
 	}
 	for _, parameter := range args {
-		f.Args = append(f.Args, statements.FuncArg{Name: parameter.Name, Type: parameter.Type})
+		f.Args = append(f.Args, interfaces.FuncArg{Name: parameter.Name, Type: parameter.Type})
 	}
-	f.Args = append(f.Args, statements.FuncArg{Name: "__call__", Type: expressions.IntType})
+	f.Args = append(f.Args, interfaces.FuncArg{Name: "__call__", Type: expressions.IntType})
 	c.functions[fullName] = f
 	log.Debugf("Creating function: %s", fullName)
 
@@ -295,7 +295,7 @@ func (c *Compiler) newRegister(regName string) string {
 }
 
 // Searches the current scope for functions and variables, returns the type of the variable or function
-func (c *Compiler) getReturnType(name string) expressions.ValueType {
+func (c *Compiler) getReturnType(name string) interfaces.ValueType {
 	for _, identifier := range c.scope[c.currentScope] {
 		if identifier.Name == name {
 			return identifier.Type

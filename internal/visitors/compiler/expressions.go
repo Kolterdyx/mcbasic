@@ -14,7 +14,7 @@ func (c *Compiler) VisitLiteral(expr expressions.LiteralExpr) interface{} {
 		return c.opHandler.MoveConst(expr.Value.(string), ops.Cs(ops.RX))
 	case expressions.StringType:
 		return c.opHandler.MoveConst(strconv.Quote(expr.Value.(string)), ops.Cs(ops.RX))
-	case expressions.FixedType:
+	case expressions.DoubleType:
 		return c.opHandler.MoveConst(expr.Value.(string), ops.Cs(ops.RX))
 	default:
 		c.error(expr.SourceLocation, "Invalid type in literal expression")
@@ -61,18 +61,18 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 		default:
 			c.error(expr.SourceLocation, "Invalid operator for integers")
 		}
-	case expressions.FixedType:
+	case expressions.DoubleType:
 		switch expr.Operator.Type {
 		case tokens.Plus:
-			cmd += c.opHandler.FixedAdd(regRa, regRb, ops.RX)
+			cmd += c.opHandler.DoubleAdd(regRa, regRb, ops.RX)
 		case tokens.Minus:
-			cmd += c.opHandler.FixedSub(regRa, regRb, ops.RX)
+			cmd += c.opHandler.DoubleSub(regRa, regRb, ops.RX)
 		case tokens.Star:
-			cmd += c.opHandler.FixedMul(regRa, regRb, ops.RX)
+			cmd += c.opHandler.DoubleMul(regRa, regRb, ops.RX)
 		case tokens.Slash:
-			cmd += c.opHandler.FixedDiv(regRa, regRb, ops.RX)
+			cmd += c.opHandler.DoubleDiv(regRa, regRb, ops.RX)
 		default:
-			c.error(expr.SourceLocation, "Invalid operator for fixed point numbers")
+			c.error(expr.SourceLocation, "Invalid operator for double numbers")
 		}
 
 	case expressions.StringType:

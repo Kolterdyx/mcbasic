@@ -2,14 +2,12 @@ package expressions
 
 import "github.com/Kolterdyx/mcbasic/internal/interfaces"
 
-type ValueType string
-
 const (
-	VoidType   ValueType = "void"
-	ErrorType  ValueType = "error"
-	IntType    ValueType = "int"
-	StringType ValueType = "str"
-	FixedType  ValueType = "fixed"
+	VoidType   interfaces.ValueType = "void"
+	ErrorType  interfaces.ValueType = "error"
+	IntType    interfaces.ValueType = "int"
+	StringType interfaces.ValueType = "str"
+	DoubleType interfaces.ValueType = "double"
 )
 
 type LiteralExpr struct {
@@ -17,7 +15,7 @@ type LiteralExpr struct {
 	interfaces.SourceLocation
 
 	Value     interface{}
-	ValueType ValueType
+	ValueType interfaces.ValueType
 }
 
 func (l LiteralExpr) Accept(v ExprVisitor) interface{} {
@@ -28,6 +26,6 @@ func (l LiteralExpr) TType() ExprType {
 	return LiteralExprType
 }
 
-func (l LiteralExpr) ReturnType() ValueType {
+func (l LiteralExpr) ReturnType() interfaces.ValueType {
 	return l.ValueType
 }

@@ -1,28 +1,16 @@
 package statements
 
 import (
-	"github.com/Kolterdyx/mcbasic/internal/expressions"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 )
-
-type FuncArg struct {
-	Name string
-	Type expressions.ValueType
-}
-
-type FuncDef struct {
-	Name       string
-	Parameters []FuncArg
-	IsBuiltIn  bool
-	ReturnType expressions.ValueType
-}
 
 type FunctionDeclarationStmt struct {
 	Stmt
 
 	Name       tokens.Token
-	Parameters []FuncArg
-	ReturnType expressions.ValueType
+	Parameters []interfaces.FuncArg
+	ReturnType interfaces.ValueType
 	Body       BlockStmt
 }
 

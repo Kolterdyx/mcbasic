@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	log "github.com/sirupsen/logrus"
@@ -41,13 +42,13 @@ func (p *Parser) expressionStatement() statements.Stmt {
 
 func (p *Parser) letDeclaration() statements.Stmt {
 	name := p.consume(tokens.Identifier, "Expected variable name.")
-	var varType expressions.ValueType
+	var varType interfaces.ValueType
 	if p.match(tokens.IntType) {
 		varType = expressions.IntType
 	} else if p.match(tokens.StringType) {
 		varType = expressions.StringType
-	} else if p.match(tokens.FixedType) {
-		varType = expressions.FixedType
+	} else if p.match(tokens.DoubleType) {
+		varType = expressions.DoubleType
 	} else {
 		p.error(p.peek(), "Expected variable type.")
 		return nil
@@ -82,7 +83,7 @@ func (p *Parser) variableAssignment() statements.Stmt {
 func (p *Parser) functionDeclaration() statements.Stmt {
 	name := p.consume(tokens.Identifier, "Expected function name.")
 	p.consume(tokens.ParenOpen, "Expected '(' after function name.")
-	parameters := make([]statements.FuncArg, 0)
+	parameters := make([]interfaces.FuncArg, 0)
 	if !p.check(tokens.ParenClose) {
 		for {
 			if len(parameters) >= 255 {
@@ -90,25 +91,25 @@ func (p *Parser) functionDeclaration() statements.Stmt {
 				return nil
 			}
 			argName := p.consume(tokens.Identifier, "Expected parameter name.")
-			if !p.match(tokens.IntType, tokens.StringType, tokens.FixedType) {
+			if !p.match(tokens.IntType, tokens.StringType, tokens.DoubleType) {
 				p.error(p.peek(), "Expected parameter type.")
 				p.synchronize()
 				return nil
 			}
 			type_ := p.previous()
-			var valueType expressions.ValueType
+			var valueType interfaces.ValueType
 			switch type_.Type {
 			case tokens.StringType:
 				valueType = expressions.StringType
 			case tokens.IntType:
 				valueType = expressions.IntType
-			case tokens.FixedType:
-				valueType = expressions.FixedType
+			case tokens.DoubleType:
+				valueType = expressions.DoubleType
 			default:
 				p.error(type_, "Expected parameter type.")
 				return nil
 			}
-			parameters = append(parameters, statements.FuncArg{Name: argName.Lexeme, Type: valueType})
+			parameters = append(parameters, interfaces.FuncArg{Name: argName.Lexeme, Type: valueType})
 			if !p.match(tokens.Comma) {
 				break
 			}
@@ -120,15 +121,15 @@ func (p *Parser) functionDeclaration() statements.Stmt {
 		returnType = expressions.IntType
 	} else if p.match(tokens.StringType) {
 		returnType = expressions.StringType
-	} else if p.match(tokens.FixedType) {
-		returnType = expressions.FixedType
+	} else if p.match(tokens.DoubleType) {
+		returnType = expressions.DoubleType
 	}
 
 	// Add all parameters to the current scope
 	for _, arg := range parameters {
 		p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{Name: arg.Name, Type: arg.Type})
 	}
-	p.functions = append(p.functions, statements.FuncDef{Name: name.Lexeme, Parameters: parameters, ReturnType: returnType})
+	p.functions = append(p.functions, interfaces.FuncDef{Name: name.Lexeme, Parameters: parameters, ReturnType: returnType})
 	body := p.block()
 	return statements.FunctionDeclarationStmt{Name: name, Parameters: parameters, ReturnType: returnType, Body: body}
 }

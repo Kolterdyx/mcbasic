@@ -3,7 +3,7 @@ package parser
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
-	"github.com/Kolterdyx/mcbasic/internal/statements"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	log "github.com/sirupsen/logrus"
 )
@@ -148,7 +148,7 @@ func (p *Parser) functionCall(namespace *tokens.Token, name tokens.Token) expres
 		lexeme = fmt.Sprintf("%s:%s", namespace.Lexeme, name.Lexeme)
 	}
 
-	var funcDef *statements.FuncDef = nil
+	var funcDef *interfaces.FuncDef = nil
 	for _, f := range p.functions {
 		log.Debugf("Checking function %s against %s", f.Name, lexeme)
 		if f.Name == lexeme {
@@ -205,8 +205,8 @@ func (p *Parser) primary() expressions.Expr {
 	if p.match(tokens.Int) {
 		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: expressions.IntType, SourceLocation: p.location()}
 	}
-	if p.match(tokens.Fixed) {
-		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: expressions.FixedType, SourceLocation: p.location()}
+	if p.match(tokens.Double) {
+		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: expressions.DoubleType, SourceLocation: p.location()}
 	}
 	if p.match(tokens.String) {
 		if p.match(tokens.BracketOpen) {

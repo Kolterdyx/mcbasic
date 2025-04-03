@@ -2,6 +2,7 @@ package parser
 
 import (
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	log "github.com/sirupsen/logrus"
@@ -15,18 +16,18 @@ type Parser struct {
 	currentScope string
 
 	variables map[string][]statements.VarDef
-	functions []statements.FuncDef
+	functions []interfaces.FuncDef
 }
 
 func (p *Parser) Parse() Program {
 	var functions []statements.FunctionDeclarationStmt
-	p.functions = make([]statements.FuncDef, 0)
+	p.functions = make([]interfaces.FuncDef, 0)
 	p.variables = make(map[string][]statements.VarDef)
 	p.functions = append(p.functions,
-		statements.FuncDef{Name: "mcb:print", ReturnType: expressions.VoidType, Parameters: []statements.FuncArg{{Name: "text", Type: expressions.VoidType}}, IsBuiltIn: true},
-		statements.FuncDef{Name: "mcb:log", ReturnType: expressions.VoidType, Parameters: []statements.FuncArg{{Name: "text", Type: expressions.VoidType}}, IsBuiltIn: true},
-		statements.FuncDef{Name: "mcb:exec", ReturnType: expressions.VoidType, Parameters: []statements.FuncArg{{Name: "command", Type: expressions.StringType}}, IsBuiltIn: true},
-		statements.FuncDef{Name: "mcb:len", ReturnType: expressions.IntType, Parameters: []statements.FuncArg{{Name: "string", Type: expressions.StringType}}, IsBuiltIn: true},
+		interfaces.FuncDef{Name: "mcb:print", ReturnType: expressions.VoidType, Parameters: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
+		interfaces.FuncDef{Name: "mcb:log", ReturnType: expressions.VoidType, Parameters: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
+		interfaces.FuncDef{Name: "mcb:exec", ReturnType: expressions.VoidType, Parameters: []interfaces.FuncArg{{Name: "command", Type: expressions.StringType}}},
+		interfaces.FuncDef{Name: "mcb:len", ReturnType: expressions.IntType, Parameters: []interfaces.FuncArg{{Name: "string", Type: expressions.StringType}}},
 	)
 	for !p.IsAtEnd() {
 		statement := p.statement()
@@ -39,7 +40,7 @@ func (p *Parser) Parse() Program {
 		}
 		funcStmt := statement.(statements.FunctionDeclarationStmt)
 		functions = append(functions, funcStmt)
-		p.functions = append(p.functions, statements.FuncDef{Name: funcStmt.Name.Lexeme, ReturnType: funcStmt.ReturnType, Parameters: funcStmt.Parameters})
+		p.functions = append(p.functions, interfaces.FuncDef{Name: funcStmt.Name.Lexeme, ReturnType: funcStmt.ReturnType, Parameters: funcStmt.Parameters})
 	}
 	return Program{Functions: functions}
 }

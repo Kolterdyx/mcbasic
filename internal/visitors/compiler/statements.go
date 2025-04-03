@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	log "github.com/sirupsen/logrus"
@@ -21,9 +22,9 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 
 	var source = cmd + stmt.Body.Accept(c).(string)
 
-	args := make([]statements.FuncArg, 0)
+	args := make([]interfaces.FuncArg, 0)
 	for _, arg := range stmt.Parameters {
-		args = append(args, statements.FuncArg{Name: arg.Name, Type: arg.Type})
+		args = append(args, interfaces.FuncArg{Name: arg.Name, Type: arg.Type})
 		c.scope[stmt.Name.Lexeme] = append(c.scope[stmt.Name.Lexeme],
 			TypedIdentifier{
 				arg.Name,

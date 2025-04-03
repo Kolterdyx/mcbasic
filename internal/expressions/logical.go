@@ -22,6 +22,6 @@ func (l LogicalExpr) TType() ExprType {
 	return LogicalExprType
 }
 
-func (l LogicalExpr) ReturnType() ValueType {
+func (l LogicalExpr) ReturnType() interfaces.ValueType {
 	return IntType
 }

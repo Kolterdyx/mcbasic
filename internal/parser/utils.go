@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	log "github.com/sirupsen/logrus"
@@ -93,7 +92,7 @@ func (p *Parser) peekCount(offset int) tokens.Token {
 	return p.Tokens[p.current+offset]
 }
 
-func (p *Parser) getType(name tokens.Token) expressions.ValueType {
+func (p *Parser) getType(name tokens.Token) interfaces.ValueType {
 	// Search the variable in the current scope
 	for _, v := range p.variables {
 		for _, def := range v {

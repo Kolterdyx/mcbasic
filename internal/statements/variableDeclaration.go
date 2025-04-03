@@ -2,19 +2,20 @@ package statements
 
 import (
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 )
 
 type VarDef struct {
 	Name string
-	Type expressions.ValueType
+	Type interfaces.ValueType
 }
 
 type VariableDeclarationStmt struct {
 	Stmt
 
 	Name        tokens.Token
-	Type        expressions.ValueType
+	Type        interfaces.ValueType
 	Initializer expressions.Expr
 }
 

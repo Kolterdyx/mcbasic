@@ -21,6 +21,6 @@ func (s SliceExpr) TType() ExprType {
 	return SliceExprType
 }
 
-func (s SliceExpr) ReturnType() ValueType {
+func (s SliceExpr) ReturnType() interfaces.ValueType {
 	return s.TargetExpr.ReturnType()
 }

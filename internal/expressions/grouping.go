@@ -17,6 +17,6 @@ func (g GroupingExpr) TType() ExprType {
 	return GroupingExprType
 }
 
-func (g GroupingExpr) ReturnType() ValueType {
+func (g GroupingExpr) ReturnType() interfaces.ValueType {
 	return g.Expression.ReturnType()
 }
