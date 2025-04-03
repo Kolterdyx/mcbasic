@@ -210,12 +210,12 @@ func (c *Compiler) createBuiltinFunctions() {
 		[]statements.FuncArg{},
 		expressions.VoidType,
 	)
-	//c.createFunction(
-	//	"internal/tick",
-	//		c.opHandler.Call("tick"),
-	//	[]statements.FuncArg{},
-	//  expressions.VoidType,
-	//)
+	c.createFunction(
+		"internal/tick",
+		c.opHandler.Call("tick", ""),
+		[]statements.FuncArg{},
+		expressions.VoidType,
+	)
 }
 
 func (c *Compiler) createFunction(fullName string, source string, args []statements.FuncArg, returnType expressions.ValueType) {
@@ -292,26 +292,6 @@ func (c *Compiler) error(location interfaces.SourceLocation, message string) {
 func (c *Compiler) newRegister(regName string) string {
 	c.regCounters[regName]++
 	return regName + fmt.Sprintf("_%d", c.regCounters[regName])
-}
-
-func (c *Compiler) addBuiltInFunctionsToScope() {
-	c.scope[c.currentScope] = append(c.scope[c.currentScope],
-		TypedIdentifier{
-			Name: "log",
-			Type: expressions.VoidType,
-		},
-		TypedIdentifier{
-			Name: "print",
-			Type: expressions.VoidType,
-		},
-		TypedIdentifier{
-			Name: "exec",
-			Type: expressions.VoidType,
-		},
-		TypedIdentifier{
-			Name: "len",
-			Type: expressions.IntType,
-		})
 }
 
 // Searches the current scope for functions and variables, returns the type of the variable or function

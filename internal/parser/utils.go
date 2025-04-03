@@ -105,10 +105,10 @@ func (p *Parser) getType(name tokens.Token) expressions.ValueType {
 	for _, f := range p.functions {
 
 		split := strings.Split(f.Name, ":")
-		if len(split) != 2 {
+		if len(split) > 2 {
 			log.Fatalf("Invalid function name: %s", f.Name)
 		}
-		if split[1] == name.Lexeme {
+		if len(split) == 2 && split[1] == name.Lexeme || len(split) == 1 && f.Name == name.Lexeme {
 			return f.ReturnType
 		}
 	}

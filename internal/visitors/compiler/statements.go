@@ -12,7 +12,6 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 	c.currentFunction = stmt
 	c.currentScope = stmt.Name.Lexeme
 	c.scope[stmt.Name.Lexeme] = []TypedIdentifier{}
-	c.addBuiltInFunctionsToScope()
 
 	cmd := ""
 	// For each parameter, copy the value to a variable with the same name
