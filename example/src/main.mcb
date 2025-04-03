@@ -1,5 +1,5 @@
 
 
 func main() {
-	mcb:log(mcb:ceil(1.5 * 1.5 * 1.5));
+	mcb:log(mcb:sqrt(3.0));
 }
