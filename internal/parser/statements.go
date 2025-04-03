@@ -129,7 +129,7 @@ func (p *Parser) functionDeclaration() statements.Stmt {
 	for _, arg := range parameters {
 		p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{Name: arg.Name, Type: arg.Type})
 	}
-	p.functions = append(p.functions, interfaces.FuncDef{Name: name.Lexeme, Parameters: parameters, ReturnType: returnType})
+	p.functions = append(p.functions, interfaces.FuncDef{Name: name.Lexeme, Args: parameters, ReturnType: returnType})
 	body := p.block()
 	return statements.FunctionDeclarationStmt{Name: name, Parameters: parameters, ReturnType: returnType, Body: body}
 }

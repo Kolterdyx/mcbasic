@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "version": "1.0",
+    "name": "gibbsly math",
+    "description": "A utility datapack for doing math operations",
+    "author": "gibbsly",
+    "homepage": "https://github.com/gibbsly/gm",
+    "license": "Unlicense (https://unlicense.org/)"
+  },
+  "definitions": {
+    "functions": {
+      "add": {
+        "args": [
+          {
+            "name": "x",
+            "type": "double"
+          },
+          {
+            "name": "y",
+            "type": "double"
+          }
+        ],
+        "returns": {
+          "type": "double",
+          "storage": "gm:io",
+          "path": "out"
+        }
+      }
+    }
+  }
+}

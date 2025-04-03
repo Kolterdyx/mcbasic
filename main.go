@@ -28,10 +28,10 @@ func main() {
 		PadLevelText:           true,
 	})
 
-	config := parseArgs()
+	config, projectRoot := parseArgs()
 
 	entrypoint := config.Project.Entrypoint
-	blob, _ := os.ReadFile(entrypoint)
+	blob, _ := os.ReadFile(path.Join(projectRoot, entrypoint))
 	source := string(blob)
 	log.Debug("Source loaded successfully")
 
@@ -59,7 +59,7 @@ func main() {
 	d := visitors.DebugVisitor{}
 	program.Visit(d)
 
-	c := compiler.NewCompiler(config)
+	c := compiler.NewCompiler(config, projectRoot)
 	c.Compile(program)
 	log.Info("Compilation complete")
 }
@@ -76,7 +76,7 @@ func loadProject(file string) interfaces.ProjectConfig {
 	return project
 }
 
-func parseArgs() interfaces.ProjectConfig {
+func parseArgs() (interfaces.ProjectConfig, string) {
 	// Parse command line arguments
 
 	versionPtr := flag.Bool("version", false, "Print version")
@@ -105,7 +105,7 @@ func parseArgs() interfaces.ProjectConfig {
 	config.OutputDir = *outputDirPtr
 	config.EnableTraces = *enableTracesPtr
 
-	return config
+	return config, path.Dir(*projectFilePtr)
 }
 
 func validateProjectConfig(config interfaces.ProjectConfig) {

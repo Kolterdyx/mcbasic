@@ -15,12 +15,6 @@ import (
 	"strings"
 )
 
-type Func struct {
-	Name       string
-	Args       []interfaces.FuncArg
-	ReturnType interfaces.ValueType
-}
-
 type TypedIdentifier struct {
 	Name string
 	Type interfaces.ValueType
@@ -28,6 +22,7 @@ type TypedIdentifier struct {
 
 type Compiler struct {
 	Config       interfaces.ProjectConfig
+	ProjectRoot  string
 	Namespace    string
 	DatapackRoot string
 
@@ -38,7 +33,7 @@ type Compiler struct {
 	currentFunction statements.FunctionDeclarationStmt
 	currentScope    string
 
-	functions map[string]Func
+	functions map[string]interfaces.FuncDef
 
 	scope map[string][]TypedIdentifier
 
@@ -53,14 +48,19 @@ type Compiler struct {
 	TickFuncName string
 }
 
-func NewCompiler(config interfaces.ProjectConfig) *Compiler {
-	c := &Compiler{Config: config, LoadFuncName: config.Project.Namespace + "/init", TickFuncName: config.Project.Namespace + "/tick"}
+func NewCompiler(config interfaces.ProjectConfig, projectRoot string) *Compiler {
+	c := &Compiler{
+		ProjectRoot:  projectRoot,
+		Config:       config,
+		LoadFuncName: path.Join(config.Project.Namespace, "init"),
+		TickFuncName: path.Join(config.Project.Namespace, "tick"),
+	}
 	c.Namespace = config.Project.Namespace
 	c.opHandler = ops.Op{
 		Namespace:    c.Namespace,
 		EnableTraces: config.EnableTraces,
 	}
-	c.functions = make(map[string]Func)
+	c.functions = make(map[string]interfaces.FuncDef)
 	c.scope = make(map[string][]TypedIdentifier)
 	c.regCounters = make(map[string]int)
 
@@ -73,8 +73,11 @@ func (c *Compiler) Compile(program parser.Program) {
 		log.Fatalln(err)
 	}
 	c.createPackMeta()
+
+	c.declareFunctionsFromHeaders()
+
 	for _, function := range program.Functions {
-		f := Func{
+		f := interfaces.FuncDef{
 			Name:       function.Name.Lexeme,
 			Args:       make([]interfaces.FuncArg, 0),
 			ReturnType: function.ReturnType,
@@ -241,7 +244,7 @@ func (c *Compiler) createFunction(fullName string, source string, args []interfa
 	}
 	filename := name + ".mcfunction"
 
-	f := Func{
+	f := interfaces.FuncDef{
 		Name:       name,
 		Args:       make([]interfaces.FuncArg, 0),
 		ReturnType: returnType,
@@ -359,4 +362,27 @@ func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx
 
 func (c *Compiler) getFuncPath(namespace string) string {
 	return fmt.Sprintf("%s/data/%s/function", c.DatapackRoot, namespace)
+}
+
+func (c *Compiler) declareFunctionsFromHeaders() {
+	for _, header := range c.Config.Dependencies.Headers {
+		headerPath := path.Join(c.ProjectRoot, header)
+		if _, err := os.Stat(headerPath); os.IsNotExist(err) {
+			log.Warnf("Header file %s does not exist, skipping...", header)
+			continue
+		}
+		headerFile, err := os.ReadFile(headerPath)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		lines := strings.Split(string(headerFile), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "function") {
+				name := strings.TrimPrefix(line, "function")
+				name = strings.TrimSpace(name)
+				c.functions[name] = interfaces.FuncDef{Name: name}
+			}
+		}
+	}
 }

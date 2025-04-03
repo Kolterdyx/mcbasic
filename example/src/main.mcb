@@ -1,0 +1,8 @@
+
+func test() {
+	mcb:log("Hello tits");
+}
+
+func main() {
+    test();
+}

@@ -24,10 +24,10 @@ func (p *Parser) Parse() Program {
 	p.functions = make([]interfaces.FuncDef, 0)
 	p.variables = make(map[string][]statements.VarDef)
 	p.functions = append(p.functions,
-		interfaces.FuncDef{Name: "mcb:print", ReturnType: expressions.VoidType, Parameters: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
-		interfaces.FuncDef{Name: "mcb:log", ReturnType: expressions.VoidType, Parameters: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
-		interfaces.FuncDef{Name: "mcb:exec", ReturnType: expressions.VoidType, Parameters: []interfaces.FuncArg{{Name: "command", Type: expressions.StringType}}},
-		interfaces.FuncDef{Name: "mcb:len", ReturnType: expressions.IntType, Parameters: []interfaces.FuncArg{{Name: "string", Type: expressions.StringType}}},
+		interfaces.FuncDef{Name: "mcb:print", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
+		interfaces.FuncDef{Name: "mcb:log", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
+		interfaces.FuncDef{Name: "mcb:exec", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "command", Type: expressions.StringType}}},
+		interfaces.FuncDef{Name: "mcb:len", ReturnType: expressions.IntType, Args: []interfaces.FuncArg{{Name: "string", Type: expressions.StringType}}},
 	)
 	for !p.IsAtEnd() {
 		statement := p.statement()
@@ -40,7 +40,7 @@ func (p *Parser) Parse() Program {
 		}
 		funcStmt := statement.(statements.FunctionDeclarationStmt)
 		functions = append(functions, funcStmt)
-		p.functions = append(p.functions, interfaces.FuncDef{Name: funcStmt.Name.Lexeme, ReturnType: funcStmt.ReturnType, Parameters: funcStmt.Parameters})
+		p.functions = append(p.functions, interfaces.FuncDef{Name: funcStmt.Name.Lexeme, ReturnType: funcStmt.ReturnType, Args: funcStmt.Parameters})
 	}
 	return Program{Functions: functions}
 }

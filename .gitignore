@@ -3,8 +3,8 @@
 *.json
 *.txt
 !version.txt
+!example/*/**
 mcbasic
 .idea
 build
-main.mcb
 utils/mcdata

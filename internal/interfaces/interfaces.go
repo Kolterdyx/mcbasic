@@ -11,6 +11,9 @@ type ProjectConfig struct {
 		Version     string
 		Description string
 	}
+	Dependencies struct {
+		Headers []string
+	}
 	OutputDir    string
 	EnableTraces bool
 }
@@ -27,6 +30,6 @@ type FuncArg struct {
 
 type FuncDef struct {
 	Name       string
-	Parameters []FuncArg
+	Args       []FuncArg
 	ReturnType ValueType
 }

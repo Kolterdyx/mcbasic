@@ -152,13 +152,13 @@ func (p *Parser) functionCall(namespace *tokens.Token, name tokens.Token) expres
 	for _, f := range p.functions {
 		log.Debugf("Checking function %s against %s", f.Name, lexeme)
 		if f.Name == lexeme {
-			if len(f.Parameters) != len(args) {
-				p.error(name, fmt.Sprintf("Expected %d arguments, got %d.", len(f.Parameters), len(args)))
+			if len(f.Args) != len(args) {
+				p.error(name, fmt.Sprintf("Expected %d arguments, got %d.", len(f.Args), len(args)))
 				return nil
 			}
 			for i, arg := range args {
-				if arg.ReturnType() != f.Parameters[i].Type && f.Parameters[i].Type != expressions.VoidType {
-					p.error(p.peekCount(-(len(f.Parameters)-i)*2), fmt.Sprintf("Expected %s, got %s.", f.Parameters[i].Type, arg.ReturnType()))
+				if arg.ReturnType() != f.Args[i].Type && f.Args[i].Type != expressions.VoidType {
+					p.error(p.peekCount(-(len(f.Args)-i)*2), fmt.Sprintf("Expected %s, got %s.", f.Args[i].Type, arg.ReturnType()))
 					return nil
 				}
 			}
