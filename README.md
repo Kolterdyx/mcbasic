@@ -24,7 +24,7 @@ This is a list of features that are currently implemented or planned for the fut
   - [x] **Logical operators**.
 - [ ] **Data Types**:
   - [x] **Integer**.
-  - [x] **Fixed point**.
+  - [x] **Double**.
   - [x] **String**.
   - [x] **Boolean**: Booleans do not have a type. Other types are evaluated to be truthy or falsy. Falsy values are `0`, `0.0`, `""`.
   - [ ] **Array**.
@@ -40,7 +40,7 @@ This is a list of features that are currently implemented or planned for the fut
 
 These are some of the quirks of the language that you should be aware of. They may be fixed in the future.
 
-- **No global scope**: Only functions can be declared at the top level. Variables must be declared inside functions.
+- **No global scope**: Only functions can be declared at the top level. Variables must be declared inside functions. Variables are scoped to the function they are declared in.
 - **No type inference**: The compiler does not infer the type of variable from its value.
 - **No type casting**: You cannot cast a variable from one type to another.
 - **Recursive functions**: Recursive functions have not been thoroughly tested and may not work as expected.
@@ -56,9 +56,9 @@ Create a new directory for your project and create a file called `project.toml` 
 
 ```toml
 [project]
-name = "My project"
-namespace = "my_project"
-description = "A description of your project"
+name = "Example project"
+namespace = "example"
+description = "An example project"
 version = "0.1.0"
 entrypoint = "main.mcb"
 ```
@@ -72,7 +72,7 @@ Create a new file called `main.mcb` with the following content:
 
 ```python # Python is used for syntax highlighting, but the language is not Python
 func main() {
-    print("Hello, world!");
+    mcb:print("Hello, world!");
 }
 ```
 
@@ -83,7 +83,7 @@ This is the entry point of your program. The `main` function is called when the 
 Run the following command inside the directory to compile your code:
 
 ```sh
-./mcbasic
+mcbasic
 ```
 
 This will generate a new directory called `build` with the compiled datapack inside.
@@ -101,19 +101,19 @@ if you are joining a world, the message may appear before you join the world. Yo
 ## Example
 
 ```python # Python is used for syntax highlighting, but the language is not Python
-func add(a: fixed, b: fixed) fixed {
+func add(a double, b double) double {
     return a + b;
 }
 
 # Recursion is possible! Careful not to hit the maxCommandChainLength or the maxCommandForkCount limit 
-func fib(n: int) int {
+func fib(n int) int {
     if (n <= 1) {
         return n;
     }
     return fib(n - 1) + fib(n - 2);
 }
 
-func fizbuzz(n: int) {
+func fizbuzz(n int) {
     # since for/while loops aren't supported yet, here is a cut down version of the fizzbuzz function
     # that evaluates a single value at a time instead of all the numbers up to n
     if (n % 3 == 0 and n % 5 == 0) {
@@ -128,36 +128,36 @@ func fizbuzz(n: int) {
 }
 
 func main() {
-    let x: fixed = 5.51;
-    let y: fixed = 10.73;
-    let z: fixed = add(x, y);
+    let x double = 5.51;
+    let y double = 10.73;
+    let z double = add(x, y);
 
     # string concatenation
-    let hello: str = "Hello" + " world!";
+    let hello str = "Hello" + " world!";
 
     # print function can take any argument type
-    print(hello);
-    print(z);
+    mcb:print(hello);
+    mcb:print(z);
 
 	# logs will only be shown to players with the 'mcblog' tag
-	log("This is a log message");
+	mcb:log("This is a log message");
 
     # Other types can be appended to strings. The string must be on the left side of the operation for this to work
-    print("10th fib: " + fib(10));
+    mcb:print("10th fib: " + fib(10));
     
     # You can also run raw commands with the built-in exec function
-    exec("say Hello, world!");
+    mcb:exec("say Hello, world!");
 
     # You can also slice strings
-    print(hello[0:5]);
+    mcb:print(hello[0:5]);
     # Even with literals and negative indices
-    print("Hello world!"[-6:-1]);
+    mcb:print("Hello world!"[-6:-1]);
     # Expressions can be used as indices. The result must be an integer
-    print(hello[0:5 + 1]);
+    mcb:print(hello[0:5 + 1]);
     # Out of bounds exceptions are checked, and errors are logged to the chat
     # Negative indices are also checked
-    # print(hello[0:100]);  # This will return out of the main function and print an error message
-    # print(hello[0:-100]);  # This will return out of the main function and print an error message
+    # mcb:print(hello[0:100]);  # This will return out of the main function and print an error message
+    # mcb:print(hello[0:-100]);  # This will return out of the main function and print an error message
 }
 ```
 

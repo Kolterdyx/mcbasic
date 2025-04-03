@@ -35,18 +35,18 @@ func (p *Parser) Parse() Program {
 		interfaces.FuncDef{Name: "mcb:exec", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "command", Type: expressions.StringType}}},
 		interfaces.FuncDef{Name: "mcb:len", ReturnType: expressions.IntType, Args: []interfaces.FuncArg{{Name: "string", Type: expressions.StringType}}},
 
-		interfaces.FuncDef{Name: "mcb:sqrt", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+		interfaces.FuncDef{Name: "math:sqrt", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
 
-		interfaces.FuncDef{Name: "mcb:sin", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-		interfaces.FuncDef{Name: "mcb:cos", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-		interfaces.FuncDef{Name: "mcb:tan", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-		interfaces.FuncDef{Name: "mcb:asin", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-		interfaces.FuncDef{Name: "mcb:acos", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-		interfaces.FuncDef{Name: "mcb:atan", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+		interfaces.FuncDef{Name: "math:sin", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+		interfaces.FuncDef{Name: "math:cos", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+		interfaces.FuncDef{Name: "math:tan", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+		interfaces.FuncDef{Name: "math:asin", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+		interfaces.FuncDef{Name: "math:acos", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+		interfaces.FuncDef{Name: "math:atan", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
 
-		interfaces.FuncDef{Name: "mcb:floor", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-		interfaces.FuncDef{Name: "mcb:ceil", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-		interfaces.FuncDef{Name: "mcb:round", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+		interfaces.FuncDef{Name: "math:floor", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+		interfaces.FuncDef{Name: "math:ceil", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+		interfaces.FuncDef{Name: "math:round", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
 	)
 	for !p.IsAtEnd() {
 		statement := p.statement()

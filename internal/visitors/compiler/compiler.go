@@ -127,14 +127,14 @@ func (c *Compiler) createDirectoryTree() error {
 	log.Infof("Compiling to %s\n", c.DatapackRoot)
 	c.funcPath = c.getFuncPath(c.Namespace)
 	c.mcbFuncPath = c.getFuncPath("mcb")
-	c.tagsPath = c.DatapackRoot + "/data/minecraft/tags"
+	c.tagsPath = path.Join(c.DatapackRoot, "/data/minecraft/tags")
+	mathPath := path.Join(c.DatapackRoot, "/data/math/function")
 
 	errs := []error{
-		os.MkdirAll(c.funcPath, 0755),
-		os.MkdirAll(c.funcPath+"/internal", 0755),
-		os.MkdirAll(c.mcbFuncPath, 0755),
-		os.MkdirAll(c.mcbFuncPath+"/internal", 0755),
+		os.MkdirAll(path.Join(c.funcPath, "/internal"), 0755),
+		os.MkdirAll(path.Join(c.mcbFuncPath, "/internal"), 0755),
 		os.MkdirAll(c.tagsPath, 0755),
+		os.MkdirAll(mathPath, 0755),
 	}
 	for _, err := range errs {
 		if err != nil {
@@ -218,7 +218,7 @@ func (c *Compiler) createFunctionTags() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	err = os.WriteFile(c.tagsPath+"/function/load.json", []byte(fmt.Sprintf(loadTag, c.Namespace+":internal/init")), 0644)
+	err = os.WriteFile(c.tagsPath+"/function/load.json", []byte(fmt.Sprintf(loadTag, "mcb:internal/init")), 0644)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -301,7 +301,7 @@ func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx
 }
 
 func (c *Compiler) getFuncPath(namespace string) string {
-	return fmt.Sprintf("%s/data/%s/function", c.DatapackRoot, namespace)
+	return path.Join(c.DatapackRoot, "data", namespace, "function")
 }
 
 func (c *Compiler) copyEmbeddedLibs() error {

@@ -44,7 +44,7 @@ func (c *Compiler) utils() {
 func (c *Compiler) math() {
 	// Others
 	c.createFunction(
-		"mcb:sqrt",
+		"math:sqrt",
 		c.opHandler.DoubleSqrt("x", ops.RET),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: expressions.DoubleType},
@@ -54,7 +54,7 @@ func (c *Compiler) math() {
 
 	// Trigonometric functions
 	c.createFunction(
-		"mcb:cos",
+		"math:cos",
 		c.opHandler.DoubleCos("x", ops.RET),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: expressions.DoubleType},
@@ -62,7 +62,7 @@ func (c *Compiler) math() {
 		expressions.DoubleType,
 	)
 	c.createFunction(
-		"mcb:sin",
+		"math:sin",
 		c.opHandler.DoubleSin("x", ops.RET),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: expressions.DoubleType},
@@ -70,7 +70,7 @@ func (c *Compiler) math() {
 		expressions.DoubleType,
 	)
 	c.createFunction(
-		"mcb:tan",
+		"math:tan",
 		c.opHandler.DoubleTan("x", ops.RET),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: expressions.DoubleType},
@@ -78,7 +78,7 @@ func (c *Compiler) math() {
 		expressions.DoubleType,
 	)
 	c.createFunction(
-		"mcb:acos",
+		"math:acos",
 		c.opHandler.DoubleAcos("x", ops.RET),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: expressions.DoubleType},
@@ -86,7 +86,7 @@ func (c *Compiler) math() {
 		expressions.DoubleType,
 	)
 	c.createFunction(
-		"mcb:asin",
+		"math:asin",
 		c.opHandler.DoubleAsin("x", ops.RET),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: expressions.DoubleType},
@@ -94,7 +94,7 @@ func (c *Compiler) math() {
 		expressions.DoubleType,
 	)
 	c.createFunction(
-		"mcb:atan",
+		"math:atan",
 		c.opHandler.DoubleAtan("x", ops.RET),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: expressions.DoubleType},
@@ -104,7 +104,7 @@ func (c *Compiler) math() {
 
 	// Rounding functions
 	c.createFunction(
-		"mcb:floor",
+		"math:floor",
 		c.opHandler.DoubleFloor("x", ops.RET),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: expressions.DoubleType},
@@ -112,7 +112,7 @@ func (c *Compiler) math() {
 		expressions.DoubleType,
 	)
 	c.createFunction(
-		"mcb:ceil",
+		"math:ceil",
 		c.opHandler.DoubleCeil("x", ops.RET),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: expressions.DoubleType},
@@ -120,7 +120,7 @@ func (c *Compiler) math() {
 		expressions.DoubleType,
 	)
 	c.createFunction(
-		"mcb:round",
+		"math:round",
 		c.opHandler.DoubleRound("x", ops.RET),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: expressions.DoubleType},

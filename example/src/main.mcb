@@ -1,5 +1,69 @@
+func add(a double, b double) double {
+    return a + b;
+}
 
+# Recursion is possible! Careful not to hit the maxCommandChainLength or the maxCommandForkCount limit
+func fib(n int) int {
+    if (n <= 1) {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+
+func fizbuzz(n int) {
+    # since for/while loops aren't supported yet, here is a cut down version of the fizzbuzz function
+    # that evaluates a single value at a time instead of all the numbers up to n
+    if (n % 3 == 0 and n % 5 == 0) {
+        mcb:print("FizzBuzz");
+    } else if (n % 3 == 0) {
+        mcb:print("Fizz");
+    } else if (n % 5 == 0) {
+        mcb:print("Buzz");
+    } else {
+        mcb:print(n);
+    }
+}
+
+func print_fizzbuzz(n int, max int) {
+	if (n <= max) {
+		fizbuzz(n);
+		print_fizzbuzz(n + 1, max);
+	}
+}
 
 func main() {
-	mcb:log(mcb:sqrt(3.0));
+
+    let x double = 5.51;
+    let y double = 10.73;
+    let z double = add(x, y);
+
+    # string concatenation
+    let hello str = "Hello" + " world!";
+
+    # print function can take any argument type
+    mcb:print(hello);
+    mcb:print(z);
+
+    # fizzbuzz!
+    print_fizzbuzz(1, 30);
+
+	# logs will only be shown to players with the 'mcblog' tag
+	mcb:log("This is a log message");
+
+    # Other types can be appended to strings. The string must be on the left side of the operation for this to work
+    mcb:log("10th fib: " + fib(10));
+
+    # You can also run raw commands with the built-in exec function
+    mcb:exec("say Hello, world!");
+
+    # You can also slice strings
+    mcb:log(hello[0:5]);
+    # Even with literals and negative indices
+    mcb:log("Hello world!"[-6:-1]);
+    # Expressions can be used as indices. The result must be an integer
+    mcb:log(hello[0:5 + 1]);
+    # Out of bounds exceptions are checked, and errors are logged to the chat
+    # Negative indices are also checked
+    # mcb:log(hello[0:100]);  # This will return out of the main function and print an error message
+    # mcb:log(hello[0:-100]);  # This will return out of the main function and print an error message
 }

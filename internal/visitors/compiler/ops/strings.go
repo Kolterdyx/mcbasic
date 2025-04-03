@@ -8,7 +8,7 @@ func (o *Op) Concat(var1 string, var2 string, result string) string {
 	cmd += o.LoadArgConst("internal/concat", "storage", fmt.Sprintf("%s:%s", o.Namespace, VarPath))
 	cmd += o.LoadArg("internal/concat", "a", var1)
 	cmd += o.LoadArg("internal/concat", "b", var2)
-	cmd += o.Call("internal/concat", result)
+	cmd += o.Call("mcb:internal/concat", result)
 	return cmd
 }
 
@@ -23,6 +23,6 @@ func (o *Op) Slice(from string, start string, end string, result string) string 
 	cmd += o.LoadArgConst("internal/slice", "from", from)
 	cmd += o.LoadArg("internal/slice", "start", start)
 	cmd += o.LoadArg("internal/slice", "end", end)
-	cmd += o.Call("internal/slice", result)
+	cmd += o.Call("mcb:internal/slice", result)
 	return cmd
 }
