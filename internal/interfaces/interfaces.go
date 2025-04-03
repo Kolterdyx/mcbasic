@@ -18,6 +18,27 @@ type ProjectConfig struct {
 	EnableTraces bool
 }
 
+type DatapackHeader struct {
+	Namespace string `json:"namespace"`
+	Meta      struct {
+		Name string
+	} `json:"meta"`
+	Definitions struct {
+		Functions []struct {
+			Name string `json:"name"`
+			Args []struct {
+				Name string    `json:"name"`
+				Type ValueType `json:"type"`
+			}
+			Returns struct {
+				Type    ValueType `json:"type"`
+				Storage string    `json:"storage"`
+				Path    string    `json:"path"`
+			}
+		} `json:"functions"`
+	} `json:"definitions"`
+}
+
 type SourceLocation struct {
 	Row int
 	Col int

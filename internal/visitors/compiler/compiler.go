@@ -1,14 +1,17 @@
 package compiler
 
 import (
+	"embed"
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"github.com/Kolterdyx/mcbasic/internal/utils"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	log "github.com/sirupsen/logrus"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -25,6 +28,7 @@ type Compiler struct {
 	ProjectRoot  string
 	Namespace    string
 	DatapackRoot string
+	Headers      []interfaces.DatapackHeader
 
 	mcbFuncPath string
 	funcPath    string
@@ -46,14 +50,22 @@ type Compiler struct {
 
 	LoadFuncName string
 	TickFuncName string
+	libs         embed.FS
 }
 
-func NewCompiler(config interfaces.ProjectConfig, projectRoot string) *Compiler {
+func NewCompiler(
+	config interfaces.ProjectConfig,
+	projectRoot string,
+	headers []interfaces.DatapackHeader,
+	libs embed.FS,
+) *Compiler {
 	c := &Compiler{
 		ProjectRoot:  projectRoot,
+		Headers:      headers,
 		Config:       config,
 		LoadFuncName: path.Join(config.Project.Namespace, "init"),
 		TickFuncName: path.Join(config.Project.Namespace, "tick"),
+		libs:         libs,
 	}
 	c.Namespace = config.Project.Namespace
 	c.opHandler = ops.Op{
@@ -72,9 +84,13 @@ func (c *Compiler) Compile(program parser.Program) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	err = c.copyEmbeddedLibs()
+	if err != nil {
+		log.Fatalln(err)
+	}
 	c.createPackMeta()
 
-	c.declareFunctionsFromHeaders()
+	c.functions = utils.GetHeaderFuncDefs(c.Headers)
 
 	for _, function := range program.Functions {
 		f := interfaces.FuncDef{
@@ -156,11 +172,35 @@ func (c *Compiler) createBuiltinFunctions() {
 	)
 	c.createFunction(
 		"mcb:log",
-		`$tellraw @a[tag=mcblog] {text:'$(text)',color:dark_gray,italic:true}`,
+		`$tellraw @a[tag=mcblog] {text:'$(text)',color:gray,italic:true}`,
 		[]interfaces.FuncArg{
 			{Name: "text", Type: expressions.StringType},
 		},
 		expressions.VoidType,
+	)
+	c.createFunction(
+		"mcb:floor",
+		c.opHandler.DoubleFloor("x", ops.RET),
+		[]interfaces.FuncArg{
+			{Name: "x", Type: expressions.DoubleType},
+		},
+		expressions.DoubleType,
+	)
+	c.createFunction(
+		"mcb:ceil",
+		c.opHandler.DoubleCeil("x", ops.RET),
+		[]interfaces.FuncArg{
+			{Name: "x", Type: expressions.DoubleType},
+		},
+		expressions.DoubleType,
+	)
+	c.createFunction(
+		"mcb:round",
+		c.opHandler.DoubleRound("x", ops.RET),
+		[]interfaces.FuncArg{
+			{Name: "x", Type: expressions.DoubleType},
+		},
+		expressions.DoubleType,
 	)
 	c.createFunction(
 		"mcb:exec",
@@ -254,7 +294,6 @@ func (c *Compiler) createFunction(fullName string, source string, args []interfa
 	}
 	f.Args = append(f.Args, interfaces.FuncArg{Name: "__call__", Type: expressions.IntType})
 	c.functions[fullName] = f
-	log.Debugf("Creating function: %s", fullName)
 
 	err := os.WriteFile(c.getFuncPath(namespace)+"/"+filename, []byte(source), 0644)
 	if err != nil {
@@ -266,7 +305,8 @@ func (c *Compiler) createFunctionTags() {
 	// load tag
 	loadTag := `{
 	"values": [
-		"%s"
+		"%s",
+		"gm:zzz/load"
 	]
 }`
 	tickTag := `{
@@ -364,25 +404,82 @@ func (c *Compiler) getFuncPath(namespace string) string {
 	return fmt.Sprintf("%s/data/%s/function", c.DatapackRoot, namespace)
 }
 
-func (c *Compiler) declareFunctionsFromHeaders() {
-	for _, header := range c.Config.Dependencies.Headers {
-		headerPath := path.Join(c.ProjectRoot, header)
-		if _, err := os.Stat(headerPath); os.IsNotExist(err) {
-			log.Warnf("Header file %s does not exist, skipping...", header)
-			continue
-		}
-		headerFile, err := os.ReadFile(headerPath)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		lines := strings.Split(string(headerFile), "\n")
-		for _, line := range lines {
-			line = strings.TrimSpace(line)
-			if strings.HasPrefix(line, "function") {
-				name := strings.TrimPrefix(line, "function")
-				name = strings.TrimSpace(name)
-				c.functions[name] = interfaces.FuncDef{Name: name}
+func (c *Compiler) copyEmbeddedLibs() error {
+	// c.libs is a folder. It contains multiple folders that must be copied to the datapack data folder
+	files, err := c.libs.ReadDir("libs")
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if file.IsDir() {
+			// copy the folder to the datapack data folder
+			err := c.copyDirRecursive(file.Name(), "libs", path.Join(c.DatapackRoot, "data"))
+			if err != nil {
+				return err
 			}
 		}
 	}
+	return err
+}
+
+// copyDirRecursive recursively copies a directory and its contents from source to destination
+func (c *Compiler) copyDirRecursive(srcDir, baseDir, destDir string) error {
+	// Read the files inside the srcDir
+	files, err := c.libs.ReadDir(filepath.Join(baseDir, srcDir))
+	if err != nil {
+		return fmt.Errorf("error reading directory %s: %w", srcDir, err)
+	}
+
+	// Create the corresponding target directory
+	destPath := filepath.Join(destDir, srcDir)
+	err = os.MkdirAll(destPath, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("error creating directory %s: %w", destPath, err)
+	}
+
+	// Iterate over the files in the source directory
+	for _, file := range files {
+		// Check if it's a directory or file
+		if file.IsDir() {
+			// Recursively copy subdirectories
+			err := c.copyDirRecursive(file.Name(), filepath.Join(baseDir, srcDir), destPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			// Copy the file to the target location
+			err := c.copyFile(file.Name(), filepath.Join(baseDir, srcDir), destPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// copyFile copies a single file from the source to the destination
+func (c *Compiler) copyFile(srcFile, baseDir, destDir string) error {
+	// Open the source file
+	srcPath := filepath.Join(baseDir, srcFile)
+	srcFileHandle, err := c.libs.Open(srcPath)
+	if err != nil {
+		return fmt.Errorf("error opening source file %s: %w", srcPath, err)
+	}
+	defer srcFileHandle.Close()
+
+	// Create the destination file
+	destPath := filepath.Join(destDir, srcFile)
+	destFileHandle, err := os.Create(destPath)
+	if err != nil {
+		return fmt.Errorf("error creating destination file %s: %w", destPath, err)
+	}
+	defer destFileHandle.Close()
+
+	// Copy the file contents
+	_, err = io.Copy(destFileHandle, srcFileHandle)
+	if err != nil {
+		return fmt.Errorf("error copying file %s: %w", srcPath, err)
+	}
+
+	return nil
 }

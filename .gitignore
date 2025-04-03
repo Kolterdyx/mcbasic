@@ -4,6 +4,7 @@
 *.txt
 !version.txt
 !example/*/**
+!libs/*/**
 datapacks
 mcbasic
 .idea

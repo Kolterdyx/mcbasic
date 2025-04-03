@@ -1,8 +1,5 @@
 
-func test() {
-	mcb:log("Hello tits");
-}
 
 func main() {
-    test();
+	mcb:log(mcb:ceil(1.5 * 1.5 * 1.5));
 }

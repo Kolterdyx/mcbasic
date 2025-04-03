@@ -5,15 +5,17 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"github.com/Kolterdyx/mcbasic/internal/utils"
 	log "github.com/sirupsen/logrus"
 )
 
 type Parser struct {
 	HadError bool
-	current  int
 	Tokens   []tokens.Token
+	Headers  []interfaces.DatapackHeader
 
 	currentScope string
+	current      int
 
 	variables map[string][]statements.VarDef
 	functions []interfaces.FuncDef
@@ -21,13 +23,20 @@ type Parser struct {
 
 func (p *Parser) Parse() Program {
 	var functions []statements.FunctionDeclarationStmt
+	funcDefMap := utils.GetHeaderFuncDefs(p.Headers)
 	p.functions = make([]interfaces.FuncDef, 0)
+	for _, funcDef := range funcDefMap {
+		p.functions = append(p.functions, funcDef)
+	}
 	p.variables = make(map[string][]statements.VarDef)
 	p.functions = append(p.functions,
 		interfaces.FuncDef{Name: "mcb:print", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
 		interfaces.FuncDef{Name: "mcb:log", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
 		interfaces.FuncDef{Name: "mcb:exec", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "command", Type: expressions.StringType}}},
 		interfaces.FuncDef{Name: "mcb:len", ReturnType: expressions.IntType, Args: []interfaces.FuncArg{{Name: "string", Type: expressions.StringType}}},
+		interfaces.FuncDef{Name: "mcb:floor", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+		interfaces.FuncDef{Name: "mcb:ceil", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+		interfaces.FuncDef{Name: "mcb:round", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
 	)
 	for !p.IsAtEnd() {
 		statement := p.statement()

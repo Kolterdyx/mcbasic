@@ -1,15 +1,17 @@
 {
+  "namespace": "gm",
   "meta": {
     "version": "1.0",
-    "name": "gibbsly math",
+    "name": "Gibbsly Math",
     "description": "A utility datapack for doing math operations",
     "author": "gibbsly",
     "homepage": "https://github.com/gibbsly/gm",
     "license": "Unlicense (https://unlicense.org/)"
   },
   "definitions": {
-    "functions": {
-      "add": {
+    "functions": [
+      {
+        "name": "add",
         "args": [
           {
             "name": "x",
@@ -26,6 +28,6 @@
           "path": "out"
         }
       }
-    }
+    ]
   }
 }

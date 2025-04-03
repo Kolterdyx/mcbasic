@@ -5,7 +5,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
-	log "github.com/sirupsen/logrus"
 )
 
 func (p *Parser) expression() expressions.Expr {
@@ -96,13 +95,19 @@ func (p *Parser) unary() expressions.Expr {
 
 func (p *Parser) value() expressions.Expr {
 
-	var namespaceIdentifier *tokens.Token
-	prev := p.previous()
+	var namespaceIdentifier tokens.Token
+	hasNamespace := false
 	if p.match(tokens.Colon) {
-		namespaceIdentifier = &prev
+		p.stepBack()
+		p.stepBack()
 	}
 	if p.match(tokens.Identifier) {
 		identifier := p.previous()
+		if p.match(tokens.Colon) {
+			namespaceIdentifier = identifier
+			hasNamespace = true
+			identifier = p.consume(tokens.Identifier, "Expected identifier after ':'.")
+		}
 		identifierType := p.getType(identifier)
 
 		if identifierType == "" {
@@ -111,7 +116,7 @@ func (p *Parser) value() expressions.Expr {
 		}
 
 		if p.match(tokens.ParenOpen) {
-			return p.functionCall(namespaceIdentifier, identifier)
+			return p.functionCall(namespaceIdentifier, identifier, hasNamespace)
 		} else if p.match(tokens.BracketOpen) {
 			return p.slice(expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: identifierType})
 		} else {
@@ -121,7 +126,7 @@ func (p *Parser) value() expressions.Expr {
 	return p.primary()
 }
 
-func (p *Parser) functionCall(namespace *tokens.Token, name tokens.Token) expressions.Expr {
+func (p *Parser) functionCall(namespace tokens.Token, name tokens.Token, hasNamespace bool) expressions.Expr {
 	location := p.location()
 	args := make([]expressions.Expr, 0)
 	if !p.check(tokens.ParenClose) {
@@ -144,13 +149,12 @@ func (p *Parser) functionCall(namespace *tokens.Token, name tokens.Token) expres
 	// Find the function in the current scope
 
 	lexeme := name.Lexeme
-	if namespace != nil {
+	if hasNamespace {
 		lexeme = fmt.Sprintf("%s:%s", namespace.Lexeme, name.Lexeme)
 	}
 
 	var funcDef *interfaces.FuncDef = nil
 	for _, f := range p.functions {
-		log.Debugf("Checking function %s against %s", f.Name, lexeme)
 		if f.Name == lexeme {
 			if len(f.Args) != len(args) {
 				p.error(name, fmt.Sprintf("Expected %d arguments, got %d.", len(f.Args), len(args)))

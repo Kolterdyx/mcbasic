@@ -2,13 +2,13 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/Kolterdyx/mcbasic/internal"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
-	"github.com/Kolterdyx/mcbasic/internal/visitors"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -16,7 +16,10 @@ import (
 )
 
 //go:embed version.txt
-var f embed.FS
+var version string
+
+//go:embed libs
+var libs embed.FS
 
 func main() {
 
@@ -43,7 +46,13 @@ func main() {
 	}
 	log.Debug("Tokens scanned successfully")
 
-	parser_ := parser.Parser{Tokens: tokens}
+	headers, err := loadHeaders(config.Dependencies.Headers, projectRoot)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Debug("Headers loaded successfully")
+
+	parser_ := parser.Parser{Tokens: tokens, Headers: headers}
 	program := parser_.Parse()
 	if parser_.HadError {
 		os.Exit(1)
@@ -51,17 +60,38 @@ func main() {
 	log.Debug("Program parsed successfully")
 
 	// Remove the contents of the output directory
-	err := os.RemoveAll(path.Join(config.OutputDir, config.Project.Name))
+	err = os.RemoveAll(path.Join(config.OutputDir, config.Project.Name))
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	d := visitors.DebugVisitor{}
-	program.Visit(d)
-
-	c := compiler.NewCompiler(config, projectRoot)
+	c := compiler.NewCompiler(config, projectRoot, headers, libs)
 	c.Compile(program)
 	log.Info("Compilation complete")
+}
+
+func loadHeaders(headerPaths []string, projectRoot string) ([]interfaces.DatapackHeader, error) {
+	headers := make([]interfaces.DatapackHeader, 0)
+
+	for _, h := range headerPaths {
+		headerPath := path.Join(projectRoot, h)
+		if _, err := os.Stat(headerPath); os.IsNotExist(err) {
+			log.Warnf("Header file %s does not exist, skipping...", h)
+			continue
+		}
+		headerFile, err := os.ReadFile(headerPath)
+		if err != nil {
+			return nil, err
+		}
+		header := &interfaces.DatapackHeader{}
+		err = json.Unmarshal(headerFile, header)
+		if err != nil {
+			return nil, err
+		}
+		headers = append(headers, *header)
+	}
+	log.Debug("Headers loaded successfully")
+	return headers, nil
 }
 
 func loadProject(file string) interfaces.ProjectConfig {
@@ -85,12 +115,6 @@ func parseArgs() (interfaces.ProjectConfig, string) {
 	outputDirPtr := flag.String("output", "build", "Output directory")
 	enableTracesPtr := flag.Bool("traces", false, "Enable traces")
 	flag.Parse()
-
-	data, _ := f.ReadFile("version.txt")
-	if data == nil {
-		log.Warnln("Version file not found")
-	}
-	version := string(data)
 
 	if *versionPtr {
 		fmt.Printf("MCBasic version %s\n", version)

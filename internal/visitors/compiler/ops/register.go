@@ -2,15 +2,21 @@ package ops
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 )
 
-func (o *Op) Move(from string, to string) string {
-	return fmt.Sprintf("data modify storage %s:%s %s set from storage %s:%s %s\n", o.Namespace, VarPath, to, o.Namespace, VarPath, from)
+func (o *Op) MoveRaw(storageFrom, pathFrom, storageTo, pathTo string) string {
+	return fmt.Sprintf("data modify storage %s %s set from storage %s %s\n", storageTo, pathTo, storageFrom, pathFrom)
 }
 
-func (o *Op) MoveConst(value string, to string) string {
+func (o *Op) Move(from, to string) string {
+	return o.MoveRaw(
+		fmt.Sprintf("%s:%s", o.Namespace, VarPath), from,
+		fmt.Sprintf("%s:%s", o.Namespace, VarPath), to,
+	)
+}
+
+func (o *Op) MoveConst(value, to string) string {
 	if _, err := strconv.ParseFloat(value, 64); err != nil && !(value[0] == '$' && value[1] == '(' && value[len(value)-1] == ')') && !(value[0] == '"' && value[len(value)-1] == '"') {
 		value = strconv.Quote(value)
 	}
@@ -18,7 +24,7 @@ func (o *Op) MoveConst(value string, to string) string {
 	n, err := strconv.ParseFloat(value, 64)
 	_, err2 := strconv.ParseInt(value, 10, 64)
 	if err == nil && err2 != nil {
-		value = fmt.Sprintf("%sL", strconv.FormatFloat(n*math.Pow(10, float64(o.FixedPointPrecision)), 'f', -1, 64))
+		value = fmt.Sprintf("%s", strconv.FormatFloat(n, 'f', -1, 64))
 	}
 	return fmt.Sprintf("data modify storage %s:%s %s set value %s\n", o.Namespace, VarPath, to, value)
 }

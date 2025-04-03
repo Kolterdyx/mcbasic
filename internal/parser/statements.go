@@ -6,7 +6,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
-	log "github.com/sirupsen/logrus"
 )
 
 func (p *Parser) statement() statements.Stmt {
@@ -140,7 +139,6 @@ func (p *Parser) block(checkBraces ...bool) statements.BlockStmt {
 		p.consume(tokens.BraceOpen, "Expected '{' before block.")
 	}
 	for !p.check(tokens.BraceClose) && !p.IsAtEnd() {
-		log.Debug("Parsing statement ", p.peek())
 		stmt := p.statement()
 		if stmt == nil {
 			p.synchronize()

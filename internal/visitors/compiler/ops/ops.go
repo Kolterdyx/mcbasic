@@ -22,10 +22,9 @@ const (
 )
 
 type Op struct {
-	Namespace           string
-	EnableTraces        bool
-	FixedPointPrecision int
-	Scope               string
+	Namespace    string
+	EnableTraces bool
+	Scope        string
 }
 
 func (o *Op) Macro(argName string) string {

@@ -2,70 +2,114 @@ package ops
 
 import (
 	"fmt"
-	"math"
-	"strconv"
 )
 
-func (o *Op) arithmeticOperation(a string, b string, to string, operator string) string {
+func (o *Op) arithmeticOperation(x, y, to, operator string) string {
 	cmd := ""
-	cmd += o.MoveScore(Cs(a), Cs(RX))
-	cmd += o.MoveScore(Cs(b), Cs(RB))
+	cmd += o.MoveScore(Cs(x), Cs(RX))
+	cmd += o.MoveScore(Cs(y), Cs(RB))
 	cmd += fmt.Sprintf("scoreboard players operation %s %s %s %s %s\n", Cs(RX), o.Namespace, operator, Cs(RB), o.Namespace)
 	cmd += o.LoadScore(Cs(RX), Cs(to))
 	return cmd
 }
 
-func (o *Op) Add(a string, b string, to string) string {
-	return o.arithmeticOperation(a, b, to, "+=")
+func (o *Op) MoveGMResult(to string) string {
+	return o.MoveRaw("gm:io", "out", fmt.Sprintf("%s:%s", o.Namespace, VarPath), to)
 }
 
-func (o *Op) Sub(a string, b string, to string) string {
-	return o.arithmeticOperation(a, b, to, "-=")
+func (o *Op) CallGM1(op, x, to string) string {
+	return o.CallFunction(op, map[string]string{
+		"x": x,
+	}, "") + o.MoveGMResult(to)
 }
 
-func (o *Op) Mul(a string, b string, to string) string {
-	return o.arithmeticOperation(a, b, to, "*=")
+func (o *Op) CallGM2(op, x, y, to string) string {
+	return o.CallFunction(op, map[string]string{
+		"x": x,
+		"y": y,
+	}, "") + o.MoveGMResult(to)
 }
 
-func (o *Op) Div(a string, b string, to string) string {
-	return o.arithmeticOperation(a, b, to, "/=")
+func (o *Op) Add(x, y, to string) string {
+	return o.arithmeticOperation(x, y, to, "+=")
 }
 
-func (o *Op) Mod(a string, b string, to string) string {
-	return o.arithmeticOperation(a, b, to, "%=")
+func (o *Op) Sub(x, y, to string) string {
+	return o.arithmeticOperation(x, y, to, "-=")
 }
 
-func (o *Op) Scale(value string, scale string, to string) string {
+func (o *Op) Mul(x, y, to string) string {
+	return o.arithmeticOperation(x, y, to, "*=")
+}
+
+func (o *Op) Div(x, y, to string) string {
+	return o.arithmeticOperation(x, y, to, "/=")
+}
+
+func (o *Op) Mod(x, y, to string) string {
+	return o.arithmeticOperation(x, y, to, "%=")
+}
+
+func (o *Op) Scale(value, scale, to string) string {
 	return fmt.Sprintf("execute store result storage %s:%s %s double %s run data get storage %s:%s %s\n", o.Namespace, VarPath, Cs(to), scale, o.Namespace, VarPath, Cs(value))
 }
 
-func (o *Op) DoubleAdd(a string, b string, to string) string {
-	return o.Add(Cs(a), Cs(b), Cs(to))
+func (o *Op) DoubleAdd(x, y, to string) string {
+	return o.CallGM2("gm:add", x, y, Cs(to))
 }
 
-func (o *Op) DoubleSub(a string, b string, to string) string {
-	return o.Sub(Cs(a), Cs(b), Cs(to))
+func (o *Op) DoubleSub(x, y, to string) string {
+	return o.CallGM2("gm:subtract", x, y, Cs(to))
 }
 
-func (o *Op) DoubleMul(a string, b string, to string) string {
-	cmd := ""
-	cmd += o.Mul(Cs(a), Cs(b), Cs(to))
-	invn := strconv.FormatFloat(1/math.Pow(10, float64(o.FixedPointPrecision)), 'f', -1, 64)
-	cmd += o.Scale(Cs(to), invn, Cs(to))
-	return cmd
+func (o *Op) DoubleMul(x, y, to string) string {
+	return o.CallGM2("gm:multiply", x, y, Cs(to))
 }
 
-func (o *Op) DoubleDiv(a string, b string, to string) string {
-	cmd := ""
-	n := strconv.FormatFloat(math.Pow(10, float64(o.FixedPointPrecision)), 'f', -1, 64)
-	// To avoid weird number boundary shenanigans, we can just multiply the numerator by the inverse of the denominator,
-	// instead of scaling up the numerator
-	// a / b = a * (1/b)
+func (o *Op) DoubleDiv(x, y, to string) string {
+	return o.CallGM2("gm:divide", x, y, Cs(to))
+}
 
-	cmd += o.MoveConst("1.0", Cs(RB))
-	cmd += o.Scale(Cs(RB), n, Cs(RB))
-	cmd += o.Div(Cs(RB), Cs(b), Cs(RB))
-	cmd += o.DoubleMul(a, Cs(RB), to)
+func (o *Op) DoubleMod(x, y, to string) string {
+	return o.CallGM2("gm:modulo", x, y, Cs(to))
+}
 
-	return cmd
+func (o *Op) DoubleSqrt(x, to string) string {
+	return o.CallGM1("gm:sqrt", x, to)
+}
+
+func (o *Op) DoubleSin(x, to string) string {
+	return o.CallGM1("gm:sin", x, to)
+}
+
+func (o *Op) DoubleCos(x, to string) string {
+	return o.CallGM1("gm:cos", x, to)
+}
+
+func (o *Op) DoubleTan(x, to string) string {
+	return o.CallGM1("gm:tan", x, to)
+}
+
+func (o *Op) DoubleAsin(x, to string) string {
+	return o.CallGM1("gm:arcsin", x, to)
+}
+
+func (o *Op) DoubleAcos(x, to string) string {
+	return o.CallGM1("gm:arccos", x, to)
+}
+
+func (o *Op) DoubleAtan(x, to string) string {
+	return o.CallGM1("gm:arctan", x, to)
+}
+
+func (o *Op) DoubleRound(x, to string) string {
+	return o.CallGM1("gm:round", x, to)
+}
+
+func (o *Op) DoubleFloor(x, to string) string {
+	return o.CallGM1("gm:floor", x, to)
+}
+
+func (o *Op) DoubleCeil(x, to string) string {
+	return o.CallGM1("gm:ceil", x, to)
 }
