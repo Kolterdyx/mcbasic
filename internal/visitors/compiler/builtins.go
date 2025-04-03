@@ -170,8 +170,8 @@ func (c *Compiler) baseFunctions() {
 		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
 			c.opHandler.MoveConst("0", ops.CALL)+
 			c.opHandler.MoveScore(ops.CALL, ops.CALL)+
-			c.opHandler.LoadArgConst("print", "text", "MCB pack loaded")+
-			c.opHandler.Call("print", "")+
+			c.opHandler.LoadArgConst("log", "text", "MCB pack loaded")+
+			c.opHandler.Call("mcb:log", "")+
 			c.opHandler.Call("main", ""),
 		[]interfaces.FuncArg{},
 		expressions.VoidType,

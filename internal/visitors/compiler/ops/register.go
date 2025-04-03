@@ -50,7 +50,7 @@ func (o *Op) ScaleStore(from string, scale string, to string) string {
 	cmd += o.LoadArg("internal/scale", "scale", scale)
 	cmd += o.LoadArgConst("internal/scale", "value", from)
 	cmd += o.TraceStorage("mcb:args.internal/scale", "", "scalestore")
-	cmd += o.Call("internal/scale", to)
+	cmd += o.Call("mcb:internal/scale", to)
 	cmd += o.TraceStorage("mcb:vars", to, "scalestore")
 	return cmd
 }
