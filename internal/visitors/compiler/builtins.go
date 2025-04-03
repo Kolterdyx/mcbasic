@@ -32,6 +32,15 @@ func (c *Compiler) utils() {
 		expressions.VoidType,
 	)
 	c.createFunction(
+		"mcb:error",
+		`$tellraw @a[tag=mcblog] {text:'$(text)',bold:true,color:red}
+		execute as @a[tag=mcblog] at @s run playsound minecraft:block.note_block.bass master @s ~ ~ ~ 1 0`,
+		[]interfaces.FuncArg{
+			{Name: "text", Type: expressions.StringType},
+		},
+		expressions.VoidType,
+	)
+	c.createFunction(
 		"mcb:exec",
 		`$execute run $(command)`,
 		[]interfaces.FuncArg{

@@ -64,6 +64,6 @@ func main() {
     mcb:log(hello[0:5 + 1]);
     # Out of bounds exceptions are checked, and errors are logged to the chat
     # Negative indices are also checked
-    # mcb:log(hello[0:100]);  # This will return out of the main function and print an error message
+    mcb:log(hello[0:100]);  # This will return out of the main function and print an error message
     # mcb:log(hello[0:-100]);  # This will return out of the main function and print an error message
 }

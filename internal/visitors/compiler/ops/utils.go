@@ -65,7 +65,7 @@ func (o *Op) TraceScore(varName string, ns string, extra string) string {
 
 func (o *Op) Exception(message string) string {
 	cmd := ""
-	cmd += o.LoadArgConst("error", "text", fmt.Sprintf("%sException: %s", Red.Format, message))
+	cmd += o.LoadArgConst("error", "text", fmt.Sprintf("Exception: %s", message))
 	cmd += o.Call("mcb:error", "")
 	// TODO: Implement schedule clear
 	cmd += o.Return()

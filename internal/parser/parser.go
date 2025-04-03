@@ -32,6 +32,7 @@ func (p *Parser) Parse() Program {
 	p.functions = append(p.functions,
 		interfaces.FuncDef{Name: "mcb:print", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
 		interfaces.FuncDef{Name: "mcb:log", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
+		interfaces.FuncDef{Name: "mcb:error", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
 		interfaces.FuncDef{Name: "mcb:exec", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "command", Type: expressions.StringType}}},
 		interfaces.FuncDef{Name: "mcb:len", ReturnType: expressions.IntType, Args: []interfaces.FuncArg{{Name: "string", Type: expressions.StringType}}},
 
