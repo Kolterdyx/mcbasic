@@ -24,6 +24,7 @@ func fizbuzz(n int) {
     }
 }
 
+# Use recursion to print fizzbuzz from 1 to n
 func print_fizzbuzz(n int, max int) {
 	if (n <= max) {
 		fizbuzz(n);
@@ -62,8 +63,8 @@ func main() {
     mcb:log("Hello world!"[-6:-1]);
     # Expressions can be used as indices. The result must be an integer
     mcb:log(hello[0:5 + 1]);
-    # Out of bounds exceptions are checked, and errors are logged to the chat
+    # Out of bounds exceptions are checked, and errors are logged to the chat to players with the 'mcblog' tag
     # Negative indices are also checked
-    mcb:log(hello[0:100]);  # This will return out of the main function and print an error message
-    # mcb:log(hello[0:-100]);  # This will return out of the main function and print an error message
+    # mcb:log(hello[0:100]);
+    # mcb:log(hello[0:-100]);
 }
