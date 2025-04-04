@@ -107,7 +107,6 @@ func loadHeaders(headerPaths []string, projectRoot string) ([]interfaces.Datapac
 		if err != nil {
 			return nil, err
 		}
-		log.Debug("Header: ", header)
 		headers = append(headers, header)
 	}
 	log.Debugf("Headers loaded successfully")

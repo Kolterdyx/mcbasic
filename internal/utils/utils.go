@@ -24,7 +24,6 @@ func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interface
 				})
 			}
 			funcDefs[funcName] = f
-			log.Debugf("Declared function from header: %s", funcName)
 		}
 	}
 	return funcDefs
