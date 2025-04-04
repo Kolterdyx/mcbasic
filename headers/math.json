@@ -1,0 +1,107 @@
+{
+  "namespace": "math",
+  "definitions": {
+    "functions": [
+      {
+        "name": "sqrt",
+        "args": [
+          {
+            "name": "x",
+            "type": "double"
+          }
+        ],
+        "returnType": "double"
+      },
+      {
+        "name": "sin",
+        "args": [
+          {
+            "name": "x",
+            "type": "double"
+          }
+        ],
+        "returnType": "double"
+      },
+      {
+        "name": "cos",
+        "args": [
+          {
+            "name": "x",
+            "type": "double"
+          }
+        ],
+        "returnType": "double"
+      },
+      {
+        "name": "tan",
+        "args": [
+          {
+            "name": "x",
+            "type": "double"
+          }
+        ],
+        "returnType": "double"
+      },
+      {
+        "name": "asin",
+        "args": [
+          {
+            "name": "x",
+            "type": "double"
+          }
+        ],
+        "returnType": "double"
+      },
+      {
+        "name": "acos",
+        "args": [
+          {
+            "name": "x",
+            "type": "double"
+          }
+        ],
+        "returnType": "double"
+      },
+      {
+        "name": "atan",
+        "args": [
+          {
+            "name": "x",
+            "type": "double"
+          }
+        ],
+        "returnType": "double"
+      },
+      {
+        "name": "floor",
+        "args": [
+          {
+            "name": "x",
+            "type": "double"
+          }
+        ],
+        "returnType": "double"
+      },
+      {
+        "name": "ceil",
+        "args": [
+          {
+            "name": "x",
+            "type": "double"
+          }
+        ],
+        "returnType": "double"
+      },
+      {
+        "name": "round",
+        "args": [
+          {
+            "name": "x",
+            "type": "double"
+          }
+        ],
+        "returnType": "double"
+      }
+    ]
+  }
+}

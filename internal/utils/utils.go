@@ -15,7 +15,7 @@ func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interface
 			f := interfaces.FuncDef{
 				Name:       funcName,
 				Args:       make([]interfaces.FuncArg, 0),
-				ReturnType: function.Returns.Type,
+				ReturnType: function.ReturnType,
 			}
 			for _, parameter := range function.Args {
 				f.Args = append(f.Args, interfaces.FuncArg{

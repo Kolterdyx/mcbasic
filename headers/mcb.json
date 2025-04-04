@@ -1,0 +1,57 @@
+{
+  "namespace": "mcb",
+  "definitions": {
+    "functions": [
+      {
+        "name": "print",
+        "args": [
+          {
+            "name": "text",
+            "type": "void"
+          }
+        ],
+        "returnType": "void"
+      },
+      {
+        "name": "log",
+        "args": [
+          {
+            "name": "text",
+            "type": "void"
+          }
+        ],
+        "returnType": "void"
+      },
+      {
+        "name": "error",
+        "args": [
+          {
+            "name": "text",
+            "type": "void"
+          }
+        ],
+        "returnType": "void"
+      },
+      {
+        "name": "exec",
+        "args": [
+          {
+            "name": "command",
+            "type": "str"
+          }
+        ],
+        "returnType": "void"
+      },
+      {
+        "name": "len",
+        "args": [
+          {
+            "name": "string",
+            "type": "str"
+          }
+        ],
+        "returnType": "int"
+      }
+    ]
+  }
+}

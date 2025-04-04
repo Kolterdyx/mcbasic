@@ -19,22 +19,15 @@ type ProjectConfig struct {
 }
 
 type DatapackHeader struct {
-	Namespace string `json:"namespace"`
-	Meta      struct {
-		Name string
-	} `json:"meta"`
+	Namespace   string `json:"namespace"`
 	Definitions struct {
 		Functions []struct {
 			Name string `json:"name"`
 			Args []struct {
 				Name string    `json:"name"`
 				Type ValueType `json:"type"`
-			}
-			Returns struct {
-				Type    ValueType `json:"type"`
-				Storage string    `json:"storage"`
-				Path    string    `json:"path"`
-			}
+			} `json:"args"`
+			ReturnType ValueType `json:"returnType"`
 		} `json:"functions"`
 	} `json:"definitions"`
 }

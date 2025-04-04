@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
@@ -29,26 +28,26 @@ func (p *Parser) Parse() Program {
 		p.functions = append(p.functions, funcDef)
 	}
 	p.variables = make(map[string][]statements.VarDef)
-	p.functions = append(p.functions,
-		interfaces.FuncDef{Name: "mcb:print", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
-		interfaces.FuncDef{Name: "mcb:log", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
-		interfaces.FuncDef{Name: "mcb:error", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
-		interfaces.FuncDef{Name: "mcb:exec", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "command", Type: expressions.StringType}}},
-		interfaces.FuncDef{Name: "mcb:len", ReturnType: expressions.IntType, Args: []interfaces.FuncArg{{Name: "string", Type: expressions.StringType}}},
-
-		interfaces.FuncDef{Name: "math:sqrt", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-
-		interfaces.FuncDef{Name: "math:sin", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-		interfaces.FuncDef{Name: "math:cos", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-		interfaces.FuncDef{Name: "math:tan", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-		interfaces.FuncDef{Name: "math:asin", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-		interfaces.FuncDef{Name: "math:acos", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-		interfaces.FuncDef{Name: "math:atan", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-
-		interfaces.FuncDef{Name: "math:floor", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-		interfaces.FuncDef{Name: "math:ceil", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-		interfaces.FuncDef{Name: "math:round", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
-	)
+	//p.functions = append(p.functions,
+	//	interfaces.FuncDef{Name: "mcb:print", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
+	//	interfaces.FuncDef{Name: "mcb:log", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
+	//	interfaces.FuncDef{Name: "mcb:error", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "text", Type: expressions.VoidType}}},
+	//	interfaces.FuncDef{Name: "mcb:exec", ReturnType: expressions.VoidType, Args: []interfaces.FuncArg{{Name: "command", Type: expressions.StringType}}},
+	//	interfaces.FuncDef{Name: "mcb:len", ReturnType: expressions.IntType, Args: []interfaces.FuncArg{{Name: "string", Type: expressions.StringType}}},
+	//
+	//	interfaces.FuncDef{Name: "math:sqrt", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+	//
+	//	interfaces.FuncDef{Name: "math:sin", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+	//	interfaces.FuncDef{Name: "math:cos", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+	//	interfaces.FuncDef{Name: "math:tan", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+	//	interfaces.FuncDef{Name: "math:asin", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+	//	interfaces.FuncDef{Name: "math:acos", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+	//	interfaces.FuncDef{Name: "math:atan", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+	//
+	//	interfaces.FuncDef{Name: "math:floor", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+	//	interfaces.FuncDef{Name: "math:ceil", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+	//	interfaces.FuncDef{Name: "math:round", ReturnType: expressions.DoubleType, Args: []interfaces.FuncArg{{Name: "x", Type: expressions.DoubleType}}},
+	//)
 	for !p.IsAtEnd() {
 		statement := p.statement()
 		if statement == nil {

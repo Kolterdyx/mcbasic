@@ -13,6 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path"
+	"strings"
 )
 
 //go:embed version.txt
@@ -20,6 +21,9 @@ var version string
 
 //go:embed libs
 var libs embed.FS
+
+//go:embed headers
+var builtinHeaders embed.FS
 
 func main() {
 
@@ -50,7 +54,6 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Debug("Headers loaded successfully")
 
 	parser_ := parser.Parser{Tokens: tokens, Headers: headers}
 	program := parser_.Parse()
@@ -73,24 +76,41 @@ func main() {
 func loadHeaders(headerPaths []string, projectRoot string) ([]interfaces.DatapackHeader, error) {
 	headers := make([]interfaces.DatapackHeader, 0)
 
-	for _, h := range headerPaths {
+	for i, h := range headerPaths {
 		headerPath := path.Join(projectRoot, h)
+		headerPaths[i] = headerPath
+	}
+
+	// include builtin headers
+	builtinHeaderPaths, err := builtinHeaders.ReadDir("headers")
+	if err != nil {
+		return nil, err
+	}
+	for _, h := range builtinHeaderPaths {
+		if !h.IsDir() && strings.HasSuffix(h.Name(), ".json") {
+			headerPaths = append(headerPaths, path.Join("headers", h.Name()))
+		}
+	}
+
+	for _, headerPath := range headerPaths {
+		log.Debug("Loading header: ", headerPath)
 		if _, err := os.Stat(headerPath); os.IsNotExist(err) {
-			log.Warnf("Header file %s does not exist, skipping...", h)
+			log.Warnf("Header file %s does not exist, skipping...", headerPath)
 			continue
 		}
 		headerFile, err := os.ReadFile(headerPath)
 		if err != nil {
 			return nil, err
 		}
-		header := &interfaces.DatapackHeader{}
-		err = json.Unmarshal(headerFile, header)
+		header := interfaces.DatapackHeader{}
+		err = json.Unmarshal(headerFile, &header)
 		if err != nil {
 			return nil, err
 		}
-		headers = append(headers, *header)
+		log.Debug("Header: ", header)
+		headers = append(headers, header)
 	}
-	log.Debug("Headers loaded successfully")
+	log.Debugf("Headers loaded successfully")
 	return headers, nil
 }
 
