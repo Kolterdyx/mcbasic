@@ -33,36 +33,6 @@ var (
 	Obfuscated    = TextFormat{Id: "obfuscated", Format: "§k"}
 )
 
-func (o *Op) Trace(desc string, content string, extra string) string {
-	cmd := ""
-
-	if o.EnableTraces {
-		// Add color to the end of the content
-		// All but the last character
-		content = fmt.Sprintf("%s, \"color\": \"%s\"}", content[:len(content)-1], Green.Id)
-		cmd += "#@ BEGIN TRACE\n"
-		if extra == "" {
-			cmd += fmt.Sprintf("tellraw @a [{\"text\": \"%sTrace %s: \"},%s]\n", Red.Format, desc, content)
-		} else {
-			cmd += fmt.Sprintf("tellraw @a [{\"text\": \"%sTrace %s: \"},{\"text\":\"%s \"},%s]\n", Red.Format, desc, extra, content)
-		}
-		cmd += "#@ END TRACE\n"
-	}
-	return cmd
-}
-
-func (o *Op) TraceStorage(storage string, path string, extra string) string {
-	if path == "" {
-		return o.Trace(fmt.Sprintf("(%s)", storage), fmt.Sprintf("{\"storage\":\"%s\",\"nbt\":\"\"}", storage), extra)
-	} else {
-		return o.Trace(fmt.Sprintf("(%s: %s)", storage, path), fmt.Sprintf("{\"storage\":\"%s\",\"nbt\":\"%s\"}", storage, path), extra)
-	}
-}
-
-func (o *Op) TraceScore(varName string, ns string, extra string) string {
-	return o.Trace(fmt.Sprintf("(%s:%s)", ns, varName), fmt.Sprintf("{\"score\":{\"name\":\"%s\",\"objective\":\"%s\"}}", varName, ns), extra)
-}
-
 func (o *Op) Exception(message string) string {
 	cmd := ""
 	cmd += o.LoadArgConst("error", "text", fmt.Sprintf("Exception: %s", message))

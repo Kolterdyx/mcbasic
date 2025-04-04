@@ -1,9 +1,9 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/Kolterdyx/mcbasic/internal"
@@ -11,6 +11,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/parser"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler"
 	log "github.com/sirupsen/logrus"
+	"github.com/urfave/cli/v3"
 	"os"
 	"path"
 	"strings"
@@ -27,7 +28,6 @@ var builtinHeaders embed.FS
 
 func main() {
 
-	log.SetLevel(log.DebugLevel)
 	log.SetFormatter(&log.TextFormatter{
 		ForceColors:            true,
 		DisableTimestamp:       true,
@@ -35,42 +35,99 @@ func main() {
 		PadLevelText:           true,
 	})
 
-	config, projectRoot := parseArgs()
+	cmd := &cli.Command{
+		Name:    "mcbasic",
+		Version: version,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "version",
+				Aliases: []string{"v"},
+				Value:   false,
+				Usage:   "Print version",
+			},
+			&cli.BoolFlag{
+				Name:    "debug",
+				Aliases: []string{"d"},
+				Value:   false,
+				Usage:   "Enable debug mode",
+			},
+		},
+		Commands: []*cli.Command{
+			{
+				Name:  "build",
+				Usage: "Compile the project into a datapack",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "config",
+						Value: "project.toml",
+						Usage: "Path to the project config file",
+					},
+					&cli.StringFlag{
+						Name:  "output",
+						Value: "build",
+						Usage: "Output directory. The resulting datapack will be inside this directory as <output>/<project_name>",
+					},
+					&cli.BoolFlag{
+						Name:  "enable-traces",
+						Value: false,
+						Usage: "Enable traces",
+					},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
 
-	entrypoint := config.Project.Entrypoint
-	blob, _ := os.ReadFile(path.Join(projectRoot, entrypoint))
-	source := string(blob)
-	log.Debug("Source loaded successfully")
+					if cmd.Bool("debug") {
+						log.SetLevel(log.DebugLevel)
+					} else {
+						log.SetLevel(log.InfoLevel)
+					}
 
-	// Create a scanner
-	scanner := &internal.Scanner{}
-	tokens := scanner.Scan(source)
-	if scanner.HadError {
-		os.Exit(1)
+					config, projectRoot := parseArgs(cmd)
+
+					entrypoint := config.Project.Entrypoint
+					blob, _ := os.ReadFile(path.Join(projectRoot, entrypoint))
+					source := string(blob)
+					log.Debug("Source loaded successfully")
+
+					// Create a scanner
+					scanner := &internal.Scanner{}
+					tokens := scanner.Scan(source)
+					if scanner.HadError {
+						return fmt.Errorf("scanner had an error")
+					}
+					log.Debug("Tokens scanned successfully")
+
+					headers, err := loadHeaders(config.Dependencies.Headers, projectRoot)
+					if err != nil {
+						return err
+					}
+
+					parser_ := parser.Parser{Tokens: tokens, Headers: headers}
+					program := parser_.Parse()
+					if parser_.HadError {
+						return fmt.Errorf("parser had an error")
+					}
+					log.Debug("Program parsed successfully")
+
+					// Remove the contents of the output directory
+					err = os.RemoveAll(path.Join(config.OutputDir, config.Project.Name))
+					if err != nil {
+						return err
+					}
+
+					c := compiler.NewCompiler(config, projectRoot, headers, libs)
+					c.Compile(program)
+					log.Info("Compilation complete")
+					return nil
+				},
+			},
+		},
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			return nil
+		},
 	}
-	log.Debug("Tokens scanned successfully")
-
-	headers, err := loadHeaders(config.Dependencies.Headers, projectRoot)
-	if err != nil {
-		log.Fatalln(err)
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
+		log.Fatal(err)
 	}
-
-	parser_ := parser.Parser{Tokens: tokens, Headers: headers}
-	program := parser_.Parse()
-	if parser_.HadError {
-		os.Exit(1)
-	}
-	log.Debug("Program parsed successfully")
-
-	// Remove the contents of the output directory
-	err = os.RemoveAll(path.Join(config.OutputDir, config.Project.Name))
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	c := compiler.NewCompiler(config, projectRoot, headers, libs)
-	c.Compile(program)
-	log.Info("Compilation complete")
 }
 
 func loadHeaders(headerPaths []string, projectRoot string) ([]interfaces.DatapackHeader, error) {
@@ -125,30 +182,17 @@ func loadProject(file string) interfaces.ProjectConfig {
 	return project
 }
 
-func parseArgs() (interfaces.ProjectConfig, string) {
-	// Parse command line arguments
+func parseArgs(cmd *cli.Command) (interfaces.ProjectConfig, string) {
 
-	versionPtr := flag.Bool("version", false, "Print version")
-
-	projectFilePtr := flag.String("config", "project.toml", "Path to the project config file")
-	outputDirPtr := flag.String("output", "build", "Output directory")
-	enableTracesPtr := flag.Bool("traces", false, "Enable traces")
-	flag.Parse()
-
-	if *versionPtr {
-		fmt.Printf("MCBasic version %s\n", version)
-		fmt.Println("Created by Kolterdyx")
-		fmt.Println("https://github.com/Kolterdyx/mcbasic")
-		os.Exit(0)
-	}
+	projectFile := cmd.String("config")
+	outputDir := cmd.String("output")
 
 	// Load config toml file
-	config := loadProject(*projectFilePtr)
+	config := loadProject(projectFile)
 	validateProjectConfig(config)
-	config.OutputDir = *outputDirPtr
-	config.EnableTraces = *enableTracesPtr
+	config.OutputDir = outputDir
 
-	return config, path.Dir(*projectFilePtr)
+	return config, path.Dir(projectFile)
 }
 
 func validateProjectConfig(config interfaces.ProjectConfig) {

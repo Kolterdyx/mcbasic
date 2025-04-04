@@ -44,13 +44,3 @@ func (o *Op) Inc(varName string) string {
 	cmd += o.LoadScore(varName, varName)
 	return cmd
 }
-
-func (o *Op) ScaleStore(from string, scale string, to string) string {
-	cmd := ""
-	cmd += o.LoadArg("internal/scale", "scale", scale)
-	cmd += o.LoadArgConst("internal/scale", "value", from)
-	cmd += o.TraceStorage("mcb:args.internal/scale", "", "scalestore")
-	cmd += o.Call("mcb:internal/scale", to)
-	cmd += o.TraceStorage("mcb:vars", to, "scalestore")
-	return cmd
-}

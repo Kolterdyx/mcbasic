@@ -14,8 +14,7 @@ type ProjectConfig struct {
 	Dependencies struct {
 		Headers []string
 	}
-	OutputDir    string
-	EnableTraces bool
+	OutputDir string
 }
 
 type DatapackHeader struct {

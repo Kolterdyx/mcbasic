@@ -12,6 +12,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	log "github.com/sirupsen/logrus"
 	"io"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -69,8 +70,7 @@ func NewCompiler(
 	}
 	c.Namespace = config.Project.Namespace
 	c.opHandler = ops.Op{
-		Namespace:    c.Namespace,
-		EnableTraces: config.EnableTraces,
+		Namespace: c.Namespace,
 	}
 	c.functions = make(map[string]interfaces.FuncDef)
 	c.scope = make(map[string][]TypedIdentifier)
@@ -365,7 +365,12 @@ func (c *Compiler) copyFile(srcFile, baseDir, destDir string) error {
 	if err != nil {
 		return fmt.Errorf("error opening source file %s: %w", srcPath, err)
 	}
-	defer srcFileHandle.Close()
+	defer func(srcFileHandle fs.File) {
+		err := srcFileHandle.Close()
+		if err != nil {
+			log.Errorf("error closing source file %s: %v", srcPath, err)
+		}
+	}(srcFileHandle)
 
 	// Create the destination file
 	destPath := filepath.Join(destDir, srcFile)
@@ -373,7 +378,12 @@ func (c *Compiler) copyFile(srcFile, baseDir, destDir string) error {
 	if err != nil {
 		return fmt.Errorf("error creating destination file %s: %w", destPath, err)
 	}
-	defer destFileHandle.Close()
+	defer func(destFileHandle *os.File) {
+		err := destFileHandle.Close()
+		if err != nil {
+			log.Errorf("error closing destination file %s: %v", destPath, err)
+		}
+	}(destFileHandle)
 
 	// Copy the file contents
 	_, err = io.Copy(destFileHandle, srcFileHandle)
