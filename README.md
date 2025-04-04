@@ -100,7 +100,7 @@ if you are joining a world, the message may appear before you join the world. Yo
 
 ## Example
 
-```python # Python is used for syntax highlighting, but the language is not Python
+```go # Go is used for syntax highlighting, but the language is not Go
 func add(a double, b double) double {
     return a + b;
 }
