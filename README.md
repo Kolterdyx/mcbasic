@@ -70,7 +70,7 @@ how to generate the pack.mcmeta file.
 
 Create a new file called `main.mcb` with the following content:
 
-```python # Python is used for syntax highlighting, but the language is not Python
+```go # Go is used for syntax highlighting, but the language is not Go
 func main() {
     mcb:print("Hello, world!");
 }
