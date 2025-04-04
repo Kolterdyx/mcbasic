@@ -49,6 +49,7 @@ These are some of the quirks of the language that you should be aware of. They m
 ## Usage
 
 First you need to install the compiler. It's a standalone binary, so you can download it and run it from anywhere.
+You can download the [latest version](https://github.com/Kolterdyx/mcbasic/releases/latest) from the releases page.
 
 ### Syntax highlighting
 If you want syntax highlighting for the language, you can use the [VSCode extension](https://marketplace.visualstudio.com/items?itemName=mcbasic-lang.mcbasic-lang) I made.
