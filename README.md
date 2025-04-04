@@ -50,6 +50,10 @@ These are some of the quirks of the language that you should be aware of. They m
 
 First you need to install the compiler. It's a standalone binary, so you can download it and run it from anywhere.
 
+### Syntax highlighting
+If you want syntax highlighting for the language, you can use the [VSCode extension](https://marketplace.visualstudio.com/items?itemName=mcbasic-lang.mcbasic-lang) I made.
+It's pretty basic, but it's better than nothing.
+
 ### Project setup
 
 Create a new directory for your project and create a file called `project.toml` with the following content:
