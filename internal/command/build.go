@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
 	"github.com/BurntSushi/toml"
@@ -15,12 +16,34 @@ import (
 	"strings"
 )
 
+var BuildCommand = &cli.Command{
+	Name:  "build",
+	Usage: "Compile the project into a datapack",
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:  "config",
+			Value: "project.toml",
+			Usage: "Path to the project config file",
+		},
+		&cli.StringFlag{
+			Name:  "output",
+			Value: "build",
+			Usage: "Output directory. The resulting datapack will be inside this directory as <output>/<project_name>",
+		},
+		&cli.BoolFlag{
+			Name:  "enable-traces",
+			Value: false,
+			Usage: "Enable traces",
+		},
+	},
+	Action: func(ctx context.Context, cmd *cli.Command) error {
+		data := ctx.Value("data").(*Data)
+		return Build(cmd, data.BuiltinHeaders, data.Libs)
+	},
+}
+
 func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
-	if cmd.Bool("debug") {
-		log.SetLevel(log.DebugLevel)
-	} else {
-		log.SetLevel(log.InfoLevel)
-	}
+	DebugFlagHandler(cmd)
 
 	config, projectRoot := parseArgs(cmd)
 

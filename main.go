@@ -49,56 +49,21 @@ func main() {
 			},
 		},
 		Commands: []*cli.Command{
-			{
-				Name:  "build",
-				Usage: "Compile the project into a datapack",
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "config",
-						Value: "project.toml",
-						Usage: "Path to the project config file",
-					},
-					&cli.StringFlag{
-						Name:  "output",
-						Value: "build",
-						Usage: "Output directory. The resulting datapack will be inside this directory as <output>/<project_name>",
-					},
-					&cli.BoolFlag{
-						Name:  "enable-traces",
-						Value: false,
-						Usage: "Enable traces",
-					},
-				},
-				Action: func(ctx context.Context, cmd *cli.Command) error {
-					return command.Build(cmd, builtinHeaders, libs)
-				},
-			},
-			{
-				Name:  "init",
-				Usage: "Initialize a new project",
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "name",
-						Value: "MyProject",
-						Usage: "Name of the project",
-					},
-					&cli.StringFlag{
-						Name:  "namespace",
-						Value: "myproject",
-						Usage: "Namespace of the project",
-					},
-				},
-				Action: func(ctx context.Context, cmd *cli.Command) error {
-					return command.Init(cmd)
-				},
-			},
+			command.BuildCommand,
+			command.InitCommand,
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			cli.ShowAppHelpAndExit(cmd, 0)
 			return nil
 		},
 	}
-	if err := cmd.Run(context.Background(), os.Args); err != nil {
+
+	ctx := context.WithValue(context.Background(), "data", &command.Data{
+		BuiltinHeaders: builtinHeaders,
+		Libs:           libs,
+	})
+
+	if err := cmd.Run(ctx, os.Args); err != nil {
 		log.Fatal(err)
 	}
 }

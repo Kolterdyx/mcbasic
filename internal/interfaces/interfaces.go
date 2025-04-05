@@ -2,19 +2,21 @@ package interfaces
 
 type ValueType string
 
+type Project struct {
+	Name        string   `toml:"name"`
+	Namespace   string   `toml:"namespace"`
+	Authors     []string `toml:"authors"`
+	Entrypoint  string   `toml:"entrypoint"`
+	Version     string   `toml:"version"`
+	Description string   `toml:"description"`
+}
+
 type ProjectConfig struct {
-	Project struct {
-		Name        string
-		Namespace   string
-		Authors     []string
-		Entrypoint  string
-		Version     string
-		Description string
-	}
+	Project      Project `toml:"Project"`
 	Dependencies struct {
 		Headers []string
-	}
-	OutputDir string
+	} `toml:"-"`
+	OutputDir string `toml:"-"`
 }
 
 type DatapackHeader struct {
