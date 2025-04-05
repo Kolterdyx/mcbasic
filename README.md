@@ -175,6 +175,26 @@ func main() {
     # Negative indices are also checked
     # mcb:log(hello[0:100]);
     # mcb:log(hello[0:-100]);
+	
+	
+    # Math implementation comes from the https://github.com/gibbsly/gm project, which uses
+    # entity transforms to perform math operations.
+    # This includes base language math operators as +, -, *, /, %
+	
+	
+    # Some math functions
+    math:sqrt(4); # 2
+    math:floor(5.51); # 5
+    math:ceil(5.51); # 6
+    math:round(5.51); # 6
+
+    # Some trigonometric functions
+    math:cos(0);
+    math:sin(0);
+    math:tan(0);
+    math:acos(1);
+    math:asin(0);
+    math:atan(0);
 }
 ```
 
