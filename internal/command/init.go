@@ -2,11 +2,10 @@ package command
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
-	"github.com/manifoldco/promptui"
+	"github.com/Songmu/prompter"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v3"
 	"os"
@@ -85,23 +84,9 @@ func Init(cmd *cli.Command) error {
 }
 
 func getProjectData(cmd *cli.Command, config *interfaces.ProjectConfig) error {
-	name, err := promptStringForValue(cmd, "project-name", DefaultProjectName, "Project name")
-	if err != nil {
-		return err
-	}
-	config.Project.Name = name
-
-	namespace, err := promptStringForValue(cmd, "namespace", DefaultProjectNamespace, "Namespace")
-	if err != nil {
-		return err
-	}
-	config.Project.Namespace = namespace
-
-	entrypoint, err := promptStringForValue(cmd, "entrypoint", DefaultProjectEntrypoint, "Entrypoint")
-	if err != nil {
-		return err
-	}
-	config.Project.Entrypoint = entrypoint
+	config.Project.Name = promptStringForValue(cmd, "project-name", DefaultProjectName, "Project name")
+	config.Project.Namespace = promptStringForValue(cmd, "namespace", DefaultProjectNamespace, "Namespace")
+	config.Project.Entrypoint = promptStringForValue(cmd, "entrypoint", DefaultProjectEntrypoint, "Entrypoint")
 	return nil
 }
 
@@ -110,20 +95,17 @@ func runProjectTasks(cmd *cli.Command, config *interfaces.ProjectConfig) error {
 	// Check if the project directory already exists
 	projectDir := path.Join(os.Getenv("PWD"), config.Project.Name)
 
-	forceOverwrite := cmd.Bool("force")
+	overwrite := cmd.Bool("force")
 
 	if _, err := os.Stat(projectDir); !os.IsNotExist(err) {
-		if !forceOverwrite {
-			force, err := promptConfirmation("Project directory already exists. Do you want to overwrite it?", "n")
-			if err != nil {
-				return err
-			}
+		if !overwrite {
+			force := promptConfirmation("Project directory already exists. Overwrite", false)
 			if !force {
 				log.Info("Project creation cancelled by user")
 				return nil
 			}
 			log.Debug("Project directory already exists, overwriting...")
-			forceOverwrite = true
+			overwrite = true
 		} else {
 			log.Debug("Project directory already exists, but force flag is set, overwriting...")
 		}
@@ -138,37 +120,36 @@ func runProjectTasks(cmd *cli.Command, config *interfaces.ProjectConfig) error {
 		log.Debug("Git init flag is set, initializing git repository")
 	}
 	if !gitInitFlag.IsSet() {
-		git, err := promptConfirmation("Do you want to initialize a git repository?", "y")
-		if err != nil {
-			return err
-		}
-		gitInit = git
+		gitInit = promptConfirmation("Do you want to initialize a git repository", true)
 	}
 
 	fmt.Printf(`
+
+This will create a new project with the following configuration:
+
 Project name: %s
 Project path: %s
 Namespace: %s
 Entrypoint file: %s
-Initialize git repository: %t"
+
+Overwrite existing files: %t
+Initialize git repository: %t
+
 `,
 		config.Project.Name,
 		projectDir,
 		config.Project.Namespace,
 		config.Project.Entrypoint,
+		overwrite,
 		gitInit,
 	)
 
-	confirm, err := promptConfirmation("Create the project?", "y")
-	if err != nil {
-		return err
-	}
-	if !confirm {
+	if !promptConfirmation("Create the project", true) {
 		log.Info("Project creation cancelled by user")
 		return nil
 	}
 
-	err = createProject(projectDir, config, forceOverwrite, gitInit)
+	err := createProject(projectDir, config, overwrite, gitInit)
 	if err != nil {
 		return fmt.Errorf("failed to create project: %w", err)
 	}
@@ -264,34 +245,13 @@ func main() {
 	return nil
 }
 
-func promptStringForValue(cmd *cli.Command, flagName, defaultValue, promptLabel string) (string, error) {
+func promptStringForValue(cmd *cli.Command, flagName, defaultValue, promptLabel string) string {
 	if cmd.String(flagName) == defaultValue {
-		prompt := promptui.Prompt{
-			Label: fmt.Sprintf("%s (default: %s)", promptLabel, defaultValue),
-		}
-		value, err := prompt.Run()
-		if err != nil {
-			return "", fmt.Errorf("failed to read %s: %w", flagName, err)
-		}
-		if value == "" {
-			value = defaultValue
-		}
-		return value, nil
+		return prompter.Prompt(promptLabel, defaultValue)
 	}
-	return cmd.String(flagName), nil
+	return cmd.String(flagName)
 }
 
-func promptConfirmation(promptLabel string, defaultValue string) (bool, error) {
-	prompt := promptui.Prompt{
-		Label:     promptLabel,
-		IsConfirm: true,
-		Default:   defaultValue,
-	}
-	result, err := prompt.Run()
-	if err != nil && !errors.Is(err, promptui.ErrAbort) {
-		return false, fmt.Errorf("failed to read confirmation: %+v", err)
-	} else if errors.Is(err, promptui.ErrAbort) {
-		return false, nil
-	}
-	return result == "y" || result == "Y" || (result == "" && (defaultValue == "y" || defaultValue == "Y")), nil
+func promptConfirmation(promptLabel string, defaultValue bool) bool {
+	return prompter.YN(promptLabel, defaultValue)
 }
