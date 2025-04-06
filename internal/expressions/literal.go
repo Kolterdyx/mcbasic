@@ -8,6 +8,7 @@ const (
 	IntType    interfaces.ValueType = "int"
 	StringType interfaces.ValueType = "str"
 	DoubleType interfaces.ValueType = "double"
+	ListType   interfaces.ValueType = "list"
 )
 
 type LiteralExpr struct {

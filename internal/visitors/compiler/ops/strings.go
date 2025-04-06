@@ -2,7 +2,7 @@ package ops
 
 import "fmt"
 
-func (o *Op) Concat(var1 string, var2 string, result string) string {
+func (o *Op) Concat(var1, var2, result string) string {
 	cmd := ""
 	cmd += o.LoadArgConst("internal/concat", "res", RET)
 	cmd += o.LoadArgConst("internal/concat", "storage", fmt.Sprintf("%s:%s", o.Namespace, VarPath))
@@ -12,11 +12,11 @@ func (o *Op) Concat(var1 string, var2 string, result string) string {
 	return cmd
 }
 
-func (o *Op) SizeString(var1 string, result string) string {
+func (o *Op) SizeString(var1, result string) string {
 	return fmt.Sprintf("execute store result storage %s:%s %s int 1 run data get storage %s:%s %s\n", o.Namespace, VarPath, result, o.Namespace, VarPath, var1)
 }
 
-func (o *Op) Slice(from string, start string, end string, result string) string {
+func (o *Op) SliceString(from, start, end, result string) string {
 	cmd := ""
 	cmd += o.LoadArgConst("internal/slice", "res", RET)
 	cmd += o.LoadArgConst("internal/slice", "storage", fmt.Sprintf("%s:%s", o.Namespace, VarPath))

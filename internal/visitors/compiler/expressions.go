@@ -184,7 +184,7 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) interface{} {
 	regIndexEnd := c.newRegister(ops.RB)
 
 	cmd := ""
-	cmd += "### Slice operation ###\n"
+	cmd += "### SliceString operation ###\n"
 	cmd += expr.StartIndex.Accept(c).(string)
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regIndexStart))
 
@@ -225,19 +225,51 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) interface{} {
 		true,
 		c.opHandler.Exception("Start index greater than end index"),
 	)
+	switch expr.TargetExpr.ReturnType() {
+	case expressions.StringType:
+		cmd += c.opHandler.ExecCond(
+			fmt.Sprintf("score %s %s >= %s %s", ops.Cs(regIndexStart), c.Namespace, ops.Cs(lenReg), c.Namespace),
+			true,
+			c.opHandler.Exception("Start slice index out of bounds"),
+		)
+		cmd += c.opHandler.ExecCond(
+			fmt.Sprintf("score %s %s > %s %s", ops.Cs(regIndexEnd), c.Namespace, ops.Cs(lenReg), c.Namespace),
+			true,
+			c.opHandler.Exception("End slice index out of bounds"),
+		)
+	case expressions.ListType:
+		cmd += c.opHandler.ExecCond(
+			fmt.Sprintf("score %s %s >= %s %s", ops.Cs(regIndexStart), c.Namespace, ops.Cs(lenReg), c.Namespace),
+			true,
+			c.opHandler.Exception("Index out of bounds"),
+		)
+	}
 
-	cmd += c.opHandler.ExecCond(
-		fmt.Sprintf("score %s %s >= %s %s", ops.Cs(regIndexStart), c.Namespace, ops.Cs(lenReg), c.Namespace),
-		true,
-		c.opHandler.Exception("Start slice index out of bounds"),
-	)
-	cmd += c.opHandler.ExecCond(
-		fmt.Sprintf("score %s %s > %s %s", ops.Cs(regIndexEnd), c.Namespace, ops.Cs(lenReg), c.Namespace),
-		true,
-		c.opHandler.Exception("End slice index out of bounds"),
-	)
+	switch expr.TargetExpr.ReturnType() {
+	case expressions.StringType:
+		// String slice operation
+		cmd += c.opHandler.SliceString(ops.Cs(ops.RX), ops.Cs(regIndexStart), ops.Cs(regIndexEnd), ops.Cs(ops.RX))
+	case expressions.ListType:
+		// List index operation
+		if expr.EndIndex != nil {
+			c.error(expr.SourceLocation, "List slicing is not supported")
+			return ""
+		}
+		cmd += c.opHandler.GetListIndex(ops.Cs(ops.RX), ops.Cs(regIndexStart), ops.Cs(ops.RX))
+	}
+	return cmd
+}
 
-	// Slice operation
-	cmd += c.opHandler.Slice(ops.Cs(ops.RX), ops.Cs(regIndexStart), ops.Cs(regIndexEnd), ops.Cs(ops.RX))
+func (c *Compiler) VisitList(expr expressions.ListExpr) interface{} {
+	cmd := ""
+	cmd += "### List operation ###\n"
+	regList := ops.Cs(c.newRegister(ops.RX))
+	cmd += c.opHandler.MakeList(regList)
+	for _, elem := range expr.Elements {
+		cmd += elem.Accept(c).(string)
+		cmd += c.opHandler.AppendList(regList, ops.Cs(ops.RX))
+	}
+	cmd += c.opHandler.Move(regList, ops.Cs(ops.RX))
+	cmd += "### List operation end ###\n"
 	return cmd
 }

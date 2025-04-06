@@ -141,7 +141,7 @@ func (c *Compiler) math() {
 func (c *Compiler) strings() {
 	c.createFunction(
 		"mcb:internal/concat",
-		`$data modify storage $(storage) $(res) set value "$(a)$(b)"`,
+		`$data modify storage $(storage) $(res) set value '$(a)$(b)'`,
 		[]interfaces.FuncArg{
 			{Name: "storage", Type: expressions.StringType},
 			{Name: "res", Type: expressions.StringType},
@@ -170,6 +170,17 @@ func (c *Compiler) strings() {
 			{Name: "from", Type: expressions.StringType},
 		},
 		expressions.IntType,
+	)
+	c.createFunction(
+		"mcb:internal/list_index",
+		`$data modify storage $(storage) $(res) set from storage $(storage) $(from)[$(index)]`,
+		[]interfaces.FuncArg{
+			{Name: "storage", Type: expressions.StringType},
+			{Name: "res", Type: expressions.StringType},
+			{Name: "from", Type: expressions.StringType},
+			{Name: "index", Type: expressions.IntType},
+		},
+		expressions.VoidType,
 	)
 }
 

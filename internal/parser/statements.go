@@ -48,6 +48,8 @@ func (p *Parser) letDeclaration() statements.Stmt {
 		varType = expressions.StringType
 	} else if p.match(tokens.DoubleType) {
 		varType = expressions.DoubleType
+	} else if p.match(tokens.ListType) {
+		varType = expressions.ListType
 	} else {
 		p.error(p.peek(), "Expected variable type.")
 		return nil

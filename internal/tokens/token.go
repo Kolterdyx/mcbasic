@@ -60,6 +60,7 @@ const (
 	IntType
 	DoubleType
 	StringType
+	ListType
 )
 
 func (t TokenType) String() string {
@@ -146,6 +147,8 @@ func (t TokenType) String() string {
 		return "DoubleType"
 	case StringType:
 		return "StringType"
+	case ListType:
+		return "ListType"
 	default:
 		return "Unknown"
 	}
@@ -163,6 +166,7 @@ var Keywords = map[string]TokenType{
 	"while":  While,
 	"int":    IntType,
 	"double": DoubleType,
+	"list":   ListType,
 	"str":    StringType,
 	"return": Return,
 }

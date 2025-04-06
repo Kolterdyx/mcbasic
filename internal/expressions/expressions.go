@@ -12,7 +12,8 @@ const (
 	VariableExprType     ExprType = "Variable"
 	FunctionCallExprType ExprType = "FunctionCall"
 	LogicalExprType      ExprType = "Logical"
-	SliceExprType        ExprType = "Slice"
+	SliceExprType        ExprType = "SliceString"
+	ListExprType         ExprType = "List"
 )
 
 type ExprVisitor interface {
@@ -24,6 +25,7 @@ type ExprVisitor interface {
 	VisitFunctionCall(f FunctionCallExpr) interface{}
 	VisitLogical(l LogicalExpr) interface{}
 	VisitSlice(s SliceExpr) interface{}
+	VisitList(s ListExpr) interface{}
 }
 
 type Expr interface {

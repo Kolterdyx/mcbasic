@@ -227,6 +227,25 @@ func (p *Parser) primary() expressions.Expr {
 		p.consume(tokens.ParenClose, "Expected ')' after expression.")
 		return expressions.GroupingExpr{Expression: expr, SourceLocation: p.location()}
 	}
+	if p.match(tokens.BracketOpen) {
+		elems := []expressions.Expr{}
+		for !p.check(tokens.BracketClose) {
+			if p.match(tokens.Comma) {
+				continue
+			}
+			expr := p.expression()
+			if expr == nil {
+				return nil
+			}
+			elems = append(elems, expr)
+			if p.check(tokens.BracketClose) {
+				break
+			}
+			p.consume(tokens.Comma, "Expected ',' after expression.")
+		}
+		p.consume(tokens.BracketClose, "Expected ']' after expression.")
+		return expressions.ListExpr{Elements: elems, SourceLocation: p.location()}
+	}
 
 	p.error(p.peek(), "Expected expression.")
 	p.synchronize()
