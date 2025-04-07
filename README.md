@@ -57,10 +57,24 @@ It's pretty basic, but it's better than nothing.
 
 ### Project setup
 
-Create a new directory for your project and create a file called `project.toml` with the following content:
+There are two ways to set up a project: using the `mcbasic` command line tool or manually creating the files.
 
+#### Using the command line tool
+
+You can use the `mcbasic` command line tool to create a new project. Run the following command:
+
+```sh
+mcbasic init
+```
+This will prompt you for some information about your project, such as the name, namespace, and if you want to initialize a git repository.
+It will create a new directory with the name of your project and create the necessary files for you.
+
+#### Manually creating the files
+If you prefer to set up the project manually, you can do so by creating the necessary files yourself.
+
+Create a new directory for your project and create a file called `project.toml` with the following content:
 ```toml
-[project]
+[Project]
 name = "Example project"
 namespace = "example"
 description = "An example project"
@@ -71,9 +85,7 @@ entrypoint = "main.mcb"
 This file is used to store metadata about your project, and it tells the compiler where to start compiling your code and
 how to generate the pack.mcmeta file.
 
-### Writing code
-
-Create a new file called `main.mcb` with the following content:
+Then, create a new file called `main.mcb` with the following content:
 
 ```go # Go is used for syntax highlighting, but the language is not Go
 func main() {
@@ -85,17 +97,20 @@ This is the entry point of your program. The `main` function is called when the 
 
 ### Compiling
 
-Run the following command inside the directory to compile your code:
+Run the following command inside the project folder to compile your code to a datapack:
 
 ```sh
-mcbasic
+mcbasic build
 ```
 
 This will generate a new directory called `build` with the compiled datapack inside.
 You can then move this directory to your Minecraft world's datapacks folder.
 
-> **Note**: The compiler will overwrite the `build` directory every time you compile your code. Make sure to back up any changes you make to the datapack.
-> You can also specify a different output directory by passing the `-output` flag to the compiler.
+> **Note**: The compiler will overwrite the `build` directory every time you compile your code.
+> Make sure to back up any changes you make manually to the compiled datapack.
+> You can also specify a different output directory by passing the `--output` flag to the compiler.
+> This can be useful if you want to compile directly to the datapacks folder of your world.
+```sh
 
 ### Running
 
