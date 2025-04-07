@@ -110,7 +110,6 @@ You can then move this directory to your Minecraft world's datapacks folder.
 > Make sure to back up any changes you make manually to the compiled datapack.
 > You can also specify a different output directory by passing the `--output` flag to the compiler.
 > This can be useful if you want to compile directly to the datapacks folder of your world.
-```sh
 
 ### Running
 
