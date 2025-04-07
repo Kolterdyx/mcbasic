@@ -1,0 +1,1 @@
+$data modify storage $(storage) $(list)[$(index)] set from storage $(storage) $(value_path)

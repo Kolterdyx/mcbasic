@@ -8,46 +8,8 @@ import (
 )
 
 func (c *Compiler) createBuiltinFunctions() {
-	c.utils()
 	c.math()
-	c.strings()
 	c.baseFunctions()
-}
-
-func (c *Compiler) utils() {
-	c.createFunction(
-		"mcb:print",
-		`$tellraw @a {text:'$(text)'}`,
-		[]interfaces.FuncArg{
-			{Name: "text", Type: expressions.StringType},
-		},
-		expressions.VoidType,
-	)
-	c.createFunction(
-		"mcb:log",
-		`$tellraw @a[tag=mcblog] {text:'$(text)',color:gray,italic:true}`,
-		[]interfaces.FuncArg{
-			{Name: "text", Type: expressions.StringType},
-		},
-		expressions.VoidType,
-	)
-	c.createFunction(
-		"mcb:error",
-		`$tellraw @a[tag=mcblog] {text:'$(text)',bold:true,color:red}
-		execute as @a[tag=mcblog] at @s run playsound minecraft:block.note_block.bass master @s ~ ~ ~ 1 0`,
-		[]interfaces.FuncArg{
-			{Name: "text", Type: expressions.StringType},
-		},
-		expressions.VoidType,
-	)
-	c.createFunction(
-		"mcb:exec",
-		`$execute run $(command)`,
-		[]interfaces.FuncArg{
-			{Name: "command", Type: expressions.StringType},
-		},
-		expressions.VoidType,
-	)
 }
 
 func (c *Compiler) math() {
@@ -135,52 +97,6 @@ func (c *Compiler) math() {
 			{Name: "x", Type: expressions.DoubleType},
 		},
 		expressions.DoubleType,
-	)
-}
-
-func (c *Compiler) strings() {
-	c.createFunction(
-		"mcb:internal/concat",
-		`$data modify storage $(storage) $(res) set value '$(a)$(b)'`,
-		[]interfaces.FuncArg{
-			{Name: "storage", Type: expressions.StringType},
-			{Name: "res", Type: expressions.StringType},
-			{Name: "a", Type: expressions.StringType},
-			{Name: "b", Type: expressions.VoidType},
-		},
-		expressions.VoidType,
-	)
-	c.createFunction(
-		"mcb:internal/slice",
-		`$data modify storage $(storage) $(res) set string storage $(storage) $(from) $(start) $(end)`,
-		[]interfaces.FuncArg{
-			{Name: "storage", Type: expressions.StringType},
-			{Name: "res", Type: expressions.StringType},
-			{Name: "from", Type: expressions.StringType},
-			{Name: "start", Type: expressions.IntType},
-			{Name: "end", Type: expressions.IntType},
-		},
-		expressions.VoidType,
-	)
-	c.createFunction(
-		"mcb:len",
-		fmt.Sprintf("$data modify storage %s:%s %s set value \"$(from)\"\n", c.Namespace, ops.VarPath, ops.RET)+
-			fmt.Sprintf("execute store result storage %s:%s %s int 1 run data get storage %s:%s %s\n", c.Namespace, ops.VarPath, ops.RET, c.Namespace, ops.VarPath, ops.RET),
-		[]interfaces.FuncArg{
-			{Name: "from", Type: expressions.StringType},
-		},
-		expressions.IntType,
-	)
-	c.createFunction(
-		"mcb:internal/list_index",
-		`$data modify storage $(storage) $(res) set from storage $(storage) $(from)[$(index)]`,
-		[]interfaces.FuncArg{
-			{Name: "storage", Type: expressions.StringType},
-			{Name: "res", Type: expressions.StringType},
-			{Name: "from", Type: expressions.StringType},
-			{Name: "index", Type: expressions.IntType},
-		},
-		expressions.VoidType,
 	)
 }
 

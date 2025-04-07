@@ -20,7 +20,7 @@ func (p *Parser) statement() statements.Stmt {
 	} else if p.match(tokens.Return) {
 		return p.returnStatement()
 	} else if p.match(tokens.Identifier) {
-		if p.check(tokens.Equal) {
+		if p.check(tokens.Equal) || p.check(tokens.BracketOpen) {
 			return p.variableAssignment()
 		} else if p.check(tokens.ParenOpen) {
 			p.stepBack()
@@ -72,12 +72,33 @@ func (p *Parser) letDeclaration() statements.Stmt {
 
 func (p *Parser) variableAssignment() statements.Stmt {
 	name := p.previous()
+	hasIndex := false
+	var index expressions.Expr
+	if p.match(tokens.BracketOpen) {
+		index = p.expression()
+		p.consume(tokens.BracketClose, "Expected ']' after index.")
+		if index == nil {
+			return nil
+		}
+		if index.ReturnType() != expressions.IntType {
+			p.error(p.peek(), fmt.Sprintf("Index must be of type %s.", expressions.IntType))
+			return nil
+		}
+		if p.getType(name) != expressions.ListType {
+			p.error(name, fmt.Sprintf("Cannot index type %s.", p.getType(name)))
+			return nil
+		}
+		hasIndex = true
+	}
 	p.consume(tokens.Equal, "Expected '=' after variable name.")
 	value := p.expression()
 	if value == nil {
 		return nil
 	}
 	p.consume(tokens.Semicolon, "Expected ';' after value.")
+	if hasIndex {
+		return statements.VariableAssignmentStmt{Name: name, Index: &index, Value: value}
+	}
 	return statements.VariableAssignmentStmt{Name: name, Value: value}
 }
 

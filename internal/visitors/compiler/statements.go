@@ -91,13 +91,21 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 
 func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStmt) interface{} {
 	cmd := ""
-
-	fmt.Println(stmt.Name.Lexeme, stmt.Value.ReturnType(), c.getReturnType(stmt.Name.Lexeme))
-	if stmt.Value.ReturnType() != c.getReturnType(stmt.Name.Lexeme) {
+	isIndexedAssignment := stmt.Index != nil
+	if stmt.Value.ReturnType() != c.getReturnType(stmt.Name.Lexeme) && !isIndexedAssignment {
 		log.Fatalln("Assignment type mismatch")
 	}
 	cmd += stmt.Value.Accept(c).(string)
-	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(stmt.Name.Lexeme))
+	valueReg := ops.Cs(c.newRegister(ops.RX))
+	cmd += c.opHandler.Move(ops.Cs(ops.RX), valueReg)
+	if isIndexedAssignment {
+		cmd += (*stmt.Index).Accept(c).(string)
+		indexReg := ops.Cs(c.newRegister(ops.RX))
+		cmd += c.opHandler.Move(ops.Cs(ops.RX), indexReg)
+		cmd += c.opHandler.SetListIndex(ops.Cs(stmt.Name.Lexeme), indexReg, valueReg)
+	} else {
+		cmd += c.opHandler.Move(valueReg, ops.Cs(stmt.Name.Lexeme))
+	}
 	return cmd
 }
 
