@@ -59,6 +59,8 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 			varType = expressions.ListStringType
 		} else if p.match(tokens.DoubleType) {
 			varType = expressions.ListDoubleType
+		} else {
+			return nil, p.error(p.peek(), "Expected list type.")
 		}
 		_, err = p.consume(tokens.Greater, fmt.Sprintf("Expected '>' after '%s'.", p.previous().Lexeme))
 		if err != nil {
