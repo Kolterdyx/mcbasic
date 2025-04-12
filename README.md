@@ -203,12 +203,12 @@ func main() {
     math:round(5.51); # 6
 
     # Some trigonometric functions
-    math:cos(0);
-    math:sin(0);
-    math:tan(0);
-    math:acos(1);
-    math:asin(0);
-    math:atan(0);
+    math:cos(0.0);
+    math:sin(0.0);
+    math:tan(0.0);
+    math:acos(1.0);
+    math:asin(0.0);
+    math:atan(0.0);
 }
 ```
 
