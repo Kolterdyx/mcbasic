@@ -93,7 +93,7 @@ func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStm
 	cmd := ""
 	isIndexedAssignment := stmt.Index != nil
 	if stmt.Value.ReturnType() != c.getReturnType(stmt.Name.Lexeme) && !isIndexedAssignment {
-		log.Fatalln("Assignment type mismatch")
+		log.Fatalf("Assignment type mismatch: %v != %v\n", stmt.Value.ReturnType(), c.getReturnType(stmt.Name.Lexeme))
 	}
 	cmd += stmt.Value.Accept(c).(string)
 	valueReg := ops.Cs(c.newRegister(ops.RX))

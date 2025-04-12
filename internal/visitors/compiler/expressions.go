@@ -237,7 +237,11 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) interface{} {
 			true,
 			c.opHandler.Exception("End slice index out of bounds"),
 		)
-	case expressions.ListType:
+	case expressions.ListIntType:
+		fallthrough
+	case expressions.ListDoubleType:
+		fallthrough
+	case expressions.ListStringType:
 		cmd += c.opHandler.ExecCond(
 			fmt.Sprintf("score %s %s >= %s %s", ops.Cs(regIndexStart), c.Namespace, ops.Cs(lenReg), c.Namespace),
 			true,
@@ -249,7 +253,11 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) interface{} {
 	case expressions.StringType:
 		// String slice operation
 		cmd += c.opHandler.SliceString(ops.Cs(ops.RX), ops.Cs(regIndexStart), ops.Cs(regIndexEnd), ops.Cs(ops.RX))
-	case expressions.ListType:
+	case expressions.ListIntType:
+		fallthrough
+	case expressions.ListDoubleType:
+		fallthrough
+	case expressions.ListStringType:
 		// List index operation
 		if expr.EndIndex != nil {
 			c.error(expr.SourceLocation, "List slicing is not supported")

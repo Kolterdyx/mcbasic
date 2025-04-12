@@ -276,6 +276,7 @@ func (p *Parser) primary() (expressions.Expr, error) {
 	}
 	if p.match(tokens.BracketOpen) {
 		var elems []expressions.Expr
+		var contentType = expressions.VoidType
 		for !p.check(tokens.BracketClose) {
 			if p.match(tokens.Comma) {
 				continue
@@ -283,6 +284,11 @@ func (p *Parser) primary() (expressions.Expr, error) {
 			expr, err := p.expression()
 			if err != nil {
 				return nil, err
+			}
+			if contentType == expressions.VoidType {
+				contentType = expr.ReturnType()
+			} else if contentType != expr.ReturnType() {
+				return nil, p.error(p.previous(), fmt.Sprintf("Expected %s, got %s.", contentType, expr.ReturnType()))
 			}
 			elems = append(elems, expr)
 			if p.check(tokens.BracketClose) {
@@ -297,7 +303,11 @@ func (p *Parser) primary() (expressions.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		return expressions.ListExpr{Elements: elems, SourceLocation: p.location()}, nil
+		return expressions.ListExpr{
+			Elements:       elems,
+			SourceLocation: p.location(),
+			ValueType:      p.getListType(contentType),
+		}, nil
 	}
 	errorToken := p.peek()
 	p.synchronize()

@@ -6,6 +6,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	log "github.com/sirupsen/logrus"
 )
 
 func (p *Parser) statement() (statements.Stmt, error) {
@@ -47,17 +48,32 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 		return nil, err
 	}
 	var varType interfaces.ValueType
-	if p.match(tokens.IntType) {
+	if p.match(tokens.ListType) {
+		_, err = p.consume(tokens.Less, fmt.Sprintf("Expected '<' after '%s'.", p.previous().Lexeme))
+		if err != nil {
+			return nil, err
+		}
+		if p.match(tokens.IntType) {
+			varType = expressions.ListIntType
+		} else if p.match(tokens.StringType) {
+			varType = expressions.ListStringType
+		} else if p.match(tokens.DoubleType) {
+			varType = expressions.ListDoubleType
+		}
+		_, err = p.consume(tokens.Greater, fmt.Sprintf("Expected '>' after '%s'.", p.previous().Lexeme))
+		if err != nil {
+			return nil, err
+		}
+	} else if p.match(tokens.IntType) {
 		varType = expressions.IntType
 	} else if p.match(tokens.StringType) {
 		varType = expressions.StringType
 	} else if p.match(tokens.DoubleType) {
 		varType = expressions.DoubleType
-	} else if p.match(tokens.ListType) {
-		varType = expressions.ListType
 	} else {
 		return nil, p.error(p.peek(), "Expected variable type.")
 	}
+	log.Debugf("Variable type: %s", varType)
 	var initializer expressions.Expr
 	if p.match(tokens.Equal) {
 		if initializer, err = p.expression(); err != nil {
@@ -71,8 +87,15 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 	if initializer != nil && initializer.ReturnType() != varType {
 		return nil, p.error(p.peekCount(-2), fmt.Sprintf("Cannot assign %s to %s.", initializer.ReturnType(), varType))
 	}
-	p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{Name: name.Lexeme, Type: varType})
-	return statements.VariableDeclarationStmt{Name: name, Type: varType, Initializer: initializer}, nil
+	p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{
+		Name: name.Lexeme,
+		Type: varType,
+	})
+	return statements.VariableDeclarationStmt{
+		Name:        name,
+		Type:        varType,
+		Initializer: initializer,
+	}, nil
 }
 
 func (p *Parser) variableAssignment() (statements.Stmt, error) {
@@ -91,7 +114,7 @@ func (p *Parser) variableAssignment() (statements.Stmt, error) {
 		if index.ReturnType() != expressions.IntType {
 			return nil, p.error(p.peek(), fmt.Sprintf("Index must be of type %s.", expressions.IntType))
 		}
-		if p.getType(name) != expressions.ListType {
+		if p.isStruct(name) {
 			return nil, p.error(name, fmt.Sprintf("Cannot index type %s.", p.getType(name)))
 		}
 		hasIndex = true

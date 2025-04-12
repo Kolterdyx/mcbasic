@@ -3,12 +3,17 @@ package expressions
 import "github.com/Kolterdyx/mcbasic/internal/interfaces"
 
 const (
+	// ErrorType  used for error handling
+	ErrorType interfaces.ValueType = "error"
+
 	VoidType   interfaces.ValueType = "void"
-	ErrorType  interfaces.ValueType = "error"
 	IntType    interfaces.ValueType = "int"
 	StringType interfaces.ValueType = "str"
 	DoubleType interfaces.ValueType = "double"
-	ListType   interfaces.ValueType = "list"
+
+	ListIntType    interfaces.ValueType = "list<int>"
+	ListDoubleType interfaces.ValueType = "list<double>"
+	ListStringType interfaces.ValueType = "list<str>"
 )
 
 type LiteralExpr struct {

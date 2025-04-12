@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	log "github.com/sirupsen/logrus"
@@ -110,6 +111,59 @@ func (p *Parser) getType(name tokens.Token) interfaces.ValueType {
 		if len(split) == 2 && split[1] == name.Lexeme || len(split) == 1 && f.Name == name.Lexeme {
 			return f.ReturnType
 		}
+	}
+	return ""
+}
+
+func (p *Parser) isStruct(name tokens.Token) bool {
+	for _, v := range p.variables {
+		for _, def := range v {
+			if def.Name == name.Lexeme {
+				return def.Type == expressions.ListIntType ||
+					def.Type == expressions.ListDoubleType ||
+					def.Type == expressions.ListStringType
+			}
+		}
+	}
+	for _, f := range p.functions {
+
+		split := strings.Split(f.Name, ":")
+		if len(split) > 2 {
+			log.Fatalf("Invalid function name: %s", f.Name)
+		}
+		if len(split) == 2 && split[1] == name.Lexeme || len(split) == 1 && f.Name == name.Lexeme {
+			return f.ReturnType == expressions.ListIntType ||
+				f.ReturnType == expressions.ListDoubleType ||
+				f.ReturnType == expressions.ListStringType
+		}
+	}
+	return false
+}
+
+func (p *Parser) getListType(valueType interfaces.ValueType) interfaces.ValueType {
+	switch valueType {
+	case expressions.IntType:
+		return expressions.ListIntType
+	case expressions.StringType:
+		return expressions.ListStringType
+	case expressions.DoubleType:
+		return expressions.ListDoubleType
+	default:
+		log.Fatalf("Unsupported type for list: %s", valueType)
+	}
+	return ""
+}
+
+func (p *Parser) getListValueType(valueType interfaces.ValueType) interfaces.ValueType {
+	switch valueType {
+	case expressions.ListIntType:
+		return expressions.IntType
+	case expressions.ListStringType:
+		return expressions.StringType
+	case expressions.ListDoubleType:
+		return expressions.DoubleType
+	default:
+		log.Fatalf("Invalid list type: %s", valueType)
 	}
 	return ""
 }

@@ -6,7 +6,8 @@ type ListExpr struct {
 	Expr
 	interfaces.SourceLocation
 
-	Elements []Expr
+	Elements  []Expr
+	ValueType interfaces.ValueType
 }
 
 func (l ListExpr) Accept(v ExprVisitor) interface{} {
@@ -18,5 +19,5 @@ func (l ListExpr) TType() ExprType {
 }
 
 func (l ListExpr) ReturnType() interfaces.ValueType {
-	return ListType
+	return l.ValueType
 }
