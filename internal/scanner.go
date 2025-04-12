@@ -191,7 +191,6 @@ func (s *Scanner) scanComment() {
 	for s.peek() != '\n' && !s.isAtEnd() {
 		s.advance()
 	}
-	s.row++
 }
 
 func (s *Scanner) scanNumber() {
