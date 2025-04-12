@@ -7,7 +7,7 @@ import (
 
 type VariableAssignmentStmt struct {
 	Name  tokens.Token
-	Index *expressions.Expr
+	Index expressions.Expr
 	Value expressions.Expr
 }
 

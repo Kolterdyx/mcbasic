@@ -93,13 +93,13 @@ func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStm
 	cmd := ""
 	isIndexedAssignment := stmt.Index != nil
 	if stmt.Value.ReturnType() != c.getReturnType(stmt.Name.Lexeme) && !isIndexedAssignment {
-		log.Fatalf("Assignment type mismatch: %v != %v\n", stmt.Value.ReturnType(), c.getReturnType(stmt.Name.Lexeme))
+		c.error(stmt.Name.SourceLocation, fmt.Sprintf("Assignment type mismatch: %v != %v", c.getReturnType(stmt.Name.Lexeme), stmt.Value.ReturnType()))
 	}
 	cmd += stmt.Value.Accept(c).(string)
 	valueReg := ops.Cs(c.newRegister(ops.RX))
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), valueReg)
 	if isIndexedAssignment {
-		cmd += (*stmt.Index).Accept(c).(string)
+		cmd += stmt.Index.Accept(c).(string)
 		indexReg := ops.Cs(c.newRegister(ops.RX))
 		cmd += c.opHandler.Move(ops.Cs(ops.RX), indexReg)
 		cmd += c.opHandler.SetListIndex(ops.Cs(stmt.Name.Lexeme), indexReg, valueReg)

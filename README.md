@@ -27,7 +27,7 @@ This is a list of features that are currently implemented or planned for the fut
   - [x] **Double**.
   - [x] **String**.
   - [x] **Boolean**: Booleans do not have a type. Other types are evaluated to be truthy or falsy. Falsy values are `0`, `0.0`, `""`.
-  - [ ] **Array**.
+  - [x] **List**: Statically typed lists. Only `int`, `double`, and `str` are supported for now.
   - [ ] **Struct**: User-defined data types.
 - [x] **Comments**: Single-line comments with `#`.
 - [x] **String operations**:
@@ -209,6 +209,16 @@ func main() {
     math:acos(1.0);
     math:asin(0.0);
     math:atan(0.0);
+    
+    # Lists are statically typed, and the type must be specified when creating a list
+    # Only 'int', 'double', and 'str' are supported for now
+    let myList list<int> = [1, 2, 3, 4, 5];
+    # You can also create empty lists
+    let myList2 list<int> = [];
+    
+    # You can access or assign list elements using the [] operator
+    myList[0] = 10;
+    mcb:print(myList[0]);
 }
 ```
 

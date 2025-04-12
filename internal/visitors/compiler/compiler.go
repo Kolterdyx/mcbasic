@@ -229,7 +229,7 @@ func (c *Compiler) createFunctionTags() {
 }
 
 func (c *Compiler) error(location interfaces.SourceLocation, message string) {
-	log.Errorf("[Position %d:%d] Error at '%s':\n", location.Row+1, location.Col+1, message)
+	log.Errorf("[Position %d:%d] Error: %s\n", location.Row+1, location.Col+1, message)
 }
 
 func (c *Compiler) newRegister(regName string) string {

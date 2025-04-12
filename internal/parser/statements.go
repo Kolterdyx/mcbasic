@@ -87,7 +87,9 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 		return nil, err
 	}
 	if initializer != nil && initializer.ReturnType() != varType {
-		return nil, p.error(p.peekCount(-2), fmt.Sprintf("Cannot assign %s to %s.", initializer.ReturnType(), varType))
+		if !(p.isListType(varType) && initializer.ReturnType() == expressions.VoidType) {
+			return nil, p.error(p.peekCount(-2), fmt.Sprintf("Cannot assign %s to %s.", initializer.ReturnType(), varType))
+		}
 	}
 	p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{
 		Name: name.Lexeme,
@@ -102,10 +104,10 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 
 func (p *Parser) variableAssignment() (statements.Stmt, error) {
 	name := p.previous()
-	hasIndex := false
 	var index expressions.Expr
+	var err error
 	if p.match(tokens.BracketOpen) {
-		index, err := p.expression()
+		index, err = p.expression()
 		if err != nil {
 			return nil, err
 		}
@@ -116,12 +118,11 @@ func (p *Parser) variableAssignment() (statements.Stmt, error) {
 		if index.ReturnType() != expressions.IntType {
 			return nil, p.error(p.peek(), fmt.Sprintf("Index must be of type %s.", expressions.IntType))
 		}
-		if p.isStruct(name) {
+		if !p.isList(name) {
 			return nil, p.error(name, fmt.Sprintf("Cannot index type %s.", p.getType(name)))
 		}
-		hasIndex = true
 	}
-	_, err := p.consume(tokens.Equal, "Expected '=' after variable name.")
+	_, err = p.consume(tokens.Equal, "Expected '=' after variable name.")
 	if err != nil {
 		return nil, err
 	}
@@ -133,10 +134,7 @@ func (p *Parser) variableAssignment() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	if hasIndex {
-		return statements.VariableAssignmentStmt{Name: name, Index: &index, Value: value}, nil
-	}
-	return statements.VariableAssignmentStmt{Name: name, Value: value}, nil
+	return statements.VariableAssignmentStmt{Name: name, Value: value, Index: index}, nil
 }
 
 func (p *Parser) functionDeclaration() (statements.Stmt, error) {

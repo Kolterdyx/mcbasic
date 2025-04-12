@@ -115,7 +115,7 @@ func (p *Parser) getType(name tokens.Token) interfaces.ValueType {
 	return ""
 }
 
-func (p *Parser) isStruct(name tokens.Token) bool {
+func (p *Parser) isList(name tokens.Token) bool {
 	for _, v := range p.variables {
 		for _, def := range v {
 			if def.Name == name.Lexeme {
@@ -140,6 +140,19 @@ func (p *Parser) isStruct(name tokens.Token) bool {
 	return false
 }
 
+func (p *Parser) isListType(varType interfaces.ValueType) bool {
+	switch varType {
+	case expressions.ListIntType:
+		return true
+	case expressions.ListStringType:
+		return true
+	case expressions.ListDoubleType:
+		return true
+	default:
+		return false
+	}
+}
+
 func (p *Parser) getListType(valueType interfaces.ValueType) interfaces.ValueType {
 	switch valueType {
 	case expressions.IntType:
@@ -148,6 +161,8 @@ func (p *Parser) getListType(valueType interfaces.ValueType) interfaces.ValueTyp
 		return expressions.ListStringType
 	case expressions.DoubleType:
 		return expressions.ListDoubleType
+	case expressions.VoidType:
+		return expressions.VoidType
 	default:
 		log.Fatalf("Unsupported type for list: %s", valueType)
 	}
