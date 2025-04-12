@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	log "github.com/sirupsen/logrus"
@@ -47,25 +48,24 @@ func (p *Parser) previous() tokens.Token {
 	return p.Tokens[p.current-1]
 }
 
-func (p *Parser) error(token tokens.Token, message string) {
+func (p *Parser) error(token tokens.Token, message string) error {
 	if token.Type == tokens.Eof {
-		p.report(token.Row, token.Col, " at end", message)
+		return p.report(token.Row, token.Col, " at end", message)
 	} else {
-		p.report(token.Row, token.Col, " at '"+token.Lexeme+"'", message)
+		return p.report(token.Row, token.Col, " at '"+token.Lexeme+"'", message)
 	}
 }
 
-func (p *Parser) report(line int, pos int, s string, message string) {
-	p.HadError = true
-	log.Errorf("[Position %d:%d] Error%s: %s\n", line+1, pos+1, s, message)
+func (p *Parser) report(line int, pos int, s string, message string) error {
+	return fmt.Errorf("[Position %d:%d] Error%s: %s\n", line+1, pos+1, s, message)
 }
 
-func (p *Parser) consume(tokenType tokens.TokenType, message string) tokens.Token {
+func (p *Parser) consume(tokenType tokens.TokenType, message string) (tokens.Token, error) {
 	if p.check(tokenType) {
-		return p.advance()
+		return p.advance(), nil
 	}
-	p.error(p.peek(), message)
-	return tokens.Token{}
+
+	return tokens.Token{}, p.error(p.peek(), message)
 }
 
 func (p *Parser) synchronize() {

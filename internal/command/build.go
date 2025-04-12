@@ -66,8 +66,11 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 	}
 
 	parser_ := parser.Parser{Tokens: tokens, Headers: headers}
-	program := parser_.Parse()
-	if parser_.HadError {
+	program, errs := parser_.Parse()
+	if len(errs) != 0 {
+		for _, err := range errs {
+			log.Error(err)
+		}
 		return cli.Exit("There was an error parsing the program", 1)
 	}
 	log.Debug("Program parsed successfully")
