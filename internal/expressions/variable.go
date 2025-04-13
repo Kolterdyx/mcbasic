@@ -13,7 +13,7 @@ type VariableExpr struct {
 	Type interfaces.ValueType
 }
 
-func (v VariableExpr) Accept(visitor ExprVisitor) interface{} {
+func (v VariableExpr) Accept(visitor ExprVisitor) string {
 	return visitor.VisitVariable(v)
 }
 

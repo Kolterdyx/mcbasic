@@ -14,7 +14,7 @@ type BinaryExpr struct {
 	Right    Expr
 }
 
-func (b BinaryExpr) Accept(v ExprVisitor) interface{} {
+func (b BinaryExpr) Accept(v ExprVisitor) string {
 	return v.VisitBinary(b)
 }
 

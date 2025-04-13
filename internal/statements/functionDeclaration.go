@@ -14,7 +14,7 @@ type FunctionDeclarationStmt struct {
 	Body       BlockStmt
 }
 
-func (f FunctionDeclarationStmt) Accept(visitor StmtVisitor) interface{} {
+func (f FunctionDeclarationStmt) Accept(visitor StmtVisitor) string {
 	return visitor.VisitFunctionDeclaration(f)
 }
 

@@ -6,7 +6,7 @@ type BlockStmt struct {
 	Statements []Stmt
 }
 
-func (b BlockStmt) Accept(visitor StmtVisitor) interface{} {
+func (b BlockStmt) Accept(visitor StmtVisitor) string {
 	return visitor.VisitBlock(b)
 }
 

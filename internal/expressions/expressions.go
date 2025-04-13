@@ -17,19 +17,19 @@ const (
 )
 
 type ExprVisitor interface {
-	VisitBinary(b BinaryExpr) interface{}
-	VisitGrouping(g GroupingExpr) interface{}
-	VisitLiteral(l LiteralExpr) interface{}
-	VisitUnary(u UnaryExpr) interface{}
-	VisitVariable(v VariableExpr) interface{}
-	VisitFunctionCall(f FunctionCallExpr) interface{}
-	VisitLogical(l LogicalExpr) interface{}
-	VisitSlice(s SliceExpr) interface{}
-	VisitList(s ListExpr) interface{}
+	VisitBinary(b BinaryExpr) string
+	VisitGrouping(g GroupingExpr) string
+	VisitLiteral(l LiteralExpr) string
+	VisitUnary(u UnaryExpr) string
+	VisitVariable(v VariableExpr) string
+	VisitFunctionCall(f FunctionCallExpr) string
+	VisitLogical(l LogicalExpr) string
+	VisitSlice(s SliceExpr) string
+	VisitList(s ListExpr) string
 }
 
 type Expr interface {
-	Accept(v ExprVisitor) interface{}
+	Accept(v ExprVisitor) string
 	TType() ExprType
 	ReturnType() interfaces.ValueType
 }

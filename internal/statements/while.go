@@ -9,7 +9,7 @@ type WhileStmt struct {
 	Body      BlockStmt
 }
 
-func (w WhileStmt) Accept(v StmtVisitor) interface{} {
+func (w WhileStmt) Accept(v StmtVisitor) string {
 	return v.VisitWhile(w)
 }
 

@@ -13,7 +13,7 @@ type VariableAssignmentStmt struct {
 	Value expressions.Expr
 }
 
-func (v VariableAssignmentStmt) Accept(visitor StmtVisitor) interface{} {
+func (v VariableAssignmentStmt) Accept(visitor StmtVisitor) string {
 	return visitor.VisitVariableAssignment(v)
 }
 

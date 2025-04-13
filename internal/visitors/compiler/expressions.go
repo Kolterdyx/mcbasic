@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func (c *Compiler) VisitLiteral(expr expressions.LiteralExpr) interface{} {
+func (c *Compiler) VisitLiteral(expr expressions.LiteralExpr) string {
 	switch expr.ReturnType() {
 	case expressions.IntType:
 		return c.opHandler.MoveConst(expr.Value.(string), ops.Cs(ops.RX))
@@ -22,17 +22,17 @@ func (c *Compiler) VisitLiteral(expr expressions.LiteralExpr) interface{} {
 	return ""
 }
 
-func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
+func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) string {
 	cmd := ""
 
 	regRa := c.newRegister(ops.RA)
 	regRb := c.newRegister(ops.RB)
 
 	cmd += "### Binary operation left side ###\n"
-	cmd += expr.Left.Accept(c).(string)
+	cmd += expr.Left.Accept(c)
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regRa))
 	cmd += "### Binary operation right side ###\n"
-	cmd += expr.Right.Accept(c).(string)
+	cmd += expr.Right.Accept(c)
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regRb))
 
 	cmd += "### Binary operation ###\n"
@@ -87,14 +87,14 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) interface{} {
 	return cmd
 }
 
-func (c *Compiler) VisitVariable(expr expressions.VariableExpr) interface{} {
+func (c *Compiler) VisitVariable(expr expressions.VariableExpr) string {
 	return c.opHandler.Move(ops.Cs(expr.Name.Lexeme), ops.Cs(ops.RX))
 }
 
-func (c *Compiler) VisitFunctionCall(expr expressions.FunctionCallExpr) interface{} {
+func (c *Compiler) VisitFunctionCall(expr expressions.FunctionCallExpr) string {
 	cmd := ""
 	for i, arg := range expr.Arguments {
-		cmd += arg.Accept(c).(string)
+		cmd += arg.Accept(c)
 		argName := c.functions[expr.Name.Lexeme].Args[i].Name
 		cmd += c.opHandler.LoadArg(expr.Name.Lexeme, argName, ops.Cs(ops.RX))
 	}
@@ -106,21 +106,23 @@ func (c *Compiler) VisitFunctionCall(expr expressions.FunctionCallExpr) interfac
 	return cmd
 }
 
-func (c *Compiler) VisitUnary(expr expressions.UnaryExpr) interface{} {
+func (c *Compiler) VisitUnary(expr expressions.UnaryExpr) string {
 	cmd := ""
 	switch expr.ReturnType() {
 	case expressions.IntType:
 		switch expr.Operator.Type {
 		case tokens.Minus:
-			cmd += expressions.BinaryExpr{
-				Left: expressions.LiteralExpr{Value: "0", SourceLocation: expr.SourceLocation, ValueType: expressions.IntType},
+			zero := expressions.LiteralExpr{Value: "0", SourceLocation: expr.SourceLocation, ValueType: expressions.IntType}
+			tmp := expressions.BinaryExpr{
+				Left: zero,
 				Operator: tokens.Token{
 					Type: tokens.Minus,
 				},
 				Right: expr.Expression,
-			}.Accept(c).(string)
+			}
+			cmd += tmp.Accept(c)
 		case tokens.Bang:
-			cmd += expr.Expression.Accept(c).(string)
+			cmd += expr.Expression.Accept(c)
 			cmd += c.opHandler.NegateNumber(ops.Cs(ops.RX))
 		default:
 			c.error(expr.SourceLocation, "Invalid operator for integers")
@@ -131,11 +133,11 @@ func (c *Compiler) VisitUnary(expr expressions.UnaryExpr) interface{} {
 	return cmd
 }
 
-func (c *Compiler) VisitGrouping(expr expressions.GroupingExpr) interface{} {
-	return expr.Expression.Accept(c).(string)
+func (c *Compiler) VisitGrouping(expr expressions.GroupingExpr) string {
+	return expr.Expression.Accept(c)
 }
 
-func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) interface{} {
+func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) string {
 	leftSide := ""
 	rightSide := ""
 
@@ -145,10 +147,10 @@ func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) interface{} {
 	cmd := ""
 
 	leftSide += "### Logical operation left side ###\n"
-	leftSide += expr.Left.Accept(c).(string)
+	leftSide += expr.Left.Accept(c)
 	leftSide += c.opHandler.Move(ops.Cs(ops.RX), regRa)
 	rightSide += "### Logical operation right side ###\n"
-	rightSide += expr.Right.Accept(c).(string)
+	rightSide += expr.Right.Accept(c)
 	rightSide += c.opHandler.Move(ops.Cs(ops.RX), regRb)
 	rightSide += c.opHandler.MoveScore(regRb, regRb)
 
@@ -179,23 +181,23 @@ func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) interface{} {
 	return cmd
 }
 
-func (c *Compiler) VisitSlice(expr expressions.SliceExpr) interface{} {
+func (c *Compiler) VisitSlice(expr expressions.SliceExpr) string {
 	regIndexStart := c.newRegister(ops.RA)
 	regIndexEnd := c.newRegister(ops.RB)
 
 	cmd := ""
 	cmd += "### SliceString operation ###\n"
-	cmd += expr.StartIndex.Accept(c).(string)
+	cmd += expr.StartIndex.Accept(c)
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regIndexStart))
 
 	if expr.EndIndex == nil {
 		cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regIndexEnd))
 		cmd += c.opHandler.Inc(ops.Cs(regIndexEnd))
 	} else {
-		cmd += expr.EndIndex.Accept(c).(string)
+		cmd += expr.EndIndex.Accept(c)
 		cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regIndexEnd))
 	}
-	cmd += expr.TargetExpr.Accept(c).(string)
+	cmd += expr.TargetExpr.Accept(c)
 
 	// Check index bounds
 	lenReg := c.newRegister(ops.RX)
@@ -268,13 +270,13 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) interface{} {
 	return cmd
 }
 
-func (c *Compiler) VisitList(expr expressions.ListExpr) interface{} {
+func (c *Compiler) VisitList(expr expressions.ListExpr) string {
 	cmd := ""
 	cmd += "### List operation ###\n"
 	regList := ops.Cs(c.newRegister(ops.RX))
 	cmd += c.opHandler.MakeList(regList)
 	for _, elem := range expr.Elements {
-		cmd += elem.Accept(c).(string)
+		cmd += elem.Accept(c)
 		cmd += c.opHandler.AppendList(regList, ops.Cs(ops.RX))
 	}
 	cmd += c.opHandler.Move(regList, ops.Cs(ops.RX))

@@ -14,7 +14,7 @@ type FunctionCallExpr struct {
 	Type      interfaces.ValueType
 }
 
-func (f FunctionCallExpr) Accept(visitor ExprVisitor) interface{} {
+func (f FunctionCallExpr) Accept(visitor ExprVisitor) string {
 	return visitor.VisitFunctionCall(f)
 }
 

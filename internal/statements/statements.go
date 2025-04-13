@@ -15,18 +15,18 @@ const (
 )
 
 type StmtVisitor interface {
-	VisitExpression(ExpressionStmt) interface{}
-	VisitVariableDeclaration(VariableDeclarationStmt) interface{}
-	VisitFunctionDeclaration(FunctionDeclarationStmt) interface{}
-	VisitVariableAssignment(VariableAssignmentStmt) interface{}
-	VisitStructDeclaration(StructDeclarationStmt) interface{}
-	VisitBlock(BlockStmt) interface{}
-	VisitWhile(WhileStmt) interface{}
-	VisitIf(IfStmt) interface{}
-	VisitReturn(ReturnStmt) interface{}
+	VisitExpression(ExpressionStmt) string
+	VisitVariableDeclaration(VariableDeclarationStmt) string
+	VisitFunctionDeclaration(FunctionDeclarationStmt) string
+	VisitVariableAssignment(VariableAssignmentStmt) string
+	VisitStructDeclaration(StructDeclarationStmt) string
+	VisitBlock(BlockStmt) string
+	VisitWhile(WhileStmt) string
+	VisitIf(IfStmt) string
+	VisitReturn(ReturnStmt) string
 }
 
 type Stmt interface {
-	Accept(StmtVisitor) interface{}
+	Accept(StmtVisitor) string
 	TType() StmtType
 }

@@ -13,7 +13,7 @@ type UnaryExpr struct {
 	Expression Expr
 }
 
-func (u UnaryExpr) Accept(v ExprVisitor) interface{} {
+func (u UnaryExpr) Accept(v ExprVisitor) string {
 	return v.VisitUnary(u)
 }
 

@@ -18,7 +18,7 @@ type StructDeclarationStmt struct {
 	Fields []StructField
 }
 
-func (s StructDeclarationStmt) Accept(visitor StmtVisitor) interface{} {
+func (s StructDeclarationStmt) Accept(visitor StmtVisitor) string {
 	return visitor.VisitStructDeclaration(s)
 }
 

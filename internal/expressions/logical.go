@@ -14,7 +14,7 @@ type LogicalExpr struct {
 	Expr
 }
 
-func (l LogicalExpr) Accept(v ExprVisitor) interface{} {
+func (l LogicalExpr) Accept(v ExprVisitor) string {
 	return v.VisitLogical(l)
 }
 

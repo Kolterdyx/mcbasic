@@ -9,7 +9,7 @@ type GroupingExpr struct {
 	Expression Expr
 }
 
-func (g GroupingExpr) Accept(v ExprVisitor) interface{} {
+func (g GroupingExpr) Accept(v ExprVisitor) string {
 	return v.VisitGrouping(g)
 }
 

@@ -19,7 +19,7 @@ type VariableDeclarationStmt struct {
 	Initializer expressions.Expr
 }
 
-func (v VariableDeclarationStmt) Accept(visitor StmtVisitor) interface{} {
+func (v VariableDeclarationStmt) Accept(visitor StmtVisitor) string {
 	return visitor.VisitVariableDeclaration(v)
 }
 

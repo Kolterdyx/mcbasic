@@ -10,7 +10,7 @@ type ListExpr struct {
 	ValueType interfaces.ValueType
 }
 
-func (l ListExpr) Accept(v ExprVisitor) interface{} {
+func (l ListExpr) Accept(v ExprVisitor) string {
 	return v.VisitList(l)
 }
 

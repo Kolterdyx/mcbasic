@@ -24,7 +24,7 @@ type LiteralExpr struct {
 	ValueType interfaces.ValueType
 }
 
-func (l LiteralExpr) Accept(v ExprVisitor) interface{} {
+func (l LiteralExpr) Accept(v ExprVisitor) string {
 	return v.VisitLiteral(l)
 }
 

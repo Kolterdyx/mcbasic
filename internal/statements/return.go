@@ -8,7 +8,7 @@ type ReturnStmt struct {
 	Expression expressions.Expr
 }
 
-func (s ReturnStmt) Accept(v StmtVisitor) interface{} {
+func (s ReturnStmt) Accept(v StmtVisitor) string {
 	return v.VisitReturn(s)
 }
 

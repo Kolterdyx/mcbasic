@@ -10,7 +10,7 @@ type IfStmt struct {
 	ElseBranch BlockStmt
 }
 
-func (i IfStmt) Accept(visitor StmtVisitor) interface{} {
+func (i IfStmt) Accept(visitor StmtVisitor) string {
 	return visitor.VisitIf(i)
 }
 

@@ -9,7 +9,7 @@ import (
 	"reflect"
 )
 
-func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationStmt) interface{} {
+func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationStmt) string {
 	c.currentFunction = stmt
 	c.currentScope = stmt.Name.Lexeme
 	c.scope[stmt.Name.Lexeme] = []TypedIdentifier{}
@@ -20,7 +20,7 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 		cmd += c.opHandler.MoveConst(c.opHandler.Macro(arg.Name), ops.Cs(arg.Name))
 	}
 
-	var source = cmd + stmt.Body.Accept(c).(string)
+	var source = cmd + stmt.Body.Accept(c)
 
 	args := make([]interfaces.FuncArg, 0)
 	for _, arg := range stmt.Parameters {
@@ -51,34 +51,34 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 	return ""
 }
 
-func (c *Compiler) VisitBlock(stmt statements.BlockStmt) interface{} {
+func (c *Compiler) VisitBlock(stmt statements.BlockStmt) string {
 	section := ""
 	for _, s := range stmt.Statements {
-		section += s.Accept(c).(string)
+		section += s.Accept(c)
 	}
 	//c.currentFunctionSections = append(c.currentFunctionSections, section)
 	return section // c.opHandler.CallSection(c.currentFunction.Name.Lexeme, len(c.currentFunctionSections)-1)
 }
 
-func (c *Compiler) VisitExpression(stmt statements.ExpressionStmt) interface{} {
-	return stmt.Expression.Accept(c).(string)
+func (c *Compiler) VisitExpression(stmt statements.ExpressionStmt) string {
+	return stmt.Expression.Accept(c)
 }
 
-func (c *Compiler) VisitReturn(stmt statements.ReturnStmt) interface{} {
+func (c *Compiler) VisitReturn(stmt statements.ReturnStmt) string {
 	cmd := ""
 	if stmt.Expression.ReturnType() != c.currentFunction.ReturnType {
 		log.Fatalln("Return type does not match function return type")
 	}
-	cmd += stmt.Expression.Accept(c).(string)
+	cmd += stmt.Expression.Accept(c)
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.RET)
 	cmd += c.opHandler.Return()
 	return cmd
 }
 
-func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationStmt) interface{} {
+func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationStmt) string {
 	cmd := ""
 	if stmt.Initializer != nil {
-		cmd += stmt.Initializer.Accept(c).(string)
+		cmd += stmt.Initializer.Accept(c)
 	}
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(stmt.Name.Lexeme))
 	c.scope[c.currentScope] = append(c.scope[c.currentScope],
@@ -89,17 +89,17 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 	return cmd
 }
 
-func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStmt) interface{} {
+func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStmt) string {
 	cmd := ""
 	isIndexedAssignment := stmt.Index != nil
 	if stmt.Value.ReturnType() != c.getReturnType(stmt.Name.Lexeme) && !isIndexedAssignment {
 		c.error(stmt.Name.SourceLocation, fmt.Sprintf("Assignment type mismatch: %v != %v", c.getReturnType(stmt.Name.Lexeme), stmt.Value.ReturnType()))
 	}
-	cmd += stmt.Value.Accept(c).(string)
+	cmd += stmt.Value.Accept(c)
 	valueReg := ops.Cs(c.newRegister(ops.RX))
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), valueReg)
 	if isIndexedAssignment {
-		cmd += stmt.Index.Accept(c).(string)
+		cmd += stmt.Index.Accept(c)
 		indexReg := ops.Cs(c.newRegister(ops.RX))
 		cmd += c.opHandler.Move(ops.Cs(ops.RX), indexReg)
 		cmd += c.opHandler.SetListIndex(ops.Cs(stmt.Name.Lexeme), indexReg, valueReg)
@@ -109,13 +109,13 @@ func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStm
 	return cmd
 }
 
-func (c *Compiler) VisitIf(stmt statements.IfStmt) interface{} {
+func (c *Compiler) VisitIf(stmt statements.IfStmt) string {
 	cmd := ""
-	cmd += stmt.Condition.Accept(c).(string)
-	thenSource := stmt.ThenBranch.Accept(c).(string)
+	cmd += stmt.Condition.Accept(c)
+	thenSource := stmt.ThenBranch.Accept(c)
 	elseSource := ""
 	if reflect.ValueOf(stmt.ElseBranch) != reflect.ValueOf(statements.BlockStmt{}) {
-		elseSource = stmt.ElseBranch.Accept(c).(string)
+		elseSource = stmt.ElseBranch.Accept(c)
 	}
 	condVar := c.newRegister(ops.RX)
 	cmd += c.opHandler.MoveScore(ops.Cs(ops.RX), ops.Cs(condVar))
@@ -125,6 +125,6 @@ func (c *Compiler) VisitIf(stmt statements.IfStmt) interface{} {
 	return cmd
 }
 
-func (c *Compiler) VisitStructDeclaration(stmt statements.StructDeclarationStmt) interface{} {
-	return nil
+func (c *Compiler) VisitStructDeclaration(stmt statements.StructDeclarationStmt) string {
+	return ""
 }
