@@ -6,29 +6,32 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
-	log "github.com/sirupsen/logrus"
 )
 
 func (p *Parser) statement() (statements.Stmt, error) {
-	if p.match(tokens.Let) {
+	switch {
+	case p.match(tokens.Let):
 		return p.letDeclaration()
-	} else if p.match(tokens.Func) {
+	case p.match(tokens.Func):
 		return p.functionDeclaration()
-	} else if p.match(tokens.While) {
+	case p.match(tokens.While):
 		return p.whileStatement()
-	} else if p.match(tokens.If) {
+	case p.match(tokens.If):
 		return p.ifStatement()
-	} else if p.match(tokens.Return) {
+	case p.match(tokens.Return):
 		return p.returnStatement()
-	} else if p.match(tokens.Identifier) {
+	case p.match(tokens.Struct):
+		return p.structDeclaration()
+	case p.match(tokens.Identifier):
 		if p.check(tokens.Equal) || p.check(tokens.BracketOpen) {
 			return p.variableAssignment()
 		} else if p.check(tokens.ParenOpen) {
 			p.stepBack()
-			return p.expressionStatement()
 		}
+		fallthrough
+	default:
+		return p.expressionStatement()
 	}
-	return p.expressionStatement()
 }
 
 func (p *Parser) expressionStatement() (statements.Stmt, error) {
@@ -48,34 +51,24 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 		return nil, err
 	}
 	var varType interfaces.ValueType
-	if p.match(tokens.ListType) {
-		_, err = p.consume(tokens.Less, fmt.Sprintf("Expected '<' after '%s'.", p.previous().Lexeme))
-		if err != nil {
-			return nil, err
-		}
-		if p.match(tokens.IntType) {
-			varType = expressions.ListIntType
-		} else if p.match(tokens.StringType) {
-			varType = expressions.ListStringType
-		} else if p.match(tokens.DoubleType) {
-			varType = expressions.ListDoubleType
+	typeToken, err := p.consumeAny("Expected variable type.", tokens.ValueTypes...)
+	if err != nil {
+		// Check if the type is a struct
+		if p.match(tokens.Identifier) {
+			// Check if the struct is defined
+			if _, ok := p.structs[p.previous().Lexeme]; !ok {
+				return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", p.previous().Lexeme))
+			}
+			typeToken = p.previous()
+			err = nil
 		} else {
-			return nil, p.error(p.peek(), "Expected list type.")
-		}
-		_, err = p.consume(tokens.Greater, fmt.Sprintf("Expected '>' after '%s'.", p.previous().Lexeme))
-		if err != nil {
 			return nil, err
 		}
-	} else if p.match(tokens.IntType) {
-		varType = expressions.IntType
-	} else if p.match(tokens.StringType) {
-		varType = expressions.StringType
-	} else if p.match(tokens.DoubleType) {
-		varType = expressions.DoubleType
-	} else {
-		return nil, p.error(p.peek(), "Expected variable type.")
 	}
-	log.Debugf("Variable type: %s", varType)
+	varType, err = p.getTokenAsValueType(typeToken)
+	if err != nil {
+		return nil, err
+	}
 	var initializer expressions.Expr
 	if p.match(tokens.Equal) {
 		if initializer, err = p.expression(); err != nil {
@@ -202,6 +195,43 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 		return nil, err
 	}
 	return statements.FunctionDeclarationStmt{Name: name, Parameters: parameters, ReturnType: returnType, Body: body}, nil
+}
+
+func (p *Parser) structDeclaration() (statements.Stmt, error) {
+	name, err := p.consume(tokens.Identifier, "Expected struct name.")
+	if err != nil {
+		return nil, err
+	}
+	_, err = p.consume(tokens.BraceOpen, "Expected '{' after struct name.")
+	if err != nil {
+		return nil, err
+	}
+	fields := make([]statements.StructField, 0)
+	for !p.check(tokens.BraceClose) && !p.IsAtEnd() {
+		fieldName, err := p.consume(tokens.Identifier, "Expected field name.")
+		if err != nil {
+			return nil, err
+		}
+		var fieldType interfaces.ValueType
+		if p.match(tokens.ValueTypes...) {
+			fieldType, err = p.getTokenAsValueType(p.previous())
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, p.error(p.peek(), "Expected field type.")
+		}
+		fields = append(fields, statements.StructField{Name: fieldName.Lexeme, Type: fieldType})
+		if !p.match(tokens.Semicolon) {
+			break
+		}
+	}
+	_, err = p.consume(tokens.BraceClose, "Expected '}' after struct fields.")
+	if len(fields) == 0 {
+		return nil, p.error(p.peek(), "Struct must have at least one field.")
+	}
+	p.structs[name.Lexeme] = statements.StructDeclarationStmt{Name: name, Fields: fields}
+	return statements.StructDeclarationStmt{Name: name, Fields: fields}, nil
 }
 
 func (p *Parser) block(checkBraces ...bool) (statements.BlockStmt, error) {

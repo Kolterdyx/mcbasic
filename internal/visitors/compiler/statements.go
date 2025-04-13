@@ -124,3 +124,7 @@ func (c *Compiler) VisitIf(stmt statements.IfStmt) interface{} {
 
 	return cmd
 }
+
+func (c *Compiler) VisitStructDeclaration(stmt statements.StructDeclarationStmt) interface{} {
+	return nil
+}

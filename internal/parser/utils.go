@@ -69,6 +69,13 @@ func (p *Parser) consume(tokenType tokens.TokenType, message string) (tokens.Tok
 	return tokens.Token{}, p.error(p.peek(), message)
 }
 
+func (p *Parser) consumeAny(message string, tokenTypes ...tokens.TokenType) (tokens.Token, error) {
+	if p.match(tokenTypes...) {
+		return p.previous(), nil
+	}
+	return tokens.Token{}, p.error(p.peek(), message)
+}
+
 func (p *Parser) synchronize() {
 	for !p.IsAtEnd() {
 		if p.match(tokens.Semicolon, tokens.BraceClose) {
@@ -153,6 +160,7 @@ func (p *Parser) isListType(varType interfaces.ValueType) bool {
 	}
 }
 
+// getListType returns the type of list based on its content value type
 func (p *Parser) getListType(valueType interfaces.ValueType) interfaces.ValueType {
 	switch valueType {
 	case expressions.IntType:
@@ -169,6 +177,7 @@ func (p *Parser) getListType(valueType interfaces.ValueType) interfaces.ValueTyp
 	return ""
 }
 
+// getListValueType returns the value type of the contents of a list
 func (p *Parser) getListValueType(valueType interfaces.ValueType) interfaces.ValueType {
 	switch valueType {
 	case expressions.ListIntType:
@@ -181,4 +190,38 @@ func (p *Parser) getListValueType(valueType interfaces.ValueType) interfaces.Val
 		log.Fatalf("Invalid list type: %s", valueType)
 	}
 	return ""
+}
+
+func (p *Parser) getTokenAsValueType(token tokens.Token) (interfaces.ValueType, error) {
+	var varType interfaces.ValueType
+	var err error
+	switch token.Type {
+	case tokens.ListType:
+		_, err = p.consume(tokens.Less, fmt.Sprintf("Expected '<' after '%s'.", p.previous().Lexeme))
+		if err != nil {
+			return "", err
+		}
+		switch {
+		case p.match(tokens.IntType):
+			varType = expressions.ListIntType
+		case p.match(tokens.StringType):
+			varType = expressions.ListStringType
+		case p.match(tokens.DoubleType):
+			varType = expressions.ListDoubleType
+		default:
+			return "", p.error(p.peek(), "Expected list type.")
+		}
+		_, err = p.consume(tokens.Greater, fmt.Sprintf("Expected '>' after '%s'.", p.previous().Lexeme))
+	case tokens.IntType:
+		varType = expressions.IntType
+	case tokens.StringType:
+		varType = expressions.StringType
+	case tokens.DoubleType:
+		varType = expressions.DoubleType
+	case tokens.Identifier:
+		varType = interfaces.ValueType(token.Lexeme)
+	default:
+		return "", p.error(p.peek(), "Expected variable type.")
+	}
+	return varType, err
 }

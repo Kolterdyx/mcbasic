@@ -6,6 +6,7 @@ const (
 	ExpressionStmtType          StmtType = "Expression"
 	VariableDeclarationStmtType StmtType = "VariableDeclaration"
 	FunctionDeclarationStmtType StmtType = "FunctionDeclaration"
+	StructDeclarationStmtType   StmtType = "StructDeclaration"
 	VariableAssignmentStmtType  StmtType = "VariableAssignment"
 	BlockStmtType               StmtType = "Block"
 	WhileStmtType               StmtType = "While"
@@ -18,6 +19,7 @@ type StmtVisitor interface {
 	VisitVariableDeclaration(VariableDeclarationStmt) interface{}
 	VisitFunctionDeclaration(FunctionDeclarationStmt) interface{}
 	VisitVariableAssignment(VariableAssignmentStmt) interface{}
+	VisitStructDeclaration(StructDeclarationStmt) interface{}
 	VisitBlock(BlockStmt) interface{}
 	VisitWhile(WhileStmt) interface{}
 	VisitIf(IfStmt) interface{}

@@ -61,6 +61,8 @@ const (
 	DoubleType
 	StringType
 	ListType
+
+	Struct
 )
 
 func (t TokenType) String() string {
@@ -149,6 +151,8 @@ func (t TokenType) String() string {
 		return "StringType"
 	case ListType:
 		return "ListType"
+	case Struct:
+		return "Struct"
 	default:
 		return "Unknown"
 	}
@@ -169,4 +173,12 @@ var Keywords = map[string]TokenType{
 	"list":   ListType,
 	"str":    StringType,
 	"return": Return,
+	"struct": Struct,
+}
+
+var ValueTypes = []TokenType{
+	IntType,
+	DoubleType,
+	StringType,
+	ListType,
 }

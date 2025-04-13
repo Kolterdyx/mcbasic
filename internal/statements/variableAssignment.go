@@ -6,6 +6,8 @@ import (
 )
 
 type VariableAssignmentStmt struct {
+	Stmt
+
 	Name  tokens.Token
 	Index expressions.Expr
 	Value expressions.Expr

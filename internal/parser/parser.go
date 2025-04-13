@@ -18,6 +18,7 @@ type Parser struct {
 	variables map[string][]statements.VarDef
 	functions []interfaces.FuncDef
 	Errors    []error
+	structs   map[string]statements.StructDeclarationStmt
 }
 
 func (p *Parser) Parse() (Program, []error) {
@@ -27,6 +28,7 @@ func (p *Parser) Parse() (Program, []error) {
 	for _, funcDef := range funcDefMap {
 		p.functions = append(p.functions, funcDef)
 	}
+	p.structs = make(map[string]statements.StructDeclarationStmt)
 	p.variables = make(map[string][]statements.VarDef)
 	for !p.IsAtEnd() {
 		statement, err := p.statement()
@@ -34,13 +36,15 @@ func (p *Parser) Parse() (Program, []error) {
 			p.Errors = append(p.Errors, err)
 			continue
 		}
-		if statement.TType() != statements.FunctionDeclarationStmtType {
-			p.Errors = append(p.Errors, fmt.Errorf("Only function declarations are allowed at the top level. Found: %s\n", statement.TType()))
+		if statement.TType() != statements.FunctionDeclarationStmtType && statement.TType() != statements.StructDeclarationStmtType {
+			p.Errors = append(p.Errors, fmt.Errorf("Only function and struct declarations are allowed at the top level. Found: %s\n", statement.TType()))
 			continue
 		}
-		funcStmt := statement.(statements.FunctionDeclarationStmt)
-		functions = append(functions, funcStmt)
-		p.functions = append(p.functions, interfaces.FuncDef{Name: funcStmt.Name.Lexeme, ReturnType: funcStmt.ReturnType, Args: funcStmt.Parameters})
+		if statement.TType() == statements.FunctionDeclarationStmtType {
+			funcStmt := statement.(statements.FunctionDeclarationStmt)
+			functions = append(functions, funcStmt)
+			p.functions = append(p.functions, interfaces.FuncDef{Name: funcStmt.Name.Lexeme, ReturnType: funcStmt.ReturnType, Args: funcStmt.Parameters})
+		}
 	}
 	return Program{Functions: functions}, p.Errors
 }
