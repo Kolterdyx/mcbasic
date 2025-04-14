@@ -16,15 +16,21 @@ func (o *Op) Move(from, to string) string {
 	)
 }
 
-func (o *Op) MoveConst(value, to string) string {
-	if _, err := strconv.ParseFloat(value, 64); err != nil && !(value[0] == '$' && value[1] == '(' && value[len(value)-1] == ')') && !(value[0] == '"' && value[len(value)-1] == '"') {
+func (o *Op) MoveConst(value, to string, wrapInQuotes ...bool) string {
+	wrapInQuote := true
+	if len(wrapInQuotes) > 0 {
+		wrapInQuote = wrapInQuotes[0]
+	}
+	if !(value[0] == '$' && value[1] == '(' && value[len(value)-1] == ')') &&
+		!(value[0] == '"' && value[len(value)-1] == '"') &&
+		wrapInQuote {
 		value = strconv.Quote(value)
 	}
 	// if the value is a float, add a trailing L to store it as a long
 	n, err := strconv.ParseFloat(value, 64)
 	_, err2 := strconv.ParseInt(value, 10, 64)
 	if err == nil && err2 != nil {
-		value = fmt.Sprintf("%s", strconv.FormatFloat(n, 'f', -1, 64))
+		value = fmt.Sprintf("%sd", strconv.FormatFloat(n, 'f', -1, 64))
 	}
 	return fmt.Sprintf("data modify storage %s:data %s.%s set value %s\n", o.Namespace, VarPath, to, value)
 }

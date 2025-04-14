@@ -110,6 +110,12 @@ func (c *Compiler) Compile(program parser.Program) {
 		})
 		c.functions[function.Name.Lexeme] = f
 	}
+	structDefFunctionSource := ""
+	for _, structDef := range program.Structs {
+		structDefCmd := structDef.Accept(c)
+		structDefFunctionSource += structDefCmd
+	}
+	c.createFunction("internal/struct_definitions", structDefFunctionSource, nil, expressions.VoidType)
 
 	// Built-in functions are protected by the compiler, so they can't be overwritten
 	c.createFunctionTags()

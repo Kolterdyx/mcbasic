@@ -126,5 +126,5 @@ func (c *Compiler) VisitIf(stmt statements.IfStmt) string {
 }
 
 func (c *Compiler) VisitStructDeclaration(stmt statements.StructDeclarationStmt) string {
-	return ""
+	return c.opHandler.StructDefine(stmt.Name.Lexeme, stmt.Fields)
 }

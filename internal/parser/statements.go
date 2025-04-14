@@ -206,7 +206,7 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	fields := make([]statements.StructField, 0)
+	fields := make([]interfaces.StructField, 0)
 	for !p.check(tokens.BraceClose) && !p.IsAtEnd() {
 		fieldName, err := p.consume(tokens.Identifier, "Expected field name.")
 		if err != nil {
@@ -221,7 +221,7 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 		} else {
 			return nil, p.error(p.peek(), "Expected field type.")
 		}
-		fields = append(fields, statements.StructField{Name: fieldName.Lexeme, Type: fieldType})
+		fields = append(fields, interfaces.StructField{Name: fieldName.Lexeme, Type: fieldType})
 		if !p.match(tokens.Semicolon) {
 			break
 		}

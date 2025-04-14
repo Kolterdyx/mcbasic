@@ -57,3 +57,9 @@ type Author struct {
 func (a Author) String() string {
 	return a.Name + " <" + a.Email + ">"
 }
+
+// StructField represents a field in a struct declaration.
+type StructField struct {
+	Name string
+	Type ValueType
+}

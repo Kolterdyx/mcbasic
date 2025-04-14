@@ -6,6 +6,7 @@ import (
 
 type Program struct {
 	Functions []statements.FunctionDeclarationStmt
+	Structs   []statements.StructDeclarationStmt
 }
 
 func (p Program) Visit(visitor statements.StmtVisitor) []interface{} {

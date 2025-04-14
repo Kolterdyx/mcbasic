@@ -6,8 +6,9 @@ import (
 )
 
 const (
-	VarPath = "vars"
-	ArgPath = "args"
+	VarPath    = "vars"
+	ArgPath    = "args"
+	StructPath = "structs"
 )
 
 const (
