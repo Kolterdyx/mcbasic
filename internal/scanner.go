@@ -55,6 +55,8 @@ func (s *Scanner) scanToken() {
 		s.addToken(tokens.BraceOpen)
 	case '}':
 		s.addToken(tokens.BraceClose)
+	case '.':
+		s.addToken(tokens.Dot)
 	case ',':
 		s.addToken(tokens.Comma)
 	case ';':

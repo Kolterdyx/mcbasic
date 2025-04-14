@@ -157,15 +157,42 @@ func (p *Parser) value() (expressions.Expr, error) {
 			return nil, p.error(identifier, "Undeclared identifier")
 		}
 
-		if p.match(tokens.ParenOpen) {
+		switch {
+		case p.match(tokens.ParenOpen):
 			return p.functionCall(namespaceIdentifier, identifier, hasNamespace)
-		} else if p.match(tokens.BracketOpen) {
+		case p.match(tokens.BracketOpen):
 			return p.slice(expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: identifierType})
-		} else {
+		case p.match(tokens.Dot):
+			if hasNamespace {
+				return nil, p.error(identifier, "Cannot use namespace with field access.")
+			}
+			return p.fieldAccess(expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: identifierType})
+		default:
 			return expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: identifierType}, nil
 		}
 	}
 	return p.primary()
+}
+
+func (p *Parser) fieldAccess(source expressions.Expr) (expressions.Expr, error) {
+	field, err := p.consume(tokens.Identifier, "Expected identifier after '.'")
+	if err != nil {
+		return nil, err
+	}
+	fieldType, err := p.getTokenAsValueType(field)
+	if err != nil {
+		return nil, p.error(field, err.Error())
+	}
+	fieldAccessExpr := expressions.FieldAccessExpr{
+		Source:         source,
+		Field:          field,
+		SourceLocation: p.location(),
+		Type:           fieldType,
+	}
+	if p.match(tokens.Dot) {
+		return p.fieldAccess(fieldAccessExpr)
+	}
+	return fieldAccessExpr, nil
 }
 
 func (p *Parser) functionCall(namespace tokens.Token, name tokens.Token, hasNamespace bool) (expressions.Expr, error) {

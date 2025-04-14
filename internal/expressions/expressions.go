@@ -9,6 +9,7 @@ const (
 	GroupingExprType     ExprType = "Grouping"
 	LiteralExprType      ExprType = "Literal"
 	UnaryExprType        ExprType = "Unary"
+	FieldAccessExprType  ExprType = "FieldAccess"
 	VariableExprType     ExprType = "Variable"
 	FunctionCallExprType ExprType = "FunctionCall"
 	LogicalExprType      ExprType = "Logical"
@@ -22,6 +23,7 @@ type ExprVisitor interface {
 	VisitLiteral(l LiteralExpr) string
 	VisitUnary(u UnaryExpr) string
 	VisitVariable(v VariableExpr) string
+	VisitFieldAccess(v FieldAccessExpr) string
 	VisitFunctionCall(f FunctionCallExpr) string
 	VisitLogical(l LogicalExpr) string
 	VisitSlice(s SliceExpr) string

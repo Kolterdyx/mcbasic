@@ -33,3 +33,7 @@ func (o *Op) StructDefine(name string, fields []interfaces.StructField) string {
 	nbtData += "}"
 	return fmt.Sprintf("data modify storage %s:data %s.%s set value %s\n", o.Namespace, StructPath, name, nbtData)
 }
+
+func (o *Op) StructGet(from, field, to string) string {
+	return fmt.Sprintf("data modify storage %s:data %s.%s set from storage %s:data %s.%s.%s\n", o.Namespace, VarPath, to, o.Namespace, VarPath, from, field)
+}

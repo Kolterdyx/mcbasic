@@ -283,3 +283,11 @@ func (c *Compiler) VisitList(expr expressions.ListExpr) string {
 	cmd += "### List operation end ###\n"
 	return cmd
 }
+
+func (c *Compiler) VisitFieldAccess(expr expressions.FieldAccessExpr) string {
+	cmd := ""
+	cmd += expr.Source.Accept(c)
+	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(ops.RA))
+	cmd += c.opHandler.StructGet(ops.Cs(ops.RA), expr.Field.Lexeme, ops.Cs(ops.RX))
+	return cmd
+}
