@@ -18,7 +18,7 @@ func (b BinaryExpr) Accept(v ExprVisitor) string {
 	return v.VisitBinary(b)
 }
 
-func (b BinaryExpr) TType() ExprType {
+func (b BinaryExpr) ExprType() ExprType {
 	return BinaryExprType
 }
 

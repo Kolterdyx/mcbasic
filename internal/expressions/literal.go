@@ -28,7 +28,7 @@ func (l LiteralExpr) Accept(v ExprVisitor) string {
 	return v.VisitLiteral(l)
 }
 
-func (l LiteralExpr) TType() ExprType {
+func (l LiteralExpr) ExprType() ExprType {
 	return LiteralExprType
 }
 

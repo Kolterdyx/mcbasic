@@ -17,7 +17,7 @@ func (v VariableExpr) Accept(visitor ExprVisitor) string {
 	return visitor.VisitVariable(v)
 }
 
-func (v VariableExpr) TType() ExprType {
+func (v VariableExpr) ExprType() ExprType {
 	return VariableExprType
 }
 

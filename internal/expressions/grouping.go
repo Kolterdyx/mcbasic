@@ -13,7 +13,7 @@ func (g GroupingExpr) Accept(v ExprVisitor) string {
 	return v.VisitGrouping(g)
 }
 
-func (g GroupingExpr) TType() ExprType {
+func (g GroupingExpr) ExprType() ExprType {
 	return GroupingExprType
 }
 

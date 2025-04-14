@@ -14,7 +14,7 @@ func (l ListExpr) Accept(v ExprVisitor) string {
 	return v.VisitList(l)
 }
 
-func (l ListExpr) TType() ExprType {
+func (l ListExpr) ExprType() ExprType {
 	return ListExprType
 }
 

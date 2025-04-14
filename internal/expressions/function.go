@@ -18,7 +18,7 @@ func (f FunctionCallExpr) Accept(visitor ExprVisitor) string {
 	return visitor.VisitFunctionCall(f)
 }
 
-func (f FunctionCallExpr) TType() ExprType {
+func (f FunctionCallExpr) ExprType() ExprType {
 	return FunctionCallExprType
 }
 

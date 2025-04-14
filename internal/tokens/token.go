@@ -38,6 +38,7 @@ const (
 	ParenClose
 	BraceOpen
 	BraceClose
+	Dot
 	Comma
 	Semicolon
 	Colon
@@ -127,6 +128,8 @@ func (t TokenType) String() string {
 		return "BracketOpen"
 	case BracketClose:
 		return "BracketClose"
+	case Dot:
+		return "Dot"
 	case Comma:
 		return "Comma"
 	case Semicolon:

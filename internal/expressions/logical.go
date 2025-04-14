@@ -18,7 +18,7 @@ func (l LogicalExpr) Accept(v ExprVisitor) string {
 	return v.VisitLogical(l)
 }
 
-func (l LogicalExpr) TType() ExprType {
+func (l LogicalExpr) ExprType() ExprType {
 	return LogicalExprType
 }
 

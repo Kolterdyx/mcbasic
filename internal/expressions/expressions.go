@@ -30,6 +30,6 @@ type ExprVisitor interface {
 
 type Expr interface {
 	Accept(v ExprVisitor) string
-	TType() ExprType
+	ExprType() ExprType
 	ReturnType() interfaces.ValueType
 }

@@ -18,7 +18,7 @@ func (s SliceExpr) Accept(v ExprVisitor) string {
 	return v.VisitSlice(s)
 }
 
-func (s SliceExpr) TType() ExprType {
+func (s SliceExpr) ExprType() ExprType {
 	return SliceExprType
 }
 
