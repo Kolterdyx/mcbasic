@@ -18,7 +18,7 @@ func (f FunctionDeclarationStmt) Accept(visitor StmtVisitor) string {
 	return visitor.VisitFunctionDeclaration(f)
 }
 
-func (f FunctionDeclarationStmt) TType() StmtType {
+func (f FunctionDeclarationStmt) StmtType() StmtType {
 	return FunctionDeclarationStmtType
 }
 

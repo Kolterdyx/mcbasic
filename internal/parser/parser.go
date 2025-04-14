@@ -37,16 +37,16 @@ func (p *Parser) Parse() (Program, []error) {
 			p.Errors = append(p.Errors, err)
 			continue
 		}
-		if statement.TType() != statements.FunctionDeclarationStmtType && statement.TType() != statements.StructDeclarationStmtType {
-			p.Errors = append(p.Errors, fmt.Errorf("Only function and struct declarations are allowed at the top level. Found: %s\n", statement.TType()))
+		if statement.StmtType() != statements.FunctionDeclarationStmtType && statement.StmtType() != statements.StructDeclarationStmtType {
+			p.Errors = append(p.Errors, fmt.Errorf("Only function and struct declarations are allowed at the top level. Found: %s\n", statement.StmtType()))
 			continue
 		}
-		if statement.TType() == statements.FunctionDeclarationStmtType {
+		if statement.StmtType() == statements.FunctionDeclarationStmtType {
 			funcStmt := statement.(statements.FunctionDeclarationStmt)
 			functions = append(functions, funcStmt)
 			p.functions = append(p.functions, interfaces.FuncDef{Name: funcStmt.Name.Lexeme, ReturnType: funcStmt.ReturnType, Args: funcStmt.Parameters})
 		}
-		if statement.TType() == statements.StructDeclarationStmtType {
+		if statement.StmtType() == statements.StructDeclarationStmtType {
 			structStmt := statement.(statements.StructDeclarationStmt)
 			structs = append(structs, structStmt)
 		}

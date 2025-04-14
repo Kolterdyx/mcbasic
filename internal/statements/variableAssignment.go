@@ -17,6 +17,6 @@ func (v VariableAssignmentStmt) Accept(visitor StmtVisitor) string {
 	return visitor.VisitVariableAssignment(v)
 }
 
-func (v VariableAssignmentStmt) TType() StmtType {
+func (v VariableAssignmentStmt) StmtType() StmtType {
 	return VariableAssignmentStmtType
 }

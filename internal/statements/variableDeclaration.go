@@ -23,6 +23,6 @@ func (v VariableDeclarationStmt) Accept(visitor StmtVisitor) string {
 	return visitor.VisitVariableDeclaration(v)
 }
 
-func (v VariableDeclarationStmt) TType() StmtType {
+func (v VariableDeclarationStmt) StmtType() StmtType {
 	return VariableDeclarationStmtType
 }

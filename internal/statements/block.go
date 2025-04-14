@@ -10,6 +10,6 @@ func (b BlockStmt) Accept(visitor StmtVisitor) string {
 	return visitor.VisitBlock(b)
 }
 
-func (b BlockStmt) TType() StmtType {
+func (b BlockStmt) StmtType() StmtType {
 	return BlockStmtType
 }

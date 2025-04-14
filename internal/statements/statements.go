@@ -28,5 +28,5 @@ type StmtVisitor interface {
 
 type Stmt interface {
 	Accept(StmtVisitor) string
-	TType() StmtType
+	StmtType() StmtType
 }

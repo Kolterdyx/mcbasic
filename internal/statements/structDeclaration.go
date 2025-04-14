@@ -16,6 +16,6 @@ func (s StructDeclarationStmt) Accept(visitor StmtVisitor) string {
 	return visitor.VisitStructDeclaration(s)
 }
 
-func (s StructDeclarationStmt) TType() StmtType {
+func (s StructDeclarationStmt) StmtType() StmtType {
 	return StructDeclarationStmtType
 }

@@ -14,6 +14,6 @@ func (i IfStmt) Accept(visitor StmtVisitor) string {
 	return visitor.VisitIf(i)
 }
 
-func (i IfStmt) TType() StmtType {
+func (i IfStmt) StmtType() StmtType {
 	return IfStmtType
 }

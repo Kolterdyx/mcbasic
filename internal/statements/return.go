@@ -12,6 +12,6 @@ func (s ReturnStmt) Accept(v StmtVisitor) string {
 	return v.VisitReturn(s)
 }
 
-func (s ReturnStmt) TType() StmtType {
+func (s ReturnStmt) StmtType() StmtType {
 	return ReturnStmtType
 }
