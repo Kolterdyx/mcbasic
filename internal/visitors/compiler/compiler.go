@@ -91,6 +91,7 @@ func (c *Compiler) Compile(program parser.Program) {
 	c.createPackMeta()
 
 	c.functions = utils.GetHeaderFuncDefs(c.Headers)
+	c.opHandler.Structs = program.Structs
 
 	for _, function := range program.Functions {
 		f := interfaces.FuncDef{

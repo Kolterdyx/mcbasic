@@ -166,6 +166,9 @@ func (p *Parser) value() (expressions.Expr, error) {
 			if hasNamespace {
 				return nil, p.error(identifier, "Cannot use namespace with field access.")
 			}
+			if _, ok := p.variables[identifier.Lexeme]; !ok {
+				return nil, p.error(identifier, fmt.Sprintf("Field access is only allowed on variables."))
+			}
 			return p.fieldAccess(expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: identifierType})
 		default:
 			return expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: identifierType}, nil

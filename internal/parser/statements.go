@@ -219,7 +219,16 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 				return nil, err
 			}
 		} else {
-			return nil, p.error(p.peek(), "Expected field type.")
+			// Check if the type is a struct
+			if p.match(tokens.Identifier) {
+				// Check if the struct is defined
+				if _, ok := p.structs[p.previous().Lexeme]; !ok {
+					return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", p.previous().Lexeme))
+				}
+				fieldType = interfaces.ValueType(p.previous().Lexeme)
+			} else {
+				return nil, p.error(p.peek(), "Expected field type.")
+			}
 		}
 		fields = append(fields, interfaces.StructField{Name: fieldName.Lexeme, Type: fieldType})
 		if !p.match(tokens.Semicolon) {
