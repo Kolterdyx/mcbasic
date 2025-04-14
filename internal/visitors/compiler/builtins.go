@@ -114,7 +114,8 @@ func (c *Compiler) baseFunctions() {
 	)
 	c.createFunction(
 		"internal/tick",
-		c.opHandler.Call("tick", ""),
+		c.opHandler.Call("tick", "")+
+			c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 1000..", ops.CALL, c.Namespace), true, c.opHandler.MoveConst("0", ops.CALL)),
 		[]interfaces.FuncArg{},
 		expressions.VoidType,
 	)

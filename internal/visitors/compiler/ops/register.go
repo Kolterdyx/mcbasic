@@ -26,15 +26,15 @@ func (o *Op) MoveConst(value, to string) string {
 	if err == nil && err2 != nil {
 		value = fmt.Sprintf("%s", strconv.FormatFloat(n, 'f', -1, 64))
 	}
-	return fmt.Sprintf("data modify storage %s:%s %s set value %s\n", o.Namespace, VarPath, to, value)
+	return fmt.Sprintf("data modify storage %s:data %s.%s set value %s\n", o.Namespace, VarPath, to, value)
 }
 
 func (o *Op) MoveScore(from string, to string) string {
-	return fmt.Sprintf("execute store result score %s %s run data get storage %s:%s %s\n", to, o.Namespace, o.Namespace, VarPath, from)
+	return fmt.Sprintf("execute store result score %s %s run data get storage %s:data %s.%s\n", to, o.Namespace, o.Namespace, VarPath, from)
 }
 
 func (o *Op) LoadScore(from string, to string) string {
-	return fmt.Sprintf("execute store result storage %s:%s %s int 1 run scoreboard players get %s %s\n", o.Namespace, VarPath, to, from, o.Namespace)
+	return fmt.Sprintf("execute store result storage %s:data %s.%s int 1 run scoreboard players get %s %s\n", o.Namespace, VarPath, to, from, o.Namespace)
 }
 
 func (o *Op) Inc(varName string) string {

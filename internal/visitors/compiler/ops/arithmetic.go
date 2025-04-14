@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func (o *Op) arithmeticOperation(x, y, to, operator string) string {
+func (o *Op) integerOperation(x, y, to, operator string) string {
 	cmd := ""
 	cmd += o.MoveScore(Cs(x), Cs(RX))
 	cmd += o.MoveScore(Cs(y), Cs(RB))
@@ -31,23 +31,23 @@ func (o *Op) CallGM2(op, x, y, to string) string {
 }
 
 func (o *Op) Add(x, y, to string) string {
-	return o.arithmeticOperation(x, y, to, "+=")
+	return o.integerOperation(x, y, to, "+=")
 }
 
 func (o *Op) Sub(x, y, to string) string {
-	return o.arithmeticOperation(x, y, to, "-=")
+	return o.integerOperation(x, y, to, "-=")
 }
 
 func (o *Op) Mul(x, y, to string) string {
-	return o.arithmeticOperation(x, y, to, "*=")
+	return o.integerOperation(x, y, to, "*=")
 }
 
 func (o *Op) Div(x, y, to string) string {
-	return o.arithmeticOperation(x, y, to, "/=")
+	return o.integerOperation(x, y, to, "/=")
 }
 
 func (o *Op) Mod(x, y, to string) string {
-	return o.arithmeticOperation(x, y, to, "%=")
+	return o.integerOperation(x, y, to, "%=")
 }
 
 func (o *Op) Scale(value, scale, to string) string {
