@@ -11,8 +11,8 @@ func (o *Op) MoveRaw(storageFrom, pathFrom, storageTo, pathTo string) string {
 
 func (o *Op) Move(from, to string) string {
 	return o.MoveRaw(
-		fmt.Sprintf("%s:%s", o.Namespace, VarPath), from,
-		fmt.Sprintf("%s:%s", o.Namespace, VarPath), to,
+		fmt.Sprintf("%s:data", o.Namespace), fmt.Sprintf("%s.%s", VarPath, from),
+		fmt.Sprintf("%s:data", o.Namespace), fmt.Sprintf("%s.%s", VarPath, to),
 	)
 }
 
