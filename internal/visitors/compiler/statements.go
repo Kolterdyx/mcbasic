@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
@@ -79,8 +80,32 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 	cmd := ""
 	if stmt.Initializer != nil {
 		cmd += stmt.Initializer.Accept(c)
+		cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(stmt.Name.Lexeme))
+	} else {
+		switch stmt.Type {
+		case expressions.IntType:
+			cmd += c.opHandler.MoveConst("0L", ops.Cs(stmt.Name.Lexeme), false)
+		case expressions.DoubleType:
+			cmd += c.opHandler.MoveConst("0.0d", ops.Cs(stmt.Name.Lexeme), false)
+		case expressions.StringType:
+			cmd += c.opHandler.MoveConst("\"\"", ops.Cs(stmt.Name.Lexeme))
+		case expressions.ListStringType:
+			fallthrough
+		case expressions.ListIntType:
+			fallthrough
+		case expressions.ListDoubleType:
+			cmd += c.opHandler.MakeList(ops.Cs(stmt.Name.Lexeme))
+		default:
+			// struct type. stmt.Type is the struct name
+			cmd += c.opHandler.MoveRaw(
+				fmt.Sprintf("%s:data", c.Namespace),
+				fmt.Sprintf("%s.%s", ops.StructPath, stmt.Type),
+				fmt.Sprintf("%s:data", c.Namespace),
+				fmt.Sprintf("%s.%s", ops.VarPath, ops.Cs(stmt.Name.Lexeme)),
+			)
+
+		}
 	}
-	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(stmt.Name.Lexeme))
 	c.scope[c.currentScope] = append(c.scope[c.currentScope],
 		TypedIdentifier{
 			stmt.Name.Lexeme,
