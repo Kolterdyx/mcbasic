@@ -164,8 +164,10 @@ func (p *Parser) getTokenAsValueType(token tokens.Token) (interfaces.ValueType, 
 		varType = types.StringType
 	case tokens.DoubleType:
 		varType = types.DoubleType
+	case tokens.VoidType:
+		varType = types.VoidType
 	case tokens.Identifier:
-		// structs?
+		// structs and lists?
 	default:
 		return nil, p.error(p.peek(), "Expected variable type.")
 	}

@@ -61,14 +61,14 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 			return nil, err
 		}
 	}
+	if initializer != nil && initializer.ReturnType() != varType {
+		if !(p.isListType(varType) && initializer.ReturnType() == types.VoidType) {
+			return nil, p.error(p.previous(), fmt.Sprintf("Cannot assign %s to %s.", initializer.ReturnType().ToString(), varType.ToString()))
+		}
+	}
 	_, err = p.consume(tokens.Semicolon, "Expected ';' or '=' after variable declaration.")
 	if err != nil {
 		return nil, err
-	}
-	if initializer != nil && initializer.ReturnType() != varType {
-		if !(p.isListType(varType) && initializer.ReturnType() == types.VoidType) {
-			return nil, p.error(p.peekCount(-2), fmt.Sprintf("Cannot assign %s to %s.", initializer.ReturnType(), varType))
-		}
 	}
 	p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{
 		Name: name.Lexeme,
@@ -105,7 +105,7 @@ func (p *Parser) ParseType() (interfaces.ValueType, error) {
 		}
 		varType = types.StructTypeStruct{Name: p.previous().Lexeme}
 	default:
-		return nil, p.error(p.peek(), "Expected variable type.")
+		return nil, p.error(p.peek(), "Expected type.")
 	}
 	if p.check(tokens.BracketOpen) {
 		var listType types.ListTypeStruct
@@ -205,15 +205,10 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	returnType := types.VoidType
-	if p.match(tokens.IntType) {
-		returnType = types.IntType
-	} else if p.match(tokens.StringType) {
-		returnType = types.StringType
-	} else if p.match(tokens.DoubleType) {
-		returnType = types.DoubleType
+	returnType, err := p.ParseType()
+	if err != nil && !p.check(tokens.BraceOpen) {
+		return nil, err
 	}
-
 	// Add all parameters to the current scope
 	for _, arg := range parameters {
 		p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{Name: arg.Name, Type: arg.Type})

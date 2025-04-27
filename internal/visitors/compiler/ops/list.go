@@ -5,11 +5,11 @@ import (
 )
 
 func (o *Op) MakeList(to string) string {
-	return fmt.Sprintf("data modify storage example:vars %s set value []\n", to)
+	return fmt.Sprintf("data modify storage example:data %s.%s set value []\n", VarPath, to)
 }
 
 func (o *Op) AppendList(to, from string) string {
-	return fmt.Sprintf("data modify storage example:data %s.%s append from storage %s:%s %s\n", VarPath, to, o.Namespace, VarPath, from)
+	return fmt.Sprintf("data modify storage example:data %s.%s append from storage %s:data %s.%s\n", VarPath, to, o.Namespace, VarPath, from)
 }
 
 func (o *Op) GetListIndex(from, index, to string) string {

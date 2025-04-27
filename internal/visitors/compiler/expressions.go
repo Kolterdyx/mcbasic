@@ -7,17 +7,16 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	"reflect"
-	"strconv"
 )
 
 func (c *Compiler) VisitLiteral(expr expressions.LiteralExpr) string {
 	switch expr.ReturnType() {
 	case types.IntType:
-		return c.opHandler.MoveConst(expr.Value.(string), ops.Cs(ops.RX))
+		return c.opHandler.MakeConst(expr.Value.(string), ops.Cs(ops.RX), false)
 	case types.StringType:
-		return c.opHandler.MoveConst(strconv.Quote(expr.Value.(string)), ops.Cs(ops.RX))
+		return c.opHandler.MakeConst(expr.Value.(string), ops.Cs(ops.RX), true)
 	case types.DoubleType:
-		return c.opHandler.MoveConst(expr.Value.(string), ops.Cs(ops.RX))
+		return c.opHandler.MakeConst(expr.Value.(string), ops.Cs(ops.RX), false)
 	default:
 		c.error(expr.SourceLocation, "Invalid type in literal expression")
 	}
@@ -162,9 +161,9 @@ func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) string {
 		// If left side is false, return false
 		evalRightSide := ""
 		cmd += c.opHandler.MoveScore(regRa, regRa)
-		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), true, c.opHandler.MoveConst("0", ops.Cs(ops.RX)))
+		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), true, c.opHandler.MakeConst("0", ops.Cs(ops.RX)))
 		evalRightSide += rightSide
-		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), true, c.opHandler.MoveConst("0", ops.Cs(ops.RX)))
+		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), true, c.opHandler.MakeConst("0", ops.Cs(ops.RX)))
 		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), false, c.opHandler.Move(regRb, ops.Cs(ops.RX)))
 		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), false, evalRightSide)
 	case tokens.Or:
@@ -173,7 +172,7 @@ func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) string {
 		cmd += c.opHandler.MoveScore(regRa, regRa)
 		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), false, c.opHandler.Move(regRa, ops.Cs(ops.RX)))
 		evalRightSide += rightSide
-		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), true, c.opHandler.MoveConst("0", ops.Cs(ops.RX)))
+		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), true, c.opHandler.MakeConst("0", ops.Cs(ops.RX)))
 		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), false, c.opHandler.Move(regRb, ops.Cs(ops.RX)))
 		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), true, evalRightSide)
 	default:

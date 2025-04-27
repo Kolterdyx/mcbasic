@@ -10,12 +10,12 @@ func (o *Op) NegateNumber(varName string) string {
 	cmd += o.ExecCond(
 		fmt.Sprintf("score %s %s matches 0", varName, o.Namespace),
 		true,
-		o.MoveConst("1", varName),
+		o.MakeConst("1", varName),
 	)
 	cmd += o.ExecCond(
 		fmt.Sprintf("score %s %s matches 1..", varName, o.Namespace),
 		true,
-		o.MoveConst("0", varName),
+		o.MakeConst("0", varName),
 	)
 	return cmd
 }
@@ -23,10 +23,10 @@ func (o *Op) NegateNumber(varName string) string {
 func (o *Op) CompNumbers(cond string, ifcond bool, ra string, rb string, rx string) string {
 	cmd := ""
 	// If the numbers are equal, the result is 1, otherwise 0
-	cmd += o.MoveConst("0", rx)
+	cmd += o.MakeConst("0", rx)
 	cmd += o.MoveScore(ra, ra)
 	cmd += o.MoveScore(rb, rb)
-	cmd += o.ExecCond(fmt.Sprintf("score %s %s %s %s %s", ra, o.Namespace, cond, rb, o.Namespace), ifcond, o.MoveConst("1", rx))
+	cmd += o.ExecCond(fmt.Sprintf("score %s %s %s %s %s", ra, o.Namespace, cond, rb, o.Namespace), ifcond, o.MakeConst("1", rx))
 	return cmd
 }
 
@@ -65,7 +65,7 @@ func (o *Op) EqStrings(ra string, rb string, rx string) string {
 	// First we check if the strings are the same length
 	ralen := ra + "len"
 	rblen := rb + "len"
-	cmd += o.MoveConst("1", rx)
+	cmd += o.MakeConst("1", rx)
 	cmd += o.SizeString(ra, ralen)
 	cmd += o.SizeString(rb, rblen)
 	cmd += o.MoveScore(ralen, ralen)
@@ -73,7 +73,7 @@ func (o *Op) EqStrings(ra string, rb string, rx string) string {
 	cmd += o.ExecCond(
 		fmt.Sprintf("score %s %s = %s %s", ralen, o.Namespace, rblen, o.Namespace),
 		false,
-		o.MoveConst("0", rx),
+		o.MakeConst("0", rx),
 	)
 	// If the strings are the same length, we compare the string values
 	// The easiest way to do this with MC commands is to check the success of a data command trying to overwrite the value of a string

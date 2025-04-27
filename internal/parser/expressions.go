@@ -134,69 +134,121 @@ func (p *Parser) unary() (expressions.Expr, error) {
 }
 
 func (p *Parser) value() (expressions.Expr, error) {
+	// 1) Parse the “primary” thing (identifier, literal, function call, grouping, list literal…)
+	expr, err := p.baseValue()
+	if err != nil {
+		return nil, err
+	}
+	// 2) Repeatedly eat [] or .field, nesting the expression:
+	return p.postfix(expr)
+}
 
-	var namespaceIdentifier tokens.Token
+// baseValue parses an atomic expression with optional namespace and function call.
+func (p *Parser) baseValue() (expressions.Expr, error) {
+	var namespaceToken tokens.Token
+	var hasNamespace bool
 	var err error
-	hasNamespace := false
 	if p.match(tokens.Colon) {
 		p.stepBack()
 		p.stepBack()
 	}
+
+	// First, try to parse an identifier (possibly namespaced)
 	if p.match(tokens.Identifier) {
+		// Save the identifier (might be namespace)
 		identifier := p.previous()
+
+		// If a colon follows, treat previous as namespace
 		if p.match(tokens.Colon) {
-			namespaceIdentifier = identifier
+			namespaceToken = identifier
 			hasNamespace = true
-			identifier, err = p.consume(tokens.Identifier, "Expected identifier after ':'.")
+			// Next token must be the actual identifier
+			identifier, err = p.consume(tokens.Identifier, "Expected identifier after ':'")
 			if err != nil {
 				return nil, err
 			}
 		}
-		identifierType := p.getType(identifier)
 
+		// Lookup the declared type
+		identifierType := p.getType(identifier)
 		if identifierType == nil {
 			return nil, p.error(identifier, "Undeclared identifier")
 		}
 
-		switch {
-		case p.match(tokens.ParenOpen):
-			return p.functionCall(namespaceIdentifier, identifier, hasNamespace)
-		case p.match(tokens.BracketOpen):
-			return p.slice(expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: identifierType})
-		case p.match(tokens.Dot):
-			if hasNamespace {
-				return nil, p.error(identifier, "Cannot use namespace with field access.")
-			}
-			if _, ok := p.variables[identifier.Lexeme]; !ok {
-				return nil, p.error(identifier, fmt.Sprintf("Field access is only allowed on variables."))
-			}
-			return p.fieldAccess(expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: identifierType})
-		default:
-			return expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: identifierType}, nil
+		// If this is a function call, delegate to functionCall (handles namespace)
+		if p.match(tokens.ParenOpen) {
+			return p.functionCall(namespaceToken, identifier, hasNamespace)
 		}
+
+		// Otherwise, it's a variable reference.  If namespaced, prefix the lexeme.
+		nameToken := identifier
+		if hasNamespace {
+			nameToken = tokens.Token{
+				Type:           identifier.Type,
+				Lexeme:         fmt.Sprintf("%s:%s", namespaceToken.Lexeme, identifier.Lexeme),
+				Literal:        identifier.Literal,
+				SourceLocation: identifier.SourceLocation,
+			}
+		}
+
+		return expressions.VariableExpr{
+			Name:           nameToken,
+			SourceLocation: p.location(),
+			Type:           identifierType,
+		}, nil
 	}
+
+	// Fallback to literals, grouping, list literals, etc.
 	return p.primary()
 }
 
-func (p *Parser) fieldAccess(source expressions.Expr) (expressions.Expr, error) {
-	field, err := p.consume(tokens.Identifier, "Expected identifier after '.'")
-	if err != nil {
-		return nil, err
+// postfix wraps an Expr in as many [index] or .field as you find:
+func (p *Parser) postfix(expr expressions.Expr) (expressions.Expr, error) {
+	// If it’s “[”, parse a slice/index, then recurse:
+	if _, ok := expr.ReturnType().(types.ListTypeStruct); p.match(tokens.BracketOpen) && ok {
+		// read either slice or single index
+		start, err := p.expression()
+		if err != nil {
+			return nil, err
+		}
+		var end expressions.Expr
+		if p.match(tokens.Colon) {
+			end, err = p.expression()
+			if err != nil {
+				return nil, err
+			}
+		}
+		if _, err = p.consume(tokens.BracketClose, "Expected ']'"); err != nil {
+			return nil, err
+		}
+		expr = expressions.SliceExpr{
+			TargetExpr:     expr,
+			StartIndex:     start,
+			EndIndex:       end,
+			SourceLocation: p.location(),
+		}
+		// keep consuming more postfix:
+		return p.postfix(expr)
 	}
-	fieldType, err := p.getTokenAsValueType(field)
-	if err != nil {
-		return nil, p.error(field, err.Error())
+	// If it’s “.”, parse a field access, then recurse:
+	if _, ok := expr.ReturnType().(types.StructTypeStruct); p.match(tokens.Dot) && ok {
+		fieldTok, err := p.consume(tokens.Identifier, "Expected field name after '.'")
+		if err != nil {
+			return nil, err
+		}
+		fieldTokenType, err := p.getTokenAsValueType(fieldTok)
+		if err != nil {
+			return nil, err
+		}
+		expr = expressions.FieldAccessExpr{
+			Source:         expr,
+			Field:          fieldTok,
+			SourceLocation: p.location(),
+			Type:           fieldTokenType,
+		}
+		return p.postfix(expr)
 	}
-	fieldAccessExpr := expressions.FieldAccessExpr{
-		Source:         source,
-		Field:          field,
-		SourceLocation: p.location(),
-		Type:           fieldType,
-	}
-	if p.match(tokens.Dot) {
-		return p.fieldAccess(fieldAccessExpr)
-	}
-	return fieldAccessExpr, nil
+	return expr, nil
 }
 
 func (p *Parser) functionCall(namespace tokens.Token, name tokens.Token, hasNamespace bool) (expressions.Expr, error) {

@@ -18,7 +18,7 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 	cmd := ""
 	// For each parameter, copy the value to a variable with the same name
 	for _, arg := range stmt.Parameters {
-		cmd += c.opHandler.MoveConst(c.opHandler.Macro(arg.Name), ops.Cs(arg.Name))
+		cmd += c.opHandler.MakeConst(c.opHandler.Macro(arg.Name), ops.Cs(arg.Name))
 	}
 
 	var source = cmd + stmt.Body.Accept(c)
@@ -84,11 +84,11 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 	} else {
 		switch stmt.Type {
 		case types.IntType:
-			cmd += c.opHandler.MoveConst("0L", ops.Cs(stmt.Name.Lexeme), false)
+			cmd += c.opHandler.MakeConst("0L", ops.Cs(stmt.Name.Lexeme), false)
 		case types.DoubleType:
-			cmd += c.opHandler.MoveConst("0.0d", ops.Cs(stmt.Name.Lexeme), false)
+			cmd += c.opHandler.MakeConst("0.0d", ops.Cs(stmt.Name.Lexeme), false)
 		case types.StringType:
-			cmd += c.opHandler.MoveConst("\"\"", ops.Cs(stmt.Name.Lexeme))
+			cmd += c.opHandler.MakeConst("\"\"", ops.Cs(stmt.Name.Lexeme))
 		default:
 			if reflect.TypeOf(stmt.Type) == reflect.TypeOf(types.ListTypeStruct{}) {
 				cmd += c.opHandler.MakeList(ops.Cs(stmt.Name.Lexeme))

@@ -4,6 +4,8 @@ type PrimitiveType string
 
 type ValueType interface {
 	Primitive() ValueType
+	ToString() string
+	IsType(other ValueType) bool
 }
 
 type Project struct {

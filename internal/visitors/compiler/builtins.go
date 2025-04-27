@@ -104,7 +104,7 @@ func (c *Compiler) baseFunctions() {
 	c.createFunction(
 		"mcb:internal/init",
 		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
-			c.opHandler.MoveConst("0", ops.CALL)+
+			c.opHandler.MakeConst("0", ops.CALL)+
 			c.opHandler.MoveScore(ops.CALL, ops.CALL)+
 			c.opHandler.LoadArgConst("log", "text", "MCB pack loaded")+
 			c.opHandler.Call("mcb:log", "")+
@@ -116,7 +116,7 @@ func (c *Compiler) baseFunctions() {
 	c.createFunction(
 		"internal/tick",
 		c.opHandler.Call("tick", "")+
-			c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 1000..", ops.CALL, c.Namespace), true, c.opHandler.MoveConst("0", ops.CALL)),
+			c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 1000..", ops.CALL, c.Namespace), true, c.opHandler.MakeConst("0", ops.CALL)),
 		[]interfaces.FuncArg{},
 		types.VoidType,
 	)

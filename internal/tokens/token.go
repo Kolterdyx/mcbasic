@@ -174,6 +174,7 @@ var Keywords = map[string]TokenType{
 	"int":    IntType,
 	"double": DoubleType,
 	"str":    StringType,
+	"void":   VoidType,
 	"return": Return,
 	"struct": Struct,
 }
@@ -182,4 +183,5 @@ var ValueTypes = []TokenType{
 	IntType,
 	DoubleType,
 	StringType,
+	VoidType,
 }

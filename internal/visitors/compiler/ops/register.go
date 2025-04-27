@@ -16,7 +16,7 @@ func (o *Op) Move(from, to string) string {
 	)
 }
 
-func (o *Op) MoveConst(value, to string, wrapInQuotes ...bool) string {
+func (o *Op) MakeConst(value, to string, wrapInQuotes ...bool) string {
 	wrapInQuote := true
 	if len(wrapInQuotes) > 0 {
 		wrapInQuote = wrapInQuotes[0]
