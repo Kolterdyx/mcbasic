@@ -3,7 +3,6 @@ package types
 import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	log "github.com/sirupsen/logrus"
-	"reflect"
 )
 
 const (
@@ -54,10 +53,6 @@ func (p PrimitiveTypeStruct) ToString() string {
 	}
 	log.Fatalf("Should be unreachable: %v", p.primitiveType)
 	return ""
-}
-
-func (p PrimitiveTypeStruct) IsType(other interfaces.ValueType) bool {
-	return reflect.TypeOf(p) == reflect.TypeOf(other)
 }
 
 var (

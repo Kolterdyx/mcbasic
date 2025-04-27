@@ -2,7 +2,6 @@ package types
 
 import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
-	"reflect"
 )
 
 type StructTypeStruct struct {
@@ -13,10 +12,6 @@ type StructTypeStruct struct {
 
 func (s StructTypeStruct) Primitive() interfaces.ValueType {
 	return s
-}
-
-func (s StructTypeStruct) IsType(other interfaces.ValueType) bool {
-	return reflect.TypeOf(s) == reflect.TypeOf(other)
 }
 
 func (s StructTypeStruct) ToString() string {
