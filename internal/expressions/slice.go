@@ -2,7 +2,9 @@ package expressions
 
 import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 	log "github.com/sirupsen/logrus"
+	"reflect"
 )
 
 type SliceExpr struct {
@@ -30,23 +32,11 @@ func (s SliceExpr) ReturnType() interfaces.ValueType {
 }
 
 func getReturnIndexType(valueType interfaces.ValueType) interfaces.ValueType {
-	switch valueType {
-	case ListIntType:
-		return IntType
-	case ListStringType:
-		return StringType
-	case ListDoubleType:
-		return DoubleType
-	case IntType:
-		fallthrough
-	case StringType:
-		fallthrough
-	case DoubleType:
-		fallthrough
-	case VoidType:
-		fallthrough
+	switch reflect.TypeOf(valueType) {
+	case reflect.TypeOf(types.ListTypeStruct{}):
+		return valueType.Primitive()
 	default:
 		log.Errorf("Can't index type: %v", valueType)
-		return ErrorType
+		return types.ErrorType
 	}
 }

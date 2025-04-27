@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 	"strings"
 )
 
@@ -49,9 +50,9 @@ func (o *Op) Return() string {
 	return fmt.Sprintf("return fail\n")
 }
 
-func (o *Op) GetStructFields(name interfaces.ValueType) []interfaces.StructField {
+func (o *Op) GetStructFields(structType types.StructTypeStruct) []interfaces.StructField {
 	for _, s := range o.Structs {
-		if s.Name.Lexeme == string(name) {
+		if s.Name.Lexeme == structType.Name {
 			return s.Fields
 		}
 	}

@@ -5,6 +5,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 func (p *Parser) expression() (expressions.Expr, error) {
@@ -153,7 +154,7 @@ func (p *Parser) value() (expressions.Expr, error) {
 		}
 		identifierType := p.getType(identifier)
 
-		if identifierType == "" {
+		if identifierType == nil {
 			return nil, p.error(identifier, "Undeclared identifier")
 		}
 
@@ -234,7 +235,7 @@ func (p *Parser) functionCall(namespace tokens.Token, name tokens.Token, hasName
 				return nil, p.error(name, fmt.Sprintf("Expected %d arguments, got %d.", len(f.Args), len(args)))
 			}
 			for i, arg := range args {
-				if arg.ReturnType() != f.Args[i].Type && f.Args[i].Type != expressions.VoidType {
+				if arg.ReturnType() != f.Args[i].Type && f.Args[i].Type != types.VoidType {
 					return nil, p.error(p.peekCount(-(len(f.Args)-i)*2), fmt.Sprintf("Expected %s, got %s.", f.Args[i].Type, arg.ReturnType()))
 				}
 			}
@@ -275,22 +276,22 @@ func (p *Parser) slice(expr expressions.Expr) (expressions.Expr, error) {
 
 func (p *Parser) primary() (expressions.Expr, error) {
 	if p.match(tokens.False) {
-		return expressions.LiteralExpr{Value: 0, ValueType: expressions.IntType, SourceLocation: p.location()}, nil
+		return expressions.LiteralExpr{Value: 0, ValueType: types.IntType, SourceLocation: p.location()}, nil
 	}
 	if p.match(tokens.True) {
-		return expressions.LiteralExpr{Value: 1, ValueType: expressions.IntType, SourceLocation: p.location()}, nil
+		return expressions.LiteralExpr{Value: 1, ValueType: types.IntType, SourceLocation: p.location()}, nil
 	}
 	if p.match(tokens.Int) {
-		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: expressions.IntType, SourceLocation: p.location()}, nil
+		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: types.IntType, SourceLocation: p.location()}, nil
 	}
 	if p.match(tokens.Double) {
-		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: expressions.DoubleType, SourceLocation: p.location()}, nil
+		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: types.DoubleType, SourceLocation: p.location()}, nil
 	}
 	if p.match(tokens.String) {
 		if p.match(tokens.BracketOpen) {
-			return p.slice(expressions.LiteralExpr{Value: p.peekCount(-2).Literal, ValueType: expressions.StringType, SourceLocation: p.location()})
+			return p.slice(expressions.LiteralExpr{Value: p.peekCount(-2).Literal, ValueType: types.StringType, SourceLocation: p.location()})
 		} else {
-			return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: expressions.StringType, SourceLocation: p.location()}, nil
+			return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: types.StringType, SourceLocation: p.location()}, nil
 		}
 	}
 	if p.match(tokens.ParenOpen) {
@@ -306,7 +307,7 @@ func (p *Parser) primary() (expressions.Expr, error) {
 	}
 	if p.match(tokens.BracketOpen) {
 		var elems []expressions.Expr
-		var contentType = expressions.VoidType
+		var contentType interfaces.ValueType = types.VoidType
 		for !p.check(tokens.BracketClose) {
 			if p.match(tokens.Comma) {
 				continue
@@ -315,7 +316,7 @@ func (p *Parser) primary() (expressions.Expr, error) {
 			if err != nil {
 				return nil, err
 			}
-			if contentType == expressions.VoidType {
+			if contentType == types.VoidType {
 				contentType = expr.ReturnType()
 			} else if contentType != expr.ReturnType() {
 				return nil, p.error(p.previous(), fmt.Sprintf("Expected %s, got %s.", contentType, expr.ReturnType()))
@@ -336,7 +337,7 @@ func (p *Parser) primary() (expressions.Expr, error) {
 		return expressions.ListExpr{
 			Elements:       elems,
 			SourceLocation: p.location(),
-			ValueType:      p.getListType(contentType),
+			ValueType:      types.ListTypeStruct{Parent: contentType},
 		}, nil
 	}
 	errorToken := p.peek()

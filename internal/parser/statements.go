@@ -6,6 +6,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 func (p *Parser) statement() (statements.Stmt, error) {
@@ -50,22 +51,7 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	var varType interfaces.ValueType
-	typeToken, err := p.consumeAny("Expected variable type.", tokens.ValueTypes...)
-	if err != nil {
-		// Check if the type is a struct
-		if p.match(tokens.Identifier) {
-			// Check if the struct is defined
-			if _, ok := p.structs[p.previous().Lexeme]; !ok {
-				return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", p.previous().Lexeme))
-			}
-			typeToken = p.previous()
-			err = nil
-		} else {
-			return nil, err
-		}
-	}
-	varType, err = p.getTokenAsValueType(typeToken)
+	varType, err := p.ParseType()
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +66,7 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 		return nil, err
 	}
 	if initializer != nil && initializer.ReturnType() != varType {
-		if !(p.isListType(varType) && initializer.ReturnType() == expressions.VoidType) {
+		if !(p.isListType(varType) && initializer.ReturnType() == types.VoidType) {
 			return nil, p.error(p.peekCount(-2), fmt.Sprintf("Cannot assign %s to %s.", initializer.ReturnType(), varType))
 		}
 	}
@@ -93,6 +79,49 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 		Type:        varType,
 		Initializer: initializer,
 	}, nil
+}
+
+func (p *Parser) ParseType() (interfaces.ValueType, error) {
+	var varType interfaces.ValueType
+
+	// types are as follows:
+	// primitive types: int, double, str
+	// structs: structName
+	// lists: int[], double[], str[], str[][], int[][], double[][], structName[], etc.
+	// Lists can be nested
+	switch {
+	case p.match(tokens.IntType):
+		varType = types.IntType
+	case p.match(tokens.DoubleType):
+		varType = types.DoubleType
+	case p.match(tokens.StringType):
+		varType = types.StringType
+	case p.match(tokens.VoidType):
+		varType = types.VoidType
+	case p.match(tokens.Identifier):
+		// Check if the type is a struct
+		if _, ok := p.structs[p.previous().Lexeme]; !ok {
+			return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", p.previous().Lexeme))
+		}
+		varType = types.StructTypeStruct{Name: p.previous().Lexeme}
+	default:
+		return nil, p.error(p.peek(), "Expected variable type.")
+	}
+	if p.check(tokens.BracketOpen) {
+		var listType types.ListTypeStruct
+		for p.match(tokens.BracketOpen) {
+			if varType == types.VoidType {
+				return nil, p.error(p.peek(), "Cannot declare empty list.")
+			}
+			listType = types.ListTypeStruct{Parent: varType}
+			varType = listType
+			if !p.match(tokens.BracketClose) {
+				return nil, p.error(p.peek(), "Expected ']' after list type.")
+			}
+		}
+		varType = listType
+	}
+	return varType, nil
 }
 
 func (p *Parser) variableAssignment() (statements.Stmt, error) {
@@ -108,8 +137,8 @@ func (p *Parser) variableAssignment() (statements.Stmt, error) {
 		if err != nil {
 			return nil, err
 		}
-		if index.ReturnType() != expressions.IntType {
-			return nil, p.error(p.peek(), fmt.Sprintf("Index must be of type %s.", expressions.IntType))
+		if index.ReturnType() != types.IntType {
+			return nil, p.error(p.peek(), fmt.Sprintf("Index must be of type %s.", types.IntType))
 		}
 		if !p.isList(name) {
 			return nil, p.error(name, fmt.Sprintf("Cannot index type %s.", p.getType(name)))
@@ -158,11 +187,11 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 			var valueType interfaces.ValueType
 			switch type_.Type {
 			case tokens.StringType:
-				valueType = expressions.StringType
+				valueType = types.StringType
 			case tokens.IntType:
-				valueType = expressions.IntType
+				valueType = types.IntType
 			case tokens.DoubleType:
-				valueType = expressions.DoubleType
+				valueType = types.DoubleType
 			default:
 				return nil, p.error(type_, "Expected parameter type.")
 			}
@@ -176,13 +205,13 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	returnType := expressions.VoidType
+	returnType := types.VoidType
 	if p.match(tokens.IntType) {
-		returnType = expressions.IntType
+		returnType = types.IntType
 	} else if p.match(tokens.StringType) {
-		returnType = expressions.StringType
+		returnType = types.StringType
 	} else if p.match(tokens.DoubleType) {
-		returnType = expressions.DoubleType
+		returnType = types.DoubleType
 	}
 
 	// Add all parameters to the current scope
@@ -225,7 +254,7 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 				if _, ok := p.structs[p.previous().Lexeme]; !ok {
 					return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", p.previous().Lexeme))
 				}
-				fieldType = interfaces.ValueType(p.previous().Lexeme)
+				fieldType = types.StructTypeStruct{Name: p.previous().Lexeme}
 			} else {
 				return nil, p.error(p.peek(), "Expected field type.")
 			}

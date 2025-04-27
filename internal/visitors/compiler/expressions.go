@@ -4,17 +4,19 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
+	"reflect"
 	"strconv"
 )
 
 func (c *Compiler) VisitLiteral(expr expressions.LiteralExpr) string {
 	switch expr.ReturnType() {
-	case expressions.IntType:
+	case types.IntType:
 		return c.opHandler.MoveConst(expr.Value.(string), ops.Cs(ops.RX))
-	case expressions.StringType:
+	case types.StringType:
 		return c.opHandler.MoveConst(strconv.Quote(expr.Value.(string)), ops.Cs(ops.RX))
-	case expressions.DoubleType:
+	case types.DoubleType:
 		return c.opHandler.MoveConst(expr.Value.(string), ops.Cs(ops.RX))
 	default:
 		c.error(expr.SourceLocation, "Invalid type in literal expression")
@@ -46,7 +48,7 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) string {
 	}
 
 	switch expr.ReturnType() {
-	case expressions.IntType:
+	case types.IntType:
 		switch expr.Operator.Type {
 		case tokens.Plus:
 			cmd += c.opHandler.Add(regRa, regRb, ops.RX)
@@ -61,7 +63,7 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) string {
 		default:
 			c.error(expr.SourceLocation, "Invalid operator for integers")
 		}
-	case expressions.DoubleType:
+	case types.DoubleType:
 		switch expr.Operator.Type {
 		case tokens.Plus:
 			cmd += c.opHandler.DoubleAdd(regRa, regRb, ops.RX)
@@ -75,7 +77,7 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) string {
 			c.error(expr.SourceLocation, "Invalid operator for double numbers")
 		}
 
-	case expressions.StringType:
+	case types.StringType:
 		if expr.Operator.Type == tokens.Plus {
 			cmd += c.opHandler.Concat(ops.Cs(regRa), ops.Cs(regRb), ops.Cs(ops.RX))
 		} else {
@@ -98,7 +100,7 @@ func (c *Compiler) VisitFunctionCall(expr expressions.FunctionCallExpr) string {
 		argName := c.functions[expr.Name.Lexeme].Args[i].Name
 		cmd += c.opHandler.LoadArg(expr.Name.Lexeme, argName, ops.Cs(ops.RX))
 	}
-	if expr.ReturnType() != expressions.VoidType {
+	if expr.ReturnType() != types.VoidType {
 		cmd += c.opHandler.Call(expr.Name.Lexeme, ops.RX)
 	} else {
 		cmd += c.opHandler.Call(expr.Name.Lexeme, "")
@@ -109,10 +111,10 @@ func (c *Compiler) VisitFunctionCall(expr expressions.FunctionCallExpr) string {
 func (c *Compiler) VisitUnary(expr expressions.UnaryExpr) string {
 	cmd := ""
 	switch expr.ReturnType() {
-	case expressions.IntType:
+	case types.IntType:
 		switch expr.Operator.Type {
 		case tokens.Minus:
-			zero := expressions.LiteralExpr{Value: "0", SourceLocation: expr.SourceLocation, ValueType: expressions.IntType}
+			zero := expressions.LiteralExpr{Value: "0", SourceLocation: expr.SourceLocation, ValueType: types.IntType}
 			tmp := expressions.BinaryExpr{
 				Left: zero,
 				Operator: tokens.Token{
@@ -227,8 +229,7 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) string {
 		true,
 		c.opHandler.Exception("Start index greater than end index"),
 	)
-	switch expr.TargetExpr.ReturnType() {
-	case expressions.StringType:
+	if expr.TargetExpr.ReturnType() == types.StringType {
 		cmd += c.opHandler.ExecCond(
 			fmt.Sprintf("score %s %s >= %s %s", ops.Cs(regIndexStart), c.Namespace, ops.Cs(lenReg), c.Namespace),
 			true,
@@ -239,28 +240,13 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) string {
 			true,
 			c.opHandler.Exception("End slice index out of bounds"),
 		)
-	case expressions.ListIntType:
-		fallthrough
-	case expressions.ListDoubleType:
-		fallthrough
-	case expressions.ListStringType:
+		cmd += c.opHandler.SliceString(ops.Cs(ops.RX), ops.Cs(regIndexStart), ops.Cs(regIndexEnd), ops.Cs(ops.RX))
+	} else if reflect.TypeOf(expr.TargetExpr.ReturnType()) == reflect.TypeOf(types.ListTypeStruct{}) {
 		cmd += c.opHandler.ExecCond(
 			fmt.Sprintf("score %s %s >= %s %s", ops.Cs(regIndexStart), c.Namespace, ops.Cs(lenReg), c.Namespace),
 			true,
 			c.opHandler.Exception("Index out of bounds"),
 		)
-	}
-
-	switch expr.TargetExpr.ReturnType() {
-	case expressions.StringType:
-		// String slice operation
-		cmd += c.opHandler.SliceString(ops.Cs(ops.RX), ops.Cs(regIndexStart), ops.Cs(regIndexEnd), ops.Cs(ops.RX))
-	case expressions.ListIntType:
-		fallthrough
-	case expressions.ListDoubleType:
-		fallthrough
-	case expressions.ListStringType:
-		// List index operation
 		if expr.EndIndex != nil {
 			c.error(expr.SourceLocation, "List slicing is not supported")
 			return ""

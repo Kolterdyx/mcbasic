@@ -3,6 +3,7 @@ package expressions
 import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 type LogicalExpr struct {
@@ -23,5 +24,5 @@ func (l LogicalExpr) ExprType() ExprType {
 }
 
 func (l LogicalExpr) ReturnType() interfaces.ValueType {
-	return IntType
+	return types.IntType
 }

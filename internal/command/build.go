@@ -5,9 +5,9 @@ import (
 	"embed"
 	"encoding/json"
 	"github.com/BurntSushi/toml"
-	"github.com/Kolterdyx/mcbasic/internal"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
+	"github.com/Kolterdyx/mcbasic/internal/scanner"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v3"
@@ -52,10 +52,10 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 	source := string(blob)
 	log.Debug("Source loaded successfully")
 
-	// Create a scanner
-	scanner := &internal.Scanner{}
-	tokens := scanner.Scan(source)
-	if scanner.HadError {
+	// Create a s
+	s := &scanner.Scanner{}
+	tokens := s.Scan(source)
+	if s.HadError {
 		return cli.Exit("There was an error parsing the program", 1)
 	}
 	log.Debug("Tokens scanned successfully")

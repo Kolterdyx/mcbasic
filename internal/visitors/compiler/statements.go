@@ -2,9 +2,9 @@ package compiler
 
 import (
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	log "github.com/sirupsen/logrus"
 	"reflect"
@@ -83,27 +83,25 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 		cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(stmt.Name.Lexeme))
 	} else {
 		switch stmt.Type {
-		case expressions.IntType:
+		case types.IntType:
 			cmd += c.opHandler.MoveConst("0L", ops.Cs(stmt.Name.Lexeme), false)
-		case expressions.DoubleType:
+		case types.DoubleType:
 			cmd += c.opHandler.MoveConst("0.0d", ops.Cs(stmt.Name.Lexeme), false)
-		case expressions.StringType:
+		case types.StringType:
 			cmd += c.opHandler.MoveConst("\"\"", ops.Cs(stmt.Name.Lexeme))
-		case expressions.ListStringType:
-			fallthrough
-		case expressions.ListIntType:
-			fallthrough
-		case expressions.ListDoubleType:
-			cmd += c.opHandler.MakeList(ops.Cs(stmt.Name.Lexeme))
 		default:
-			// struct type. stmt.Type is the struct name
-			cmd += c.opHandler.MoveRaw(
-				fmt.Sprintf("%s:data", c.Namespace),
-				fmt.Sprintf("%s.%s", ops.StructPath, stmt.Type),
-				fmt.Sprintf("%s:data", c.Namespace),
-				fmt.Sprintf("%s.%s", ops.VarPath, ops.Cs(stmt.Name.Lexeme)),
-			)
-
+			if reflect.TypeOf(stmt.Type) == reflect.TypeOf(types.ListTypeStruct{}) {
+				cmd += c.opHandler.MakeList(ops.Cs(stmt.Name.Lexeme))
+			} else if reflect.TypeOf(stmt.Type) == reflect.TypeOf(types.StructTypeStruct{}) {
+				cmd += c.opHandler.MoveRaw(
+					fmt.Sprintf("%s:data", c.Namespace),
+					fmt.Sprintf("%s.%s", ops.StructPath, stmt.Type),
+					fmt.Sprintf("%s:data", c.Namespace),
+					fmt.Sprintf("%s.%s", ops.VarPath, ops.Cs(stmt.Name.Lexeme)),
+				)
+			} else {
+				c.error(stmt.Name.SourceLocation, fmt.Sprintf("Invalid type: %v", stmt.Type))
+			}
 		}
 	}
 	c.scope[c.currentScope] = append(c.scope[c.currentScope],
@@ -151,5 +149,5 @@ func (c *Compiler) VisitIf(stmt statements.IfStmt) string {
 }
 
 func (c *Compiler) VisitStructDeclaration(stmt statements.StructDeclarationStmt) string {
-	return c.opHandler.StructDefine(stmt.Name.Lexeme)
+	return c.opHandler.StructDefine(c.getReturnType(stmt.Name.Lexeme).(types.StructTypeStruct))
 }

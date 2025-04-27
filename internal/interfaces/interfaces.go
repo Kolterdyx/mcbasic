@@ -1,6 +1,10 @@
 package interfaces
 
-type ValueType string
+type PrimitiveType string
+
+type ValueType interface {
+	Primitive() ValueType
+}
 
 type Project struct {
 	Name        string   `toml:"name"`
@@ -25,10 +29,10 @@ type DatapackHeader struct {
 		Functions []struct {
 			Name string `json:"name"`
 			Args []struct {
-				Name string    `json:"name"`
-				Type ValueType `json:"type"`
+				Name string `json:"name"`
+				Type string `json:"type"`
 			} `json:"args"`
-			ReturnType ValueType `json:"returnType"`
+			ReturnType string `json:"returnType"`
 		} `json:"functions"`
 	} `json:"definitions"`
 }

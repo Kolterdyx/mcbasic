@@ -5,7 +5,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
-	"github.com/Kolterdyx/mcbasic/internal/utils"
 )
 
 type Parser struct {
@@ -24,7 +23,7 @@ type Parser struct {
 func (p *Parser) Parse() (Program, []error) {
 	var functions []statements.FunctionDeclarationStmt
 	var structs []statements.StructDeclarationStmt
-	funcDefMap := utils.GetHeaderFuncDefs(p.Headers)
+	funcDefMap := GetHeaderFuncDefs(p.Headers)
 	p.functions = make([]interfaces.FuncDef, 0)
 	for _, funcDef := range funcDefMap {
 		p.functions = append(p.functions, funcDef)

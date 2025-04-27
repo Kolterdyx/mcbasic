@@ -2,8 +2,8 @@ package compiler
 
 import (
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 )
 
@@ -18,9 +18,9 @@ func (c *Compiler) math() {
 		"math:sqrt",
 		c.opHandler.DoubleSqrt("x", ops.RET),
 		[]interfaces.FuncArg{
-			{Name: "x", Type: expressions.DoubleType},
+			{Name: "x", Type: types.DoubleType},
 		},
-		expressions.DoubleType,
+		types.DoubleType,
 	)
 
 	// Trigonometric functions
@@ -28,49 +28,49 @@ func (c *Compiler) math() {
 		"math:cos",
 		c.opHandler.DoubleCos("x", ops.RET),
 		[]interfaces.FuncArg{
-			{Name: "x", Type: expressions.DoubleType},
+			{Name: "x", Type: types.DoubleType},
 		},
-		expressions.DoubleType,
+		types.DoubleType,
 	)
 	c.createFunction(
 		"math:sin",
 		c.opHandler.DoubleSin("x", ops.RET),
 		[]interfaces.FuncArg{
-			{Name: "x", Type: expressions.DoubleType},
+			{Name: "x", Type: types.DoubleType},
 		},
-		expressions.DoubleType,
+		types.DoubleType,
 	)
 	c.createFunction(
 		"math:tan",
 		c.opHandler.DoubleTan("x", ops.RET),
 		[]interfaces.FuncArg{
-			{Name: "x", Type: expressions.DoubleType},
+			{Name: "x", Type: types.DoubleType},
 		},
-		expressions.DoubleType,
+		types.DoubleType,
 	)
 	c.createFunction(
 		"math:acos",
 		c.opHandler.DoubleAcos("x", ops.RET),
 		[]interfaces.FuncArg{
-			{Name: "x", Type: expressions.DoubleType},
+			{Name: "x", Type: types.DoubleType},
 		},
-		expressions.DoubleType,
+		types.DoubleType,
 	)
 	c.createFunction(
 		"math:asin",
 		c.opHandler.DoubleAsin("x", ops.RET),
 		[]interfaces.FuncArg{
-			{Name: "x", Type: expressions.DoubleType},
+			{Name: "x", Type: types.DoubleType},
 		},
-		expressions.DoubleType,
+		types.DoubleType,
 	)
 	c.createFunction(
 		"math:atan",
 		c.opHandler.DoubleAtan("x", ops.RET),
 		[]interfaces.FuncArg{
-			{Name: "x", Type: expressions.DoubleType},
+			{Name: "x", Type: types.DoubleType},
 		},
-		expressions.DoubleType,
+		types.DoubleType,
 	)
 
 	// Rounding functions
@@ -78,25 +78,25 @@ func (c *Compiler) math() {
 		"math:floor",
 		c.opHandler.DoubleFloor("x", ops.RET),
 		[]interfaces.FuncArg{
-			{Name: "x", Type: expressions.DoubleType},
+			{Name: "x", Type: types.DoubleType},
 		},
-		expressions.DoubleType,
+		types.DoubleType,
 	)
 	c.createFunction(
 		"math:ceil",
 		c.opHandler.DoubleCeil("x", ops.RET),
 		[]interfaces.FuncArg{
-			{Name: "x", Type: expressions.DoubleType},
+			{Name: "x", Type: types.DoubleType},
 		},
-		expressions.DoubleType,
+		types.DoubleType,
 	)
 	c.createFunction(
 		"math:round",
 		c.opHandler.DoubleRound("x", ops.RET),
 		[]interfaces.FuncArg{
-			{Name: "x", Type: expressions.DoubleType},
+			{Name: "x", Type: types.DoubleType},
 		},
-		expressions.DoubleType,
+		types.DoubleType,
 	)
 }
 
@@ -111,13 +111,13 @@ func (c *Compiler) baseFunctions() {
 			c.opHandler.Call("internal/struct_definitions", "")+
 			c.opHandler.Call("main", ""),
 		[]interfaces.FuncArg{},
-		expressions.VoidType,
+		types.VoidType,
 	)
 	c.createFunction(
 		"internal/tick",
 		c.opHandler.Call("tick", "")+
 			c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 1000..", ops.CALL, c.Namespace), true, c.opHandler.MoveConst("0", ops.CALL)),
 		[]interfaces.FuncArg{},
-		expressions.VoidType,
+		types.VoidType,
 	)
 }
