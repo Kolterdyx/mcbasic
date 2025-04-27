@@ -153,6 +153,8 @@ func (p *Parser) variableAssignment() (statements.Stmt, error) {
 		break
 	}
 
+	// TODO: Traverse result: var.field[index].etc to make sure the types are compatible
+
 	if _, err := p.consume(tokens.Equal, "Expected '=' after variable target."); err != nil {
 		return nil, err
 	}
