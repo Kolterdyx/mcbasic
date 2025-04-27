@@ -25,19 +25,28 @@ func (o *Op) GetListIndex(from, index, to string) string {
 
 func (o *Op) SetListIndex(list, index, valuePath string) string {
 	cmd := ""
-	cmd += o.LoadArgConst("internal/list_index/set", "storage", fmt.Sprintf("%s:data %s", o.Namespace, VarPath))
-	cmd += o.LoadArgConst("internal/list_index/set", "list", list)
+	cmd += o.LoadArgConst("internal/list_index/set", "storage", fmt.Sprintf("%s:data", o.Namespace))
+	cmd += o.LoadArgConst("internal/list_index/set", "list", fmt.Sprintf("%s.%s", VarPath, list))
 	cmd += o.LoadArg("internal/list_index/set", "index", index)
-	cmd += o.LoadArgConst("internal/list_index/set", "value_path", valuePath)
+	cmd += o.LoadArgConst("internal/list_index/set", "value_path", fmt.Sprintf("%s.%s", VarPath, valuePath))
 	cmd += o.Call("mcb:internal/list_index/set", "")
 	return cmd
 }
 
 func (o *Op) DeleteListIndex(list, index string) string {
 	cmd := ""
-	cmd += o.LoadArgConst("internal/list_index/delete", "storage", fmt.Sprintf("%s:data %s", o.Namespace, VarPath))
-	cmd += o.LoadArgConst("internal/list_index/delete", "list", list)
+	cmd += o.LoadArgConst("internal/list_index/delete", "storage", fmt.Sprintf("%s:data", o.Namespace))
+	cmd += o.LoadArgConst("internal/list_index/delete", "list", fmt.Sprintf("%s.%s", VarPath, list))
 	cmd += o.LoadArg("internal/list_index/delete", "index", index)
 	cmd += o.Call("mcb:internal/list_index/delete", "")
+	return cmd
+}
+
+func (o *Op) MakeIndex(res, index string) string {
+	cmd := ""
+	cmd += o.LoadArgConst("internal/list_index/make_index", "storage", fmt.Sprintf("%s:data", o.Namespace))
+	cmd += o.LoadArgConst("internal/list_index/make_index", "res", fmt.Sprintf("%s.%s", VarPath, RET))
+	cmd += o.LoadArg("internal/list_index/make_index", "index", index)
+	cmd += o.Call("mcb:internal/list_index/make_index", res)
 	return cmd
 }

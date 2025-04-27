@@ -114,7 +114,7 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 
 func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStmt) string {
 	cmd := ""
-	isIndexedAssignment := stmt.Index != nil
+	isIndexedAssignment := len(stmt.Accessors) > 0
 	if stmt.Value.ReturnType() != c.getReturnType(stmt.Name.Lexeme) && !isIndexedAssignment {
 		c.error(stmt.Name.SourceLocation, fmt.Sprintf("Assignment type mismatch: %v != %v", c.getReturnType(stmt.Name.Lexeme), stmt.Value.ReturnType()))
 	}
@@ -122,10 +122,27 @@ func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStm
 	valueReg := ops.Cs(c.newRegister(ops.RX))
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), valueReg)
 	if isIndexedAssignment {
-		cmd += stmt.Index.Accept(c)
-		indexReg := ops.Cs(c.newRegister(ops.RX))
-		cmd += c.opHandler.Move(ops.Cs(ops.RX), indexReg)
-		cmd += c.opHandler.SetListIndex(ops.Cs(stmt.Name.Lexeme), indexReg, valueReg)
+		pathReg := ops.Cs(c.newRegister(ops.RX))
+		for i := 0; i < len(stmt.Accessors); i++ {
+			switch stmt.Accessors[i].(type) {
+			case statements.IndexAccessor:
+				cmd += fmt.Sprintf("### BEGIN Compute path part %v/%v ###\n", i+1, len(stmt.Accessors))
+				indexAccessor := stmt.Accessors[i].(statements.IndexAccessor)
+				cmd += "###       Compile index expression ###\n"
+				cmd += indexAccessor.Index.Accept(c)
+				cmd += "###       Move to its own register ###\n"
+				indexReg := ops.Cs(c.newRegister(ops.RX))
+				cmd += c.opHandler.Move(ops.Cs(ops.RX), indexReg)
+				// wrap index in brackets and append to pathReg
+				// pathReg += "[" + indexReg + "]"
+				cmd += "###       Wrap in brackets ###\n"
+				cmd += c.opHandler.MakeIndex(indexReg, indexReg)
+				cmd += "###       Append to path ###\n"
+				cmd += c.opHandler.Concat(pathReg, indexReg, pathReg)
+				cmd += fmt.Sprintf("### END   Compute path part %v/%v ###\n", i+1, len(stmt.Accessors))
+			}
+		}
+		cmd += c.opHandler.SetListIndex(ops.Cs(stmt.Name.Lexeme), pathReg, valueReg)
 	} else {
 		cmd += c.opHandler.Move(valueReg, ops.Cs(stmt.Name.Lexeme))
 	}

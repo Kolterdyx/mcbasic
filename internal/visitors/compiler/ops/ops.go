@@ -63,8 +63,25 @@ func Cs(s string) string {
 	if s == RCF || s == CALL {
 		return s
 	}
-	if strings.Contains(s, "$(__call__)") {
+	suffix := ".$(__call__)"
+	if strings.Contains(s, suffix) {
 		return s
 	}
-	return s + "$(__call__)"
+	return s + suffix
+}
+
+func (o *Op) Trace(name string) string {
+	cmd := ""
+	cmd += o.LoadArgConst("internal/trace", "storage", fmt.Sprintf("%s:data", o.Namespace))
+	cmd += o.LoadArgConst("internal/trace", "path", fmt.Sprintf("%s:%s", VarPath, name))
+	cmd += o.LoadArg("internal/trace", "value", name)
+	cmd += o.Call("mcb:internal/trace", "")
+	return cmd
+}
+
+func (o *Op) TraceRaw(name string) string {
+	cmd := ""
+	cmd += o.LoadArgRaw("internal/trace", "value", name)
+	cmd += o.Call("mcb:internal/trace", "")
+	return cmd
 }

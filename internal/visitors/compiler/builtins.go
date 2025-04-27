@@ -123,6 +123,7 @@ func (c *Compiler) baseFunctions() {
 	c.createFunction(
 		"mcb:internal/clean",
 		"data remove storage example:data vars\n"+
+			"data remove storage example:data structs\n"+
 			"data remove storage example:data args",
 		[]interfaces.FuncArg{},
 		types.VoidType,

@@ -124,39 +124,50 @@ func (p *Parser) ParseType() (interfaces.ValueType, error) {
 	return varType, nil
 }
 
+// variableAssignment parses assignments to variables, list indices, or struct fields
 func (p *Parser) variableAssignment() (statements.Stmt, error) {
 	name := p.previous()
-	var index expressions.Expr
-	var err error
-	if p.match(tokens.BracketOpen) {
-		index, err = p.expression()
-		if err != nil {
-			return nil, err
+
+	// Collect any number of [index] or .field accessors
+	var accessors []statements.Accessor
+	for {
+		if p.match(tokens.BracketOpen) {
+			idxExpr, err := p.expression()
+			if err != nil {
+				return nil, err
+			}
+			if _, err := p.consume(tokens.BracketClose, "Expected ']' after index"); err != nil {
+				return nil, err
+			}
+			accessors = append(accessors, statements.IndexAccessor{Index: idxExpr})
+			continue
 		}
-		_, err = p.consume(tokens.BracketClose, "Expected ']' after index.")
-		if err != nil {
-			return nil, err
+		if p.match(tokens.Dot) {
+			fieldTok, err := p.consume(tokens.Identifier, "Expected field name after '.'")
+			if err != nil {
+				return nil, err
+			}
+			accessors = append(accessors, statements.FieldAccessor{Field: fieldTok})
+			continue
 		}
-		if index.ReturnType() != types.IntType {
-			return nil, p.error(p.peek(), fmt.Sprintf("Index must be of type %s.", types.IntType))
-		}
-		if !p.isList(name) {
-			return nil, p.error(name, fmt.Sprintf("Cannot index type %s.", p.getType(name)))
-		}
+		break
 	}
-	_, err = p.consume(tokens.Equal, "Expected '=' after variable name.")
+
+	if _, err := p.consume(tokens.Equal, "Expected '=' after variable target."); err != nil {
+		return nil, err
+	}
+	valueExpr, err := p.expression()
 	if err != nil {
 		return nil, err
 	}
-	value, err := p.expression()
-	if err != nil {
+	if _, err := p.consume(tokens.Semicolon, "Expected ';' after assignment."); err != nil {
 		return nil, err
 	}
-	_, err = p.consume(tokens.Semicolon, "Expected ';' after value.")
-	if err != nil {
-		return nil, err
-	}
-	return statements.VariableAssignmentStmt{Name: name, Value: value, Index: index}, nil
+	return statements.VariableAssignmentStmt{
+		Name:      name,
+		Accessors: accessors,
+		Value:     valueExpr,
+	}, nil
 }
 
 func (p *Parser) functionDeclaration() (statements.Stmt, error) {
