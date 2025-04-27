@@ -8,12 +8,13 @@ type ValueType interface {
 }
 
 type Project struct {
-	Name        string   `toml:"name"`
-	Namespace   string   `toml:"namespace"`
-	Authors     []string `toml:"authors"`
-	Entrypoint  string   `toml:"entrypoint"`
-	Version     string   `toml:"version"`
-	Description string   `toml:"description"`
+	Name            string   `toml:"name"`
+	Namespace       string   `toml:"namespace"`
+	Authors         []string `toml:"authors"`
+	Entrypoint      string   `toml:"entrypoint"`
+	Version         string   `toml:"version"`
+	Description     string   `toml:"description"`
+	CleanBeforeInit bool     `toml:"cleanBeforeInit"`
 }
 
 type ProjectConfig struct {

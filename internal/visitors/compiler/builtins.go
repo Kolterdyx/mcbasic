@@ -101,15 +101,29 @@ func (c *Compiler) math() {
 }
 
 func (c *Compiler) baseFunctions() {
+
+	cleanCall := ""
+	if c.Config.Project.CleanBeforeInit {
+		cleanCall = c.opHandler.Call("mcb:internal/clean", "")
+	}
+
 	c.createFunction(
 		"mcb:internal/init",
 		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
 			c.opHandler.MakeConst("0", ops.CALL)+
 			c.opHandler.MoveScore(ops.CALL, ops.CALL)+
+			cleanCall+
 			c.opHandler.LoadArgConst("log", "text", "MCB pack loaded")+
 			c.opHandler.Call("mcb:log", "")+
 			c.opHandler.Call("internal/struct_definitions", "")+
 			c.opHandler.Call("main", ""),
+		[]interfaces.FuncArg{},
+		types.VoidType,
+	)
+	c.createFunction(
+		"mcb:internal/clean",
+		"data remove storage example:data vars\n"+
+			"data remove storage example:data args",
 		[]interfaces.FuncArg{},
 		types.VoidType,
 	)

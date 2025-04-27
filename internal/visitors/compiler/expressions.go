@@ -29,14 +29,13 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) string {
 	regRa := c.newRegister(ops.RA)
 	regRb := c.newRegister(ops.RB)
 
-	cmd += "### Binary operation left side ###\n"
+	cmd += "### BEGIN Binary operation ###\n"
+	cmd += "###       Left side ###\n"
 	cmd += expr.Left.Accept(c)
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regRa))
-	cmd += "### Binary operation right side ###\n"
+	cmd += "###       Right side ###\n"
 	cmd += expr.Right.Accept(c)
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regRb))
-
-	cmd += "### Binary operation ###\n"
 
 	switch expr.Operator.Type {
 	case tokens.EqualEqual, tokens.BangEqual, tokens.Greater, tokens.GreaterEqual, tokens.Less, tokens.LessEqual:
@@ -85,6 +84,7 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) string {
 	default:
 		c.error(expr.SourceLocation, "Invalid type combination in binary operation")
 	}
+	cmd += "### END   Binary operation ###\n"
 	return cmd
 }
 
@@ -147,10 +147,11 @@ func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) string {
 
 	cmd := ""
 
-	leftSide += "### Logical operation left side ###\n"
+	cmd += "### BEGIN Logical operation ###\n"
+	leftSide += "###       Logical operation left side ###\n"
 	leftSide += expr.Left.Accept(c)
 	leftSide += c.opHandler.Move(ops.Cs(ops.RX), regRa)
-	rightSide += "### Logical operation right side ###\n"
+	rightSide += "###       Logical operation right side ###\n"
 	rightSide += expr.Right.Accept(c)
 	rightSide += c.opHandler.Move(ops.Cs(ops.RX), regRb)
 	rightSide += c.opHandler.MoveScore(regRb, regRb)
@@ -179,6 +180,7 @@ func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) string {
 		c.error(expr.SourceLocation, "Invalid operator for logical expressions")
 	}
 
+	cmd += "### END   Logical operation ###\n"
 	return cmd
 }
 
@@ -187,7 +189,8 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) string {
 	regIndexEnd := c.newRegister(ops.RB)
 
 	cmd := ""
-	cmd += "### SliceString operation ###\n"
+	cmd += "### BEGIN String slice operation ###\n"
+	cmd += "###       Accept start index ###\n"
 	cmd += expr.StartIndex.Accept(c)
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regIndexStart))
 
@@ -195,12 +198,15 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) string {
 		cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regIndexEnd))
 		cmd += c.opHandler.Inc(ops.Cs(regIndexEnd))
 	} else {
+		cmd += "###       Accept end index ###\n"
 		cmd += expr.EndIndex.Accept(c)
 		cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(regIndexEnd))
 	}
 	cmd += expr.TargetExpr.Accept(c)
 
 	// Check index bounds
+
+	cmd += "###       Cheking index bounds ###\n"
 	lenReg := c.newRegister(ops.RX)
 
 	cmd += c.opHandler.SizeString(ops.Cs(ops.RX), ops.Cs(lenReg))
@@ -239,6 +245,7 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) string {
 			true,
 			c.opHandler.Exception("End slice index out of bounds"),
 		)
+		cmd += "###       Slice string ###\n"
 		cmd += c.opHandler.SliceString(ops.Cs(ops.RX), ops.Cs(regIndexStart), ops.Cs(regIndexEnd), ops.Cs(ops.RX))
 	} else if reflect.TypeOf(expr.TargetExpr.ReturnType()) == reflect.TypeOf(types.ListTypeStruct{}) {
 		cmd += c.opHandler.ExecCond(
@@ -246,18 +253,19 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) string {
 			true,
 			c.opHandler.Exception("Index out of bounds"),
 		)
+		cmd += "###       Index list ###\n"
 		if expr.EndIndex != nil {
 			c.error(expr.SourceLocation, "List slicing is not supported")
 			return ""
 		}
 		cmd += c.opHandler.GetListIndex(ops.Cs(ops.RX), ops.Cs(regIndexStart), ops.Cs(ops.RX))
 	}
+	cmd += "### END   String slice operation ###\n"
 	return cmd
 }
 
 func (c *Compiler) VisitList(expr expressions.ListExpr) string {
-	cmd := ""
-	cmd += "### List operation ###\n"
+	cmd := "### BEGIN List init operation ###\n"
 	regList := ops.Cs(c.newRegister(ops.RX))
 	cmd += c.opHandler.MakeList(regList)
 	for _, elem := range expr.Elements {
@@ -265,14 +273,15 @@ func (c *Compiler) VisitList(expr expressions.ListExpr) string {
 		cmd += c.opHandler.AppendList(regList, ops.Cs(ops.RX))
 	}
 	cmd += c.opHandler.Move(regList, ops.Cs(ops.RX))
-	cmd += "### List operation end ###\n"
+	cmd += "### END   List operation ###\n"
 	return cmd
 }
 
 func (c *Compiler) VisitFieldAccess(expr expressions.FieldAccessExpr) string {
-	cmd := ""
+	cmd := "### BEGIN Struct field access operation ###\n"
 	cmd += expr.Source.Accept(c)
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(ops.RA))
 	cmd += c.opHandler.StructGet(ops.Cs(ops.RA), expr.Field.Lexeme, ops.Cs(ops.RX))
+	cmd += "### END   Struct field access operation ###\n"
 	return cmd
 }

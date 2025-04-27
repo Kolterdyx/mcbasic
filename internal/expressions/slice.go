@@ -4,7 +4,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	log "github.com/sirupsen/logrus"
-	"reflect"
 )
 
 type SliceExpr struct {
@@ -32,9 +31,9 @@ func (s SliceExpr) ReturnType() interfaces.ValueType {
 }
 
 func getReturnIndexType(valueType interfaces.ValueType) interfaces.ValueType {
-	switch reflect.TypeOf(valueType) {
-	case reflect.TypeOf(types.ListTypeStruct{}):
-		return valueType.Primitive()
+	switch valueType.(type) {
+	case types.ListTypeStruct:
+		return valueType.(types.ListTypeStruct).Parent
 	default:
 		log.Errorf("Can't index type: %v", valueType)
 		return types.ErrorType
