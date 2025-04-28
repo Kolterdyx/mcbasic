@@ -27,7 +27,7 @@ This is a list of features that are currently implemented or planned for the fut
   - [x] **Double**.
   - [x] **String**.
   - [x] **Boolean**: Booleans do not have a type. Other types are evaluated to be truthy or falsy. Falsy values are `0`, `0.0`, `""`.
-  - [x] **List**: Statically typed lists. Only `int`, `double`, and `str` are supported for now.
+  - [x] **List**: Statically typed lists.
   - [ ] **Struct**: User-defined data types.
 - [x] **Comments**: Single-line comments with `#`.
 - [x] **String operations**:
