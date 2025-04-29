@@ -14,7 +14,7 @@ func (o *Op) integerOperation(x, y, to, operator string) string {
 }
 
 func (o *Op) MoveGMResult(to string) string {
-	return o.MoveRaw("gm:io", "out", fmt.Sprintf("%s:%s", o.Namespace, VarPath), to)
+	return o.MoveRaw("gm:io", "out", fmt.Sprintf("%s:data", o.Namespace), fmt.Sprintf("%s.%s", VarPath, to))
 }
 
 func (o *Op) CallGM1(op, x, to string) string {
