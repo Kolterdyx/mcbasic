@@ -99,11 +99,11 @@ func (p *Parser) ParseType() (interfaces.ValueType, error) {
 	case p.match(tokens.VoidType):
 		varType = types.VoidType
 	case p.match(tokens.Identifier):
-		// Check if the type is a struct
-		if _, ok := p.structs[p.previous().Lexeme]; !ok {
-			return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", p.previous().Lexeme))
+		structName := p.previous().Lexeme
+		if _, ok := p.structs[structName]; !ok {
+			return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", structName))
 		}
-		varType = types.StructTypeStruct{Name: p.previous().Lexeme}
+		varType = types.StructTypeStruct{Name: structName}
 	default:
 		return nil, p.error(p.peek(), "Expected type.")
 	}
@@ -218,7 +218,13 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	returnType, err := p.ParseType()
+	var returnType interfaces.ValueType = types.VoidType
+	if !p.check(tokens.BraceOpen) {
+		returnType, err = p.ParseType()
+	}
+	if returnType == nil {
+		return nil, p.error(p.peek(), "Expected return type.")
+	}
 	if err != nil && !p.check(tokens.BraceOpen) {
 		return nil, err
 	}
