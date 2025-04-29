@@ -22,6 +22,7 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 	}
 
 	var source = cmd + stmt.Body.Accept(c)
+	source += c.opHandler.Return()
 
 	args := make([]interfaces.FuncArg, 0)
 	for _, arg := range stmt.Parameters {
@@ -47,6 +48,7 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 		wrapperSource += c.opHandler.LoadArgConst("internal/"+stmt.Name.Lexeme+"__wrapped", arg.Name, c.opHandler.Macro(arg.Name), arg.Type == types.StringType)
 	}
 	wrapperSource += c.opHandler.Call("internal/"+stmt.Name.Lexeme+"__wrapped", "")
+	wrapperSource += c.opHandler.Return()
 	c.createFunction(stmt.Name.Lexeme, c.opHandler.MacroReplace(wrapperSource), args, stmt.ReturnType)
 	c.createFunction("internal/"+stmt.Name.Lexeme+"__wrapped", c.opHandler.MacroReplace(source), args, stmt.ReturnType)
 	return ""
@@ -120,7 +122,7 @@ func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStm
 	cmd := ""
 	isIndexedAssignment := len(stmt.Accessors) > 0
 	if stmt.Value.ReturnType() != c.getReturnType(stmt.Name.Lexeme) && !isIndexedAssignment {
-		c.error(stmt.Name.SourceLocation, fmt.Sprintf("Assignment type mismatch: %v != %v", c.getReturnType(stmt.Name.Lexeme), stmt.Value.ReturnType()))
+		c.error(stmt.Name.SourceLocation, fmt.Sprintf("Assignment type mismatch: %v != %v", c.getReturnType(stmt.Name.Lexeme).ToString(), stmt.Value.ReturnType().ToString()))
 	}
 	cmd += stmt.Value.Accept(c)
 	valueReg := ops.Cs(c.newRegister(ops.RX))

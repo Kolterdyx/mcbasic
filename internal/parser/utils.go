@@ -146,8 +146,8 @@ func (p *Parser) isList(name tokens.Token) bool {
 }
 
 func (p *Parser) isListType(varType interfaces.ValueType) bool {
-	switch reflect.TypeOf(varType) {
-	case reflect.TypeOf(types.ListTypeStruct{}):
+	switch varType.(type) {
+	case types.ListTypeStruct:
 		return true
 	default:
 		return false

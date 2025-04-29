@@ -20,9 +20,9 @@ func (o *Op) Call(funcName string, res string) string {
 	cmd += o.LoadArg(funcName, "__call__", CALL)
 	cmd += o.Inc(CALL)
 	if strings.Contains(funcName, ":") {
-		cmd += fmt.Sprintf("function %s with storage %s:data %s.%s\n", funcName, o.Namespace, ArgPath, o.baseFuncName(funcName))
+		cmd += fmt.Sprintf("function mcb:internal/call {function:'%s',args:'%s:data %s.%s',namespace:'%s'}\n", funcName, o.Namespace, ArgPath, o.baseFuncName(funcName), o.Namespace)
 	} else {
-		cmd += fmt.Sprintf("function %s:%s with storage %s:data %s.%s\n", o.Namespace, funcName, o.Namespace, ArgPath, funcName)
+		cmd += fmt.Sprintf("function mcb:internal/call {function:'%s:%s',args:'%s:data %s.%s',namespace:'%s'}\n", o.Namespace, funcName, o.Namespace, ArgPath, funcName, o.Namespace)
 	}
 	if res == "" {
 		return cmd

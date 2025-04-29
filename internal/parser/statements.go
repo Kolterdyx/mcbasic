@@ -61,8 +61,18 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 			return nil, err
 		}
 	}
-	if initializer != nil && initializer.ReturnType() != varType {
-		if !(p.isListType(varType) && initializer.ReturnType() == types.VoidType) {
+	if initializer != nil {
+		if list, ok := initializer.(expressions.ListExpr); ok {
+			// Allow assignment as long as varType is a list
+			if _, isList := varType.(types.ListTypeStruct); !isList {
+				return nil, p.error(p.previous(), "Cannot assign empty list to non-list type.")
+			}
+			if len(list.Elements) == 0 {
+				list.ValueType = varType
+			}
+			initializer = list
+		}
+		if initializer.ReturnType() != varType {
 			return nil, p.error(p.previous(), fmt.Sprintf("Cannot assign %s to %s.", initializer.ReturnType().ToString(), varType.ToString()))
 		}
 	}

@@ -116,6 +116,7 @@ func (c *Compiler) Compile(program parser.Program) {
 		structDefCmd := structDef.Accept(c)
 		structDefFunctionSource += structDefCmd
 	}
+	structDefFunctionSource += c.opHandler.Return()
 	c.createFunction("internal/struct_definitions", structDefFunctionSource, nil, types.VoidType)
 
 	// Built-in functions are protected by the compiler, so they can't be overwritten

@@ -14,9 +14,9 @@ func (o *Op) AppendList(to, from string) string {
 
 func (o *Op) GetListIndex(from, index, to string) string {
 	cmd := "### BEGIN List index operation  ###\n"
-	cmd += o.LoadArgConst("internal/list_index/get", "res", fmt.Sprintf("%s.%s", VarPath, RET))
-	cmd += o.LoadArgConst("internal/list_index/get", "storage", fmt.Sprintf("%s:data", o.Namespace))
-	cmd += o.LoadArgConst("internal/list_index/get", "from", fmt.Sprintf("%s.%s", VarPath, from))
+	cmd += o.LoadArgConst("internal/list_index/get", "res", fmt.Sprintf("%s.%s", VarPath, RET), true)
+	cmd += o.LoadArgConst("internal/list_index/get", "storage", fmt.Sprintf("%s:data", o.Namespace), true)
+	cmd += o.LoadArgConst("internal/list_index/get", "from", fmt.Sprintf("%s.%s", VarPath, from), true)
 	cmd += o.LoadArg("internal/list_index/get", "index", index)
 	cmd += o.Call("mcb:internal/list_index/get", to)
 	cmd += "### END   List index operation ###\n"
@@ -25,10 +25,10 @@ func (o *Op) GetListIndex(from, index, to string) string {
 
 func (o *Op) SetListIndex(list, index, valuePath string) string {
 	cmd := ""
-	cmd += o.LoadArgConst("internal/list_index/set", "storage", fmt.Sprintf("%s:data", o.Namespace))
-	cmd += o.LoadArgConst("internal/list_index/set", "list", fmt.Sprintf("%s.%s", VarPath, list))
+	cmd += o.LoadArgConst("internal/list_index/set", "storage", fmt.Sprintf("%s:data", o.Namespace), true)
+	cmd += o.LoadArgConst("internal/list_index/set", "list", fmt.Sprintf("%s.%s", VarPath, list), true)
 	cmd += o.LoadArg("internal/list_index/set", "index", index)
-	cmd += o.LoadArgConst("internal/list_index/set", "value_path", fmt.Sprintf("%s.%s", VarPath, valuePath))
+	cmd += o.LoadArgConst("internal/list_index/set", "value_path", fmt.Sprintf("%s.%s", VarPath, valuePath), true)
 	cmd += o.Call("mcb:internal/list_index/set", "")
 	return cmd
 }
