@@ -7,7 +7,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	log "github.com/sirupsen/logrus"
-	"reflect"
 	"strings"
 )
 
@@ -122,27 +121,6 @@ func (p *Parser) getType(name tokens.Token) interfaces.ValueType {
 		}
 	}
 	return nil
-}
-
-func (p *Parser) isList(name tokens.Token) bool {
-	for _, v := range p.variables {
-		for _, def := range v {
-			if def.Name == name.Lexeme {
-				return reflect.TypeOf(def.Type) == reflect.TypeOf(types.ListTypeStruct{})
-			}
-		}
-	}
-	for _, f := range p.functions {
-
-		split := strings.Split(f.Name, ":")
-		if len(split) > 2 {
-			log.Fatalf("Invalid function name: %s", f.Name)
-		}
-		if len(split) == 2 && split[1] == name.Lexeme || len(split) == 1 && f.Name == name.Lexeme {
-			return reflect.TypeOf(f.ReturnType) == reflect.TypeOf(types.ListTypeStruct{})
-		}
-	}
-	return false
 }
 
 func (p *Parser) isListType(varType interfaces.ValueType) bool {
