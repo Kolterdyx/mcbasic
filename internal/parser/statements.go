@@ -226,7 +226,8 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 	for _, arg := range parameters {
 		p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{Name: arg.Name, Type: arg.Type})
 	}
-	p.functions = append(p.functions, interfaces.FuncDef{Name: name.Lexeme, Args: parameters, ReturnType: returnType})
+	p.functions[name.Lexeme] = interfaces.FuncDef{Name: name.Lexeme, Args: parameters, ReturnType: returnType}
+	p.currentScope = name.Lexeme
 	body, err := p.block()
 	if err != nil {
 		return nil, err
@@ -362,13 +363,17 @@ func (p *Parser) ifStatement() (statements.Stmt, error) {
 }
 
 func (p *Parser) returnStatement() (statements.Stmt, error) {
-	value, err := p.expression()
-	if err != nil {
-		return nil, err
+	var expr expressions.Expr = nil
+	var err error
+	if p.functions[p.currentScope].ReturnType != types.VoidType {
+		expr, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
 	}
 	_, err = p.consume(tokens.Semicolon, "Expected ';' after return statement.")
 	if err != nil {
 		return nil, err
 	}
-	return statements.ReturnStmt{Expression: value}, nil
+	return statements.ReturnStmt{Expression: expr}, nil
 }

@@ -110,7 +110,7 @@ func (c *Compiler) baseFunctions() {
 	c.createFunction(
 		"mcb:internal/init",
 		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
-			c.opHandler.MakeConst("0", ops.CALL)+
+			c.opHandler.MakeConst("0", ops.CALL, false)+
 			c.opHandler.MoveScore(ops.CALL, ops.CALL)+
 			cleanCall+
 			c.opHandler.LoadArgConst("log", "text", "MCB pack loaded", true)+

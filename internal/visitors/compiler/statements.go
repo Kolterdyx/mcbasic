@@ -67,10 +67,14 @@ func (c *Compiler) VisitExpression(stmt statements.ExpressionStmt) string {
 
 func (c *Compiler) VisitReturn(stmt statements.ReturnStmt) string {
 	cmd := ""
-	if stmt.Expression.ReturnType() != c.currentFunction.ReturnType {
-		log.Fatalln("Return type does not match function return type")
+
+	expr := stmt.Expression
+	if expr != nil {
+		if expr.ReturnType() != c.currentFunction.ReturnType {
+			log.Fatalln("Return type does not match function return type")
+		}
+		cmd += expr.Accept(c)
 	}
-	cmd += stmt.Expression.Accept(c)
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.RET)
 	cmd += c.opHandler.Return()
 	return cmd
@@ -88,7 +92,7 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 		case types.DoubleType:
 			cmd += c.opHandler.MakeConst("0.0d", ops.Cs(stmt.Name.Lexeme), false)
 		case types.StringType:
-			cmd += c.opHandler.MakeConst("\"\"", ops.Cs(stmt.Name.Lexeme))
+			cmd += c.opHandler.MakeConst("", ops.Cs(stmt.Name.Lexeme))
 		default:
 			if reflect.TypeOf(stmt.Type) == reflect.TypeOf(types.ListTypeStruct{}) {
 				cmd += c.opHandler.MakeList(ops.Cs(stmt.Name.Lexeme))

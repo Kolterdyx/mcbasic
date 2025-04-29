@@ -162,9 +162,9 @@ func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) string {
 		// If left side is false, return false
 		evalRightSide := ""
 		cmd += c.opHandler.MoveScore(regRa, regRa)
-		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), true, c.opHandler.MakeConst("0", ops.Cs(ops.RX)))
+		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), true, c.opHandler.MakeConst("0", ops.Cs(ops.RX), false))
 		evalRightSide += rightSide
-		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), true, c.opHandler.MakeConst("0", ops.Cs(ops.RX)))
+		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), true, c.opHandler.MakeConst("0", ops.Cs(ops.RX), false))
 		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), false, c.opHandler.Move(regRb, ops.Cs(ops.RX)))
 		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), false, evalRightSide)
 	case tokens.Or:
@@ -173,7 +173,7 @@ func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) string {
 		cmd += c.opHandler.MoveScore(regRa, regRa)
 		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), false, c.opHandler.Move(regRa, ops.Cs(ops.RX)))
 		evalRightSide += rightSide
-		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), true, c.opHandler.MakeConst("0", ops.Cs(ops.RX)))
+		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), true, c.opHandler.MakeConst("0", ops.Cs(ops.RX), false))
 		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), false, c.opHandler.Move(regRb, ops.Cs(ops.RX)))
 		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), true, evalRightSide)
 	default:
