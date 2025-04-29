@@ -49,12 +49,10 @@ func (o *Op) LoadArgRaw(funcName, argName string, varName string) string {
 }
 
 func (o *Op) LoadArgConst(funcName, argName string, value string, quote ...bool) string {
-	log.Debugf("LoadArgConst: %s %s %s %v", funcName, argName, value, quote)
 	// if value is not numeric, wrap it in quotes
 	if len(quote) > 0 && quote[0] {
 		value = strconv.Quote(value)
 	}
-	log.Debugf("value: %s", value)
 	return fmt.Sprintf("data modify storage %s:data %s.%s.%s set value %s\n", o.Namespace, ArgPath, o.baseFuncName(funcName), argName, value)
 }
 
