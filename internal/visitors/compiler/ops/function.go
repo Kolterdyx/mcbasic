@@ -48,11 +48,13 @@ func (o *Op) LoadArgRaw(funcName, argName string, varName string) string {
 	return fmt.Sprintf("data modify storage %s:data %s.%s.%s set from storage %s:data %s\n", o.Namespace, ArgPath, o.baseFuncName(funcName), argName, o.Namespace, varName)
 }
 
-func (o *Op) LoadArgConst(funcName, argName string, value string) string {
+func (o *Op) LoadArgConst(funcName, argName string, value string, quote ...bool) string {
+	log.Debugf("LoadArgConst: %s %s %s %v", funcName, argName, value, quote)
 	// if value is not numeric, wrap it in quotes
-	if _, err := strconv.Atoi(value); err != nil && !(value[0] == '$' && value[1] == '(' && value[len(value)-1] == ')') {
+	if len(quote) > 0 && quote[0] {
 		value = strconv.Quote(value)
 	}
+	log.Debugf("value: %s", value)
 	return fmt.Sprintf("data modify storage %s:data %s.%s.%s set value %s\n", o.Namespace, ArgPath, o.baseFuncName(funcName), argName, value)
 }
 

@@ -18,7 +18,7 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 	cmd := ""
 	// For each parameter, copy the value to a variable with the same name
 	for _, arg := range stmt.Parameters {
-		cmd += c.opHandler.MakeConst(c.opHandler.Macro(arg.Name), ops.Cs(arg.Name))
+		cmd += c.opHandler.MakeConst(c.opHandler.Macro(arg.Name), ops.Cs(arg.Name), arg.Type == types.StringType)
 	}
 
 	var source = cmd + stmt.Body.Accept(c)
@@ -44,7 +44,7 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 	// function wrapper that automatically loads the __call__ parameter
 	wrapperSource := ""
 	for _, arg := range stmt.Parameters {
-		wrapperSource += c.opHandler.LoadArgConst("internal/"+stmt.Name.Lexeme+"__wrapped", arg.Name, c.opHandler.Macro(arg.Name))
+		wrapperSource += c.opHandler.LoadArgConst("internal/"+stmt.Name.Lexeme+"__wrapped", arg.Name, c.opHandler.Macro(arg.Name), arg.Type == types.StringType)
 	}
 	wrapperSource += c.opHandler.Call("internal/"+stmt.Name.Lexeme+"__wrapped", "")
 	c.createFunction(stmt.Name.Lexeme, c.opHandler.MacroReplace(wrapperSource), args, stmt.ReturnType)
