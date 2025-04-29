@@ -16,14 +16,12 @@ func (o *Op) Move(from, to string) string {
 	)
 }
 
-func (o *Op) MoveConst(value, to string, wrapInQuotes ...bool) string {
-	wrapInQuote := true
-	if len(wrapInQuotes) > 0 {
-		wrapInQuote = wrapInQuotes[0]
+func (o *Op) MakeConst(value, to string, quote ...bool) string {
+	wrapInQuotes := true
+	if len(quote) > 0 {
+		wrapInQuotes = quote[0]
 	}
-	if !(value[0] == '$' && value[1] == '(' && value[len(value)-1] == ')') &&
-		!(value[0] == '"' && value[len(value)-1] == '"') &&
-		wrapInQuote {
+	if wrapInQuotes {
 		value = strconv.Quote(value)
 	}
 	// if the value is a float, add a trailing L to store it as a long

@@ -1,14 +1,20 @@
 package interfaces
 
-type ValueType string
+type PrimitiveType string
+
+type ValueType interface {
+	Primitive() ValueType
+	ToString() string
+}
 
 type Project struct {
-	Name        string   `toml:"name"`
-	Namespace   string   `toml:"namespace"`
-	Authors     []string `toml:"authors"`
-	Entrypoint  string   `toml:"entrypoint"`
-	Version     string   `toml:"version"`
-	Description string   `toml:"description"`
+	Name            string   `toml:"name"`
+	Namespace       string   `toml:"namespace"`
+	Authors         []string `toml:"authors"`
+	Entrypoint      string   `toml:"entrypoint"`
+	Version         string   `toml:"version"`
+	Description     string   `toml:"description"`
+	CleanBeforeInit bool     `toml:"cleanBeforeInit"`
 }
 
 type ProjectConfig struct {
@@ -25,10 +31,10 @@ type DatapackHeader struct {
 		Functions []struct {
 			Name string `json:"name"`
 			Args []struct {
-				Name string    `json:"name"`
-				Type ValueType `json:"type"`
+				Name string `json:"name"`
+				Type string `json:"type"`
 			} `json:"args"`
-			ReturnType ValueType `json:"returnType"`
+			ReturnType string `json:"returnType"`
 		} `json:"functions"`
 	} `json:"definitions"`
 }

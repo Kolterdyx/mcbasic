@@ -2,39 +2,37 @@ package ops
 
 import (
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal/expressions"
-	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 	log "github.com/sirupsen/logrus"
 )
 
-func (o *Op) StructDefine(name string) string {
-	return fmt.Sprintf("data modify storage %s:data %s.%s set value %s\n", o.Namespace, StructPath, name, o.StructToNbt(interfaces.ValueType(name)))
+func (o *Op) StructDefine(structType types.StructTypeStruct) string {
+	return fmt.Sprintf("data modify storage %s:data %s.%s set value %s\n", o.Namespace, StructPath, structType.Name, o.StructToNbt(structType))
 }
 
-func (o *Op) StructToNbt(structName interfaces.ValueType) string {
+func (o *Op) StructToNbt(structType types.StructTypeStruct) string {
 	nbtData := "{"
-	fields := o.GetStructFields(structName)
+	fields := o.GetStructFields(structType)
 	if fields == nil {
-		log.Errorf("Struct %s not found", structName)
+		log.Errorf("Struct %s not found", structType)
 		return ""
 	}
 	for i, field := range fields {
 		nbtData += field.Name + ": "
 		switch field.Type {
-		case expressions.IntType:
+		case types.IntType:
 			nbtData += "0L"
-		case expressions.DoubleType:
+		case types.DoubleType:
 			nbtData += "0.0d"
-		case expressions.StringType:
+		case types.StringType:
 			nbtData += "''"
-		case expressions.ListIntType:
-			fallthrough
-		case expressions.ListDoubleType:
-			fallthrough
-		case expressions.ListStringType:
-			nbtData += "[]"
 		default:
-			nbtData += o.StructToNbt(field.Type)
+			switch field.Type.(type) {
+			case types.ListTypeStruct:
+				nbtData += "[]"
+			case types.StructTypeStruct:
+				nbtData += o.StructToNbt(field.Type.(types.StructTypeStruct))
+			}
 		}
 		if i != len(fields)-1 {
 			nbtData += ", "

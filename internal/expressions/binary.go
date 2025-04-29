@@ -3,6 +3,7 @@ package expressions
 import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 type BinaryExpr struct {
@@ -24,21 +25,21 @@ func (b BinaryExpr) ExprType() ExprType {
 
 func (b BinaryExpr) ReturnType() interfaces.ValueType {
 	switch b.Left.ReturnType() {
-	case IntType:
+	case types.IntType:
 		switch b.Right.ReturnType() {
-		case IntType:
-			return IntType
+		case types.IntType:
+			return types.IntType
 		default:
-			return ErrorType
+			return types.ErrorType
 		}
-	case StringType:
-		return StringType
-	case DoubleType:
+	case types.StringType:
+		return types.StringType
+	case types.DoubleType:
 		switch b.Right.ReturnType() {
-		case DoubleType:
-			return DoubleType
+		case types.DoubleType:
+			return types.DoubleType
 		default:
-			return ErrorType
+			return types.ErrorType
 		}
 	}
 	return b.Left.ReturnType()

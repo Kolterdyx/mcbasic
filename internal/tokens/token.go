@@ -61,7 +61,7 @@ const (
 	IntType
 	DoubleType
 	StringType
-	ListType
+	VoidType
 
 	Struct
 )
@@ -152,8 +152,8 @@ func (t TokenType) String() string {
 		return "DoubleType"
 	case StringType:
 		return "StringType"
-	case ListType:
-		return "ListType"
+	case VoidType:
+		return "VoidType"
 	case Struct:
 		return "Struct"
 	default:
@@ -173,8 +173,8 @@ var Keywords = map[string]TokenType{
 	"while":  While,
 	"int":    IntType,
 	"double": DoubleType,
-	"list":   ListType,
 	"str":    StringType,
+	"void":   VoidType,
 	"return": Return,
 	"struct": Struct,
 }
@@ -183,5 +183,5 @@ var ValueTypes = []TokenType{
 	IntType,
 	DoubleType,
 	StringType,
-	ListType,
+	VoidType,
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/parser"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
-	"github.com/Kolterdyx/mcbasic/internal/utils"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	log "github.com/sirupsen/logrus"
 	"io"
@@ -90,7 +90,7 @@ func (c *Compiler) Compile(program parser.Program) {
 	}
 	c.createPackMeta()
 
-	c.functions = utils.GetHeaderFuncDefs(c.Headers)
+	c.functions = parser.GetHeaderFuncDefs(c.Headers)
 	c.opHandler.Structs = program.Structs
 
 	for _, function := range program.Functions {
@@ -107,7 +107,7 @@ func (c *Compiler) Compile(program parser.Program) {
 		}
 		f.Args = append(f.Args, interfaces.FuncArg{
 			Name: "__call__",
-			Type: expressions.IntType,
+			Type: types.IntType,
 		})
 		c.functions[function.Name.Lexeme] = f
 	}
@@ -116,7 +116,8 @@ func (c *Compiler) Compile(program parser.Program) {
 		structDefCmd := structDef.Accept(c)
 		structDefFunctionSource += structDefCmd
 	}
-	c.createFunction("internal/struct_definitions", structDefFunctionSource, nil, expressions.VoidType)
+	structDefFunctionSource += c.opHandler.Return()
+	c.createFunction("internal/struct_definitions", structDefFunctionSource, nil, types.VoidType)
 
 	// Built-in functions are protected by the compiler, so they can't be overwritten
 	c.createFunctionTags()
@@ -199,7 +200,7 @@ func (c *Compiler) createFunction(fullName string, source string, args []interfa
 	for _, parameter := range args {
 		f.Args = append(f.Args, interfaces.FuncArg{Name: parameter.Name, Type: parameter.Type})
 	}
-	f.Args = append(f.Args, interfaces.FuncArg{Name: "__call__", Type: expressions.IntType})
+	f.Args = append(f.Args, interfaces.FuncArg{Name: "__call__", Type: types.IntType})
 	c.functions[fullName] = f
 
 	err := os.WriteFile(c.getFuncPath(namespace)+"/"+filename, []byte(source), 0644)
@@ -251,7 +252,7 @@ func (c *Compiler) getReturnType(name string) interfaces.ValueType {
 			return identifier.Type
 		}
 	}
-	return expressions.VoidType
+	return types.VoidType
 }
 
 func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx string) string {
@@ -261,43 +262,43 @@ func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx
 	case tokens.EqualEqual:
 		if expr.Left.ReturnType() != expr.Right.ReturnType() {
 			// Return false
-			cmd += c.opHandler.MoveConst("0", rx)
+			cmd += c.opHandler.MakeConst("0", rx, false)
 		} else {
-			if expr.Left.ReturnType() == expressions.IntType {
+			if expr.Left.ReturnType() == types.IntType {
 				cmd += c.opHandler.EqNumbers(ra, rb, rx)
-			} else if expr.Left.ReturnType() == expressions.StringType {
+			} else if expr.Left.ReturnType() == types.StringType {
 				cmd += c.opHandler.EqStrings(ra, rb, rx)
 			}
 		}
 	case tokens.BangEqual:
 		if expr.Left.ReturnType() != expr.Right.ReturnType() {
 			// Return true
-			cmd += c.opHandler.MoveConst("1", rx)
+			cmd += c.opHandler.MakeConst("1", rx, false)
 		} else {
-			if expr.Left.ReturnType() == expressions.IntType {
+			if expr.Left.ReturnType() == types.IntType {
 				cmd += c.opHandler.NeqNumbers(ra, rb, rx)
-			} else if expr.Left.ReturnType() == expressions.StringType {
+			} else if expr.Left.ReturnType() == types.StringType {
 				cmd += c.opHandler.NeqStrings(ra, rb, rx)
 			}
 
 		}
 	case tokens.Greater:
-		if expr.Left.ReturnType() != expressions.IntType {
+		if expr.Left.ReturnType() != types.IntType {
 			c.error(expr.SourceLocation, "Invalid type in binary operation")
 		}
 		cmd += c.opHandler.GtNumbers(ra, rb, rx)
 	case tokens.GreaterEqual:
-		if expr.Left.ReturnType() != expressions.IntType {
+		if expr.Left.ReturnType() != types.IntType {
 			c.error(expr.SourceLocation, "Invalid type in binary operation")
 		}
 		cmd += c.opHandler.GteNumbers(ra, rb, rx)
 	case tokens.Less:
-		if expr.Left.ReturnType() != expressions.IntType {
+		if expr.Left.ReturnType() != types.IntType {
 			c.error(expr.SourceLocation, "Invalid type in binary operation")
 		}
 		cmd += c.opHandler.LtNumbers(ra, rb, rx)
 	case tokens.LessEqual:
-		if expr.Left.ReturnType() != expressions.IntType {
+		if expr.Left.ReturnType() != types.IntType {
 			c.error(expr.SourceLocation, "Invalid type in binary operation")
 		}
 		cmd += c.opHandler.LteNumbers(ra, rb, rx)

@@ -3,6 +3,7 @@ package expressions
 import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 type UnaryExpr struct {
@@ -22,5 +23,5 @@ func (u UnaryExpr) ExprType() ExprType {
 }
 
 func (u UnaryExpr) ReturnType() interfaces.ValueType {
-	return IntType
+	return types.IntType
 }

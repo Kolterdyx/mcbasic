@@ -2,9 +2,10 @@ package parser
 
 import (
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/scanner"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 	log "github.com/sirupsen/logrus"
 	"strings"
 )
@@ -119,109 +120,77 @@ func (p *Parser) getType(name tokens.Token) interfaces.ValueType {
 			return f.ReturnType
 		}
 	}
-	return ""
-}
-
-func (p *Parser) isList(name tokens.Token) bool {
-	for _, v := range p.variables {
-		for _, def := range v {
-			if def.Name == name.Lexeme {
-				return def.Type == expressions.ListIntType ||
-					def.Type == expressions.ListDoubleType ||
-					def.Type == expressions.ListStringType
-			}
-		}
-	}
-	for _, f := range p.functions {
-
-		split := strings.Split(f.Name, ":")
-		if len(split) > 2 {
-			log.Fatalf("Invalid function name: %s", f.Name)
-		}
-		if len(split) == 2 && split[1] == name.Lexeme || len(split) == 1 && f.Name == name.Lexeme {
-			return f.ReturnType == expressions.ListIntType ||
-				f.ReturnType == expressions.ListDoubleType ||
-				f.ReturnType == expressions.ListStringType
-		}
-	}
-	return false
+	return nil
 }
 
 func (p *Parser) isListType(varType interfaces.ValueType) bool {
-	switch varType {
-	case expressions.ListIntType:
-		return true
-	case expressions.ListStringType:
-		return true
-	case expressions.ListDoubleType:
+	switch varType.(type) {
+	case types.ListTypeStruct:
 		return true
 	default:
 		return false
 	}
 }
 
-// getListType returns the type of list based on its content value type
-func (p *Parser) getListType(valueType interfaces.ValueType) interfaces.ValueType {
-	switch valueType {
-	case expressions.IntType:
-		return expressions.ListIntType
-	case expressions.StringType:
-		return expressions.ListStringType
-	case expressions.DoubleType:
-		return expressions.ListDoubleType
-	case expressions.VoidType:
-		return expressions.VoidType
-	default:
-		log.Fatalf("Unsupported type for list: %s", valueType)
-	}
-	return ""
-}
-
-// getListValueType returns the value type of the contents of a list
-func (p *Parser) getListValueType(valueType interfaces.ValueType) interfaces.ValueType {
-	switch valueType {
-	case expressions.ListIntType:
-		return expressions.IntType
-	case expressions.ListStringType:
-		return expressions.StringType
-	case expressions.ListDoubleType:
-		return expressions.DoubleType
-	default:
-		log.Fatalf("Invalid list type: %s", valueType)
-	}
-	return ""
-}
-
 func (p *Parser) getTokenAsValueType(token tokens.Token) (interfaces.ValueType, error) {
 	var varType interfaces.ValueType
 	var err error
 	switch token.Type {
-	case tokens.ListType:
-		_, err = p.consume(tokens.Less, fmt.Sprintf("Expected '<' after '%s'.", p.previous().Lexeme))
-		if err != nil {
-			return "", err
-		}
-		switch {
-		case p.match(tokens.IntType):
-			varType = expressions.ListIntType
-		case p.match(tokens.StringType):
-			varType = expressions.ListStringType
-		case p.match(tokens.DoubleType):
-			varType = expressions.ListDoubleType
-		default:
-			return "", p.error(p.peek(), "Expected list type.")
-		}
-		_, err = p.consume(tokens.Greater, fmt.Sprintf("Expected '>' after '%s'.", p.previous().Lexeme))
 	case tokens.IntType:
-		varType = expressions.IntType
+		varType = types.IntType
 	case tokens.StringType:
-		varType = expressions.StringType
+		varType = types.StringType
 	case tokens.DoubleType:
-		varType = expressions.DoubleType
+		varType = types.DoubleType
+	case tokens.VoidType:
+		varType = types.VoidType
 	case tokens.Identifier:
-		varType = interfaces.ValueType(token.Lexeme)
+		// structs and lists?
 	default:
-		return "", p.error(p.peek(), "Expected variable type.")
+		return nil, p.error(p.peek(), "Expected variable type.")
 	}
 	return varType, err
+}
+
+func parseType(valueType string) (interfaces.ValueType, error) {
+	s := scanner.Scanner{}
+	p := Parser{
+		Tokens: s.Scan(valueType),
+	}
+	return p.ParseType()
+}
+
+func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interfaces.FuncDef {
+	funcDefs := make(map[string]interfaces.FuncDef)
+	for _, header := range headers {
+		log.Debugf("Loading header: %s. Functions: %v", header.Namespace, len(header.Definitions.Functions))
+		for _, function := range header.Definitions.Functions {
+			funcName := fmt.Sprintf("%s:%s", header.Namespace, function.Name)
+
+			returnType, err := parseType(function.ReturnType)
+			if err != nil {
+				log.Errorf("Error parsing function return type: %s", err)
+				continue
+			}
+			f := interfaces.FuncDef{
+				Name:       funcName,
+				Args:       make([]interfaces.FuncArg, 0),
+				ReturnType: returnType,
+			}
+			for _, parameter := range function.Args {
+				parameterType, err := parseType(parameter.Type)
+				if err != nil {
+					log.Errorf("Error parsing function parameter type: %s", err)
+					continue
+				}
+				f.Args = append(f.Args, interfaces.FuncArg{
+					Name: parameter.Name,
+					Type: parameterType,
+				})
+			}
+			funcDefs[funcName] = f
+		}
+		log.Debugf("Loaded header: %s. Functions: %v", header.Namespace, len(header.Definitions.Functions))
+	}
+	return funcDefs
 }

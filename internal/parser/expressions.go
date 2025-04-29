@@ -5,6 +5,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 func (p *Parser) expression() (expressions.Expr, error) {
@@ -133,69 +134,121 @@ func (p *Parser) unary() (expressions.Expr, error) {
 }
 
 func (p *Parser) value() (expressions.Expr, error) {
+	// 1) Parse the “primary” thing (identifier, literal, function call, grouping, list literal…)
+	expr, err := p.baseValue()
+	if err != nil {
+		return nil, err
+	}
+	// 2) Repeatedly eat [] or .field, nesting the expression:
+	return p.postfix(expr)
+}
 
-	var namespaceIdentifier tokens.Token
+// baseValue parses an atomic expression with optional namespace and function call.
+func (p *Parser) baseValue() (expressions.Expr, error) {
+	var namespaceToken tokens.Token
+	var hasNamespace bool
 	var err error
-	hasNamespace := false
 	if p.match(tokens.Colon) {
 		p.stepBack()
 		p.stepBack()
 	}
+
+	// First, try to parse an identifier (possibly namespaced)
 	if p.match(tokens.Identifier) {
+		// Save the identifier (might be namespace)
 		identifier := p.previous()
+
+		// If a colon follows, treat previous as namespace
 		if p.match(tokens.Colon) {
-			namespaceIdentifier = identifier
+			namespaceToken = identifier
 			hasNamespace = true
-			identifier, err = p.consume(tokens.Identifier, "Expected identifier after ':'.")
+			// Next token must be the actual identifier
+			identifier, err = p.consume(tokens.Identifier, "Expected identifier after ':'")
 			if err != nil {
 				return nil, err
 			}
 		}
-		identifierType := p.getType(identifier)
 
-		if identifierType == "" {
+		// Lookup the declared type
+		identifierType := p.getType(identifier)
+		if identifierType == nil {
 			return nil, p.error(identifier, "Undeclared identifier")
 		}
 
-		switch {
-		case p.match(tokens.ParenOpen):
-			return p.functionCall(namespaceIdentifier, identifier, hasNamespace)
-		case p.match(tokens.BracketOpen):
-			return p.slice(expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: identifierType})
-		case p.match(tokens.Dot):
-			if hasNamespace {
-				return nil, p.error(identifier, "Cannot use namespace with field access.")
-			}
-			if _, ok := p.variables[identifier.Lexeme]; !ok {
-				return nil, p.error(identifier, fmt.Sprintf("Field access is only allowed on variables."))
-			}
-			return p.fieldAccess(expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: identifierType})
-		default:
-			return expressions.VariableExpr{Name: identifier, SourceLocation: p.location(), Type: identifierType}, nil
+		// If this is a function call, delegate to functionCall (handles namespace)
+		if p.match(tokens.ParenOpen) {
+			return p.functionCall(namespaceToken, identifier, hasNamespace)
 		}
+
+		// Otherwise, it's a variable reference.  If namespaced, prefix the lexeme.
+		nameToken := identifier
+		if hasNamespace {
+			nameToken = tokens.Token{
+				Type:           identifier.Type,
+				Lexeme:         fmt.Sprintf("%s:%s", namespaceToken.Lexeme, identifier.Lexeme),
+				Literal:        identifier.Literal,
+				SourceLocation: identifier.SourceLocation,
+			}
+		}
+
+		return expressions.VariableExpr{
+			Name:           nameToken,
+			SourceLocation: p.location(),
+			Type:           identifierType,
+		}, nil
 	}
+
+	// Fallback to literals, grouping, list literals, etc.
 	return p.primary()
 }
 
-func (p *Parser) fieldAccess(source expressions.Expr) (expressions.Expr, error) {
-	field, err := p.consume(tokens.Identifier, "Expected identifier after '.'")
-	if err != nil {
-		return nil, err
+// postfix wraps an Expr in as many [index] or .field as you find:
+func (p *Parser) postfix(expr expressions.Expr) (expressions.Expr, error) {
+	// If it’s “[”, parse a slice/index, then recurse:
+	if _, ok := expr.ReturnType().(types.ListTypeStruct); p.match(tokens.BracketOpen) && ok {
+		// read either slice or single index
+		start, err := p.expression()
+		if err != nil {
+			return nil, err
+		}
+		var end expressions.Expr
+		if p.match(tokens.Colon) {
+			end, err = p.expression()
+			if err != nil {
+				return nil, err
+			}
+		}
+		if _, err = p.consume(tokens.BracketClose, "Expected ']'"); err != nil {
+			return nil, err
+		}
+		expr = expressions.SliceExpr{
+			TargetExpr:     expr,
+			StartIndex:     start,
+			EndIndex:       end,
+			SourceLocation: p.location(),
+		}
+		// keep consuming more postfix:
+		return p.postfix(expr)
 	}
-	fieldType, err := p.getTokenAsValueType(field)
-	if err != nil {
-		return nil, p.error(field, err.Error())
+	// If it’s “.”, parse a field access, then recurse:
+	if _, ok := expr.ReturnType().(types.StructTypeStruct); p.match(tokens.Dot) && ok {
+		fieldTok, err := p.consume(tokens.Identifier, "Expected field name after '.'")
+		if err != nil {
+			return nil, err
+		}
+		fieldTokenType, err := p.getTokenAsValueType(fieldTok)
+		if err != nil {
+			return nil, err
+		}
+		expr = expressions.FieldAccessExpr{
+			Source:         expr,
+			Field:          fieldTok,
+			SourceLocation: p.location(),
+			Type:           fieldTokenType,
+		}
+		return p.postfix(expr)
 	}
-	fieldAccessExpr := expressions.FieldAccessExpr{
-		Source:         source,
-		Field:          field,
-		SourceLocation: p.location(),
-		Type:           fieldType,
-	}
-	if p.match(tokens.Dot) {
-		return p.fieldAccess(fieldAccessExpr)
-	}
-	return fieldAccessExpr, nil
+	return expr, nil
 }
 
 func (p *Parser) functionCall(namespace tokens.Token, name tokens.Token, hasNamespace bool) (expressions.Expr, error) {
@@ -234,7 +287,7 @@ func (p *Parser) functionCall(namespace tokens.Token, name tokens.Token, hasName
 				return nil, p.error(name, fmt.Sprintf("Expected %d arguments, got %d.", len(f.Args), len(args)))
 			}
 			for i, arg := range args {
-				if arg.ReturnType() != f.Args[i].Type && f.Args[i].Type != expressions.VoidType {
+				if arg.ReturnType() != f.Args[i].Type && f.Args[i].Type != types.VoidType {
 					return nil, p.error(p.peekCount(-(len(f.Args)-i)*2), fmt.Sprintf("Expected %s, got %s.", f.Args[i].Type, arg.ReturnType()))
 				}
 			}
@@ -275,22 +328,22 @@ func (p *Parser) slice(expr expressions.Expr) (expressions.Expr, error) {
 
 func (p *Parser) primary() (expressions.Expr, error) {
 	if p.match(tokens.False) {
-		return expressions.LiteralExpr{Value: 0, ValueType: expressions.IntType, SourceLocation: p.location()}, nil
+		return expressions.LiteralExpr{Value: 0, ValueType: types.IntType, SourceLocation: p.location()}, nil
 	}
 	if p.match(tokens.True) {
-		return expressions.LiteralExpr{Value: 1, ValueType: expressions.IntType, SourceLocation: p.location()}, nil
+		return expressions.LiteralExpr{Value: 1, ValueType: types.IntType, SourceLocation: p.location()}, nil
 	}
 	if p.match(tokens.Int) {
-		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: expressions.IntType, SourceLocation: p.location()}, nil
+		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: types.IntType, SourceLocation: p.location()}, nil
 	}
 	if p.match(tokens.Double) {
-		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: expressions.DoubleType, SourceLocation: p.location()}, nil
+		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: types.DoubleType, SourceLocation: p.location()}, nil
 	}
 	if p.match(tokens.String) {
 		if p.match(tokens.BracketOpen) {
-			return p.slice(expressions.LiteralExpr{Value: p.peekCount(-2).Literal, ValueType: expressions.StringType, SourceLocation: p.location()})
+			return p.slice(expressions.LiteralExpr{Value: p.peekCount(-2).Literal, ValueType: types.StringType, SourceLocation: p.location()})
 		} else {
-			return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: expressions.StringType, SourceLocation: p.location()}, nil
+			return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: types.StringType, SourceLocation: p.location()}, nil
 		}
 	}
 	if p.match(tokens.ParenOpen) {
@@ -306,7 +359,7 @@ func (p *Parser) primary() (expressions.Expr, error) {
 	}
 	if p.match(tokens.BracketOpen) {
 		var elems []expressions.Expr
-		var contentType = expressions.VoidType
+		var contentType interfaces.ValueType = types.VoidType
 		for !p.check(tokens.BracketClose) {
 			if p.match(tokens.Comma) {
 				continue
@@ -315,7 +368,7 @@ func (p *Parser) primary() (expressions.Expr, error) {
 			if err != nil {
 				return nil, err
 			}
-			if contentType == expressions.VoidType {
+			if contentType == types.VoidType {
 				contentType = expr.ReturnType()
 			} else if contentType != expr.ReturnType() {
 				return nil, p.error(p.previous(), fmt.Sprintf("Expected %s, got %s.", contentType, expr.ReturnType()))
@@ -336,7 +389,7 @@ func (p *Parser) primary() (expressions.Expr, error) {
 		return expressions.ListExpr{
 			Elements:       elems,
 			SourceLocation: p.location(),
-			ValueType:      p.getListType(contentType),
+			ValueType:      types.ListTypeStruct{Parent: contentType},
 		}, nil
 	}
 	errorToken := p.peek()

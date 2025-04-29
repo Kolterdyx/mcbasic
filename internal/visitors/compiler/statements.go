@@ -2,9 +2,9 @@ package compiler
 
 import (
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	log "github.com/sirupsen/logrus"
 	"reflect"
@@ -18,10 +18,11 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 	cmd := ""
 	// For each parameter, copy the value to a variable with the same name
 	for _, arg := range stmt.Parameters {
-		cmd += c.opHandler.MoveConst(c.opHandler.Macro(arg.Name), ops.Cs(arg.Name))
+		cmd += c.opHandler.MakeConst(c.opHandler.Macro(arg.Name), ops.Cs(arg.Name), arg.Type == types.StringType)
 	}
 
 	var source = cmd + stmt.Body.Accept(c)
+	source += c.opHandler.Return()
 
 	args := make([]interfaces.FuncArg, 0)
 	for _, arg := range stmt.Parameters {
@@ -44,9 +45,10 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 	// function wrapper that automatically loads the __call__ parameter
 	wrapperSource := ""
 	for _, arg := range stmt.Parameters {
-		wrapperSource += c.opHandler.LoadArgConst("internal/"+stmt.Name.Lexeme+"__wrapped", arg.Name, c.opHandler.Macro(arg.Name))
+		wrapperSource += c.opHandler.LoadArgConst("internal/"+stmt.Name.Lexeme+"__wrapped", arg.Name, c.opHandler.Macro(arg.Name), arg.Type == types.StringType)
 	}
 	wrapperSource += c.opHandler.Call("internal/"+stmt.Name.Lexeme+"__wrapped", "")
+	wrapperSource += c.opHandler.Return()
 	c.createFunction(stmt.Name.Lexeme, c.opHandler.MacroReplace(wrapperSource), args, stmt.ReturnType)
 	c.createFunction("internal/"+stmt.Name.Lexeme+"__wrapped", c.opHandler.MacroReplace(source), args, stmt.ReturnType)
 	return ""
@@ -67,10 +69,14 @@ func (c *Compiler) VisitExpression(stmt statements.ExpressionStmt) string {
 
 func (c *Compiler) VisitReturn(stmt statements.ReturnStmt) string {
 	cmd := ""
-	if stmt.Expression.ReturnType() != c.currentFunction.ReturnType {
-		log.Fatalln("Return type does not match function return type")
+
+	expr := stmt.Expression
+	if expr != nil {
+		if expr.ReturnType() != c.currentFunction.ReturnType {
+			log.Fatalln("Return type does not match function return type")
+		}
+		cmd += expr.Accept(c)
 	}
-	cmd += stmt.Expression.Accept(c)
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.RET)
 	cmd += c.opHandler.Return()
 	return cmd
@@ -83,27 +89,25 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 		cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(stmt.Name.Lexeme))
 	} else {
 		switch stmt.Type {
-		case expressions.IntType:
-			cmd += c.opHandler.MoveConst("0L", ops.Cs(stmt.Name.Lexeme), false)
-		case expressions.DoubleType:
-			cmd += c.opHandler.MoveConst("0.0d", ops.Cs(stmt.Name.Lexeme), false)
-		case expressions.StringType:
-			cmd += c.opHandler.MoveConst("\"\"", ops.Cs(stmt.Name.Lexeme))
-		case expressions.ListStringType:
-			fallthrough
-		case expressions.ListIntType:
-			fallthrough
-		case expressions.ListDoubleType:
-			cmd += c.opHandler.MakeList(ops.Cs(stmt.Name.Lexeme))
+		case types.IntType:
+			cmd += c.opHandler.MakeConst("0L", ops.Cs(stmt.Name.Lexeme), false)
+		case types.DoubleType:
+			cmd += c.opHandler.MakeConst("0.0d", ops.Cs(stmt.Name.Lexeme), false)
+		case types.StringType:
+			cmd += c.opHandler.MakeConst("", ops.Cs(stmt.Name.Lexeme))
 		default:
-			// struct type. stmt.Type is the struct name
-			cmd += c.opHandler.MoveRaw(
-				fmt.Sprintf("%s:data", c.Namespace),
-				fmt.Sprintf("%s.%s", ops.StructPath, stmt.Type),
-				fmt.Sprintf("%s:data", c.Namespace),
-				fmt.Sprintf("%s.%s", ops.VarPath, ops.Cs(stmt.Name.Lexeme)),
-			)
-
+			if reflect.TypeOf(stmt.Type) == reflect.TypeOf(types.ListTypeStruct{}) {
+				cmd += c.opHandler.MakeList(ops.Cs(stmt.Name.Lexeme))
+			} else if reflect.TypeOf(stmt.Type) == reflect.TypeOf(types.StructTypeStruct{}) {
+				cmd += c.opHandler.MoveRaw(
+					fmt.Sprintf("%s:data", c.Namespace),
+					fmt.Sprintf("%s.%s", ops.StructPath, stmt.Type),
+					fmt.Sprintf("%s:data", c.Namespace),
+					fmt.Sprintf("%s.%s", ops.VarPath, ops.Cs(stmt.Name.Lexeme)),
+				)
+			} else {
+				c.error(stmt.Name.SourceLocation, fmt.Sprintf("Invalid type: %v", stmt.Type))
+			}
 		}
 	}
 	c.scope[c.currentScope] = append(c.scope[c.currentScope],
@@ -116,18 +120,35 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 
 func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStmt) string {
 	cmd := ""
-	isIndexedAssignment := stmt.Index != nil
+	isIndexedAssignment := len(stmt.Accessors) > 0
 	if stmt.Value.ReturnType() != c.getReturnType(stmt.Name.Lexeme) && !isIndexedAssignment {
-		c.error(stmt.Name.SourceLocation, fmt.Sprintf("Assignment type mismatch: %v != %v", c.getReturnType(stmt.Name.Lexeme), stmt.Value.ReturnType()))
+		c.error(stmt.Name.SourceLocation, fmt.Sprintf("Assignment type mismatch: %v != %v", c.getReturnType(stmt.Name.Lexeme).ToString(), stmt.Value.ReturnType().ToString()))
 	}
 	cmd += stmt.Value.Accept(c)
 	valueReg := ops.Cs(c.newRegister(ops.RX))
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), valueReg)
 	if isIndexedAssignment {
-		cmd += stmt.Index.Accept(c)
-		indexReg := ops.Cs(c.newRegister(ops.RX))
-		cmd += c.opHandler.Move(ops.Cs(ops.RX), indexReg)
-		cmd += c.opHandler.SetListIndex(ops.Cs(stmt.Name.Lexeme), indexReg, valueReg)
+		pathReg := ops.Cs(c.newRegister(ops.RX))
+		for i := 0; i < len(stmt.Accessors); i++ {
+			switch stmt.Accessors[i].(type) {
+			case statements.IndexAccessor:
+				cmd += fmt.Sprintf("### BEGIN Compute path part %v/%v ###\n", i+1, len(stmt.Accessors))
+				indexAccessor := stmt.Accessors[i].(statements.IndexAccessor)
+				cmd += "###       Compile index expression ###\n"
+				cmd += indexAccessor.Index.Accept(c)
+				cmd += "###       Move to its own register ###\n"
+				indexReg := ops.Cs(c.newRegister(ops.RX))
+				cmd += c.opHandler.Move(ops.Cs(ops.RX), indexReg)
+				// wrap index in brackets and append to pathReg
+				// pathReg += "[" + indexReg + "]"
+				cmd += "###       Wrap in brackets ###\n"
+				cmd += c.opHandler.MakeIndex(indexReg, indexReg)
+				cmd += "###       Append to path ###\n"
+				cmd += c.opHandler.Concat(pathReg, indexReg, pathReg)
+				cmd += fmt.Sprintf("### END   Compute path part %v/%v ###\n", i+1, len(stmt.Accessors))
+			}
+		}
+		cmd += c.opHandler.SetListIndex(ops.Cs(stmt.Name.Lexeme), pathReg, valueReg)
 	} else {
 		cmd += c.opHandler.Move(valueReg, ops.Cs(stmt.Name.Lexeme))
 	}
@@ -151,5 +172,5 @@ func (c *Compiler) VisitIf(stmt statements.IfStmt) string {
 }
 
 func (c *Compiler) VisitStructDeclaration(stmt statements.StructDeclarationStmt) string {
-	return c.opHandler.StructDefine(stmt.Name.Lexeme)
+	return c.opHandler.StructDefine(c.getReturnType(stmt.Name.Lexeme).(types.StructTypeStruct))
 }

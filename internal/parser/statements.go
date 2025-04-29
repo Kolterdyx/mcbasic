@@ -6,6 +6,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 func (p *Parser) statement() (statements.Stmt, error) {
@@ -50,22 +51,7 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	var varType interfaces.ValueType
-	typeToken, err := p.consumeAny("Expected variable type.", tokens.ValueTypes...)
-	if err != nil {
-		// Check if the type is a struct
-		if p.match(tokens.Identifier) {
-			// Check if the struct is defined
-			if _, ok := p.structs[p.previous().Lexeme]; !ok {
-				return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", p.previous().Lexeme))
-			}
-			typeToken = p.previous()
-			err = nil
-		} else {
-			return nil, err
-		}
-	}
-	varType, err = p.getTokenAsValueType(typeToken)
+	varType, err := p.ParseType()
 	if err != nil {
 		return nil, err
 	}
@@ -75,14 +61,24 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 			return nil, err
 		}
 	}
+	if initializer != nil {
+		if list, ok := initializer.(expressions.ListExpr); ok {
+			// Allow assignment as long as varType is a list
+			if _, isList := varType.(types.ListTypeStruct); !isList {
+				return nil, p.error(p.previous(), "Cannot assign empty list to non-list type.")
+			}
+			if len(list.Elements) == 0 {
+				list.ValueType = varType
+			}
+			initializer = list
+		}
+		if initializer.ReturnType() != varType {
+			return nil, p.error(p.previous(), fmt.Sprintf("Cannot assign %s to %s.", initializer.ReturnType().ToString(), varType.ToString()))
+		}
+	}
 	_, err = p.consume(tokens.Semicolon, "Expected ';' or '=' after variable declaration.")
 	if err != nil {
 		return nil, err
-	}
-	if initializer != nil && initializer.ReturnType() != varType {
-		if !(p.isListType(varType) && initializer.ReturnType() == expressions.VoidType) {
-			return nil, p.error(p.peekCount(-2), fmt.Sprintf("Cannot assign %s to %s.", initializer.ReturnType(), varType))
-		}
 	}
 	p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{
 		Name: name.Lexeme,
@@ -95,39 +91,95 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 	}, nil
 }
 
+func (p *Parser) ParseType() (interfaces.ValueType, error) {
+	var varType interfaces.ValueType
+
+	// types are as follows:
+	// primitive types: int, double, str
+	// structs: structName
+	// lists: int[], double[], str[], str[][], int[][], double[][], structName[], etc.
+	// Lists can be nested
+	switch {
+	case p.match(tokens.IntType):
+		varType = types.IntType
+	case p.match(tokens.DoubleType):
+		varType = types.DoubleType
+	case p.match(tokens.StringType):
+		varType = types.StringType
+	case p.match(tokens.VoidType):
+		varType = types.VoidType
+	case p.match(tokens.Identifier):
+		structName := p.previous().Lexeme
+		if _, ok := p.structs[structName]; !ok {
+			return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", structName))
+		}
+		varType = types.StructTypeStruct{Name: structName}
+	default:
+		return nil, p.error(p.peek(), "Expected type.")
+	}
+	if p.check(tokens.BracketOpen) {
+		var listType types.ListTypeStruct
+		for p.match(tokens.BracketOpen) {
+			if varType == types.VoidType {
+				return nil, p.error(p.peek(), "Cannot declare empty list.")
+			}
+			listType = types.ListTypeStruct{Parent: varType}
+			varType = listType
+			if !p.match(tokens.BracketClose) {
+				return nil, p.error(p.peek(), "Expected ']' after list type.")
+			}
+		}
+		varType = listType
+	}
+	return varType, nil
+}
+
+// variableAssignment parses assignments to variables, list indices, or struct fields
 func (p *Parser) variableAssignment() (statements.Stmt, error) {
 	name := p.previous()
-	var index expressions.Expr
-	var err error
-	if p.match(tokens.BracketOpen) {
-		index, err = p.expression()
-		if err != nil {
-			return nil, err
+
+	// Collect any number of [index] or .field accessors
+	var accessors []statements.Accessor
+	for {
+		if p.match(tokens.BracketOpen) {
+			idxExpr, err := p.expression()
+			if err != nil {
+				return nil, err
+			}
+			if _, err := p.consume(tokens.BracketClose, "Expected ']' after index"); err != nil {
+				return nil, err
+			}
+			accessors = append(accessors, statements.IndexAccessor{Index: idxExpr})
+			continue
 		}
-		_, err = p.consume(tokens.BracketClose, "Expected ']' after index.")
-		if err != nil {
-			return nil, err
+		if p.match(tokens.Dot) {
+			fieldTok, err := p.consume(tokens.Identifier, "Expected field name after '.'")
+			if err != nil {
+				return nil, err
+			}
+			accessors = append(accessors, statements.FieldAccessor{Field: fieldTok})
+			continue
 		}
-		if index.ReturnType() != expressions.IntType {
-			return nil, p.error(p.peek(), fmt.Sprintf("Index must be of type %s.", expressions.IntType))
-		}
-		if !p.isList(name) {
-			return nil, p.error(name, fmt.Sprintf("Cannot index type %s.", p.getType(name)))
-		}
+		break
 	}
-	_, err = p.consume(tokens.Equal, "Expected '=' after variable name.")
+
+	// TODO: Traverse result: var.field[index].etc to make sure the types are compatible
+
+	if _, err := p.consume(tokens.Equal, "Expected '=' after variable target."); err != nil {
+		return nil, err
+	}
+	valueExpr, err := p.expression()
 	if err != nil {
 		return nil, err
 	}
-	value, err := p.expression()
-	if err != nil {
+	if _, err := p.consume(tokens.Semicolon, "Expected ';' after assignment."); err != nil {
 		return nil, err
 	}
-	_, err = p.consume(tokens.Semicolon, "Expected ';' after value.")
-	if err != nil {
-		return nil, err
-	}
-	return statements.VariableAssignmentStmt{Name: name, Value: value, Index: index}, nil
+	return statements.VariableAssignmentStmt{
+		Name:      name,
+		Accessors: accessors,
+		Value:     valueExpr,
+	}, nil
 }
 
 func (p *Parser) functionDeclaration() (statements.Stmt, error) {
@@ -158,11 +210,11 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 			var valueType interfaces.ValueType
 			switch type_.Type {
 			case tokens.StringType:
-				valueType = expressions.StringType
+				valueType = types.StringType
 			case tokens.IntType:
-				valueType = expressions.IntType
+				valueType = types.IntType
 			case tokens.DoubleType:
-				valueType = expressions.DoubleType
+				valueType = types.DoubleType
 			default:
 				return nil, p.error(type_, "Expected parameter type.")
 			}
@@ -176,20 +228,22 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	returnType := expressions.VoidType
-	if p.match(tokens.IntType) {
-		returnType = expressions.IntType
-	} else if p.match(tokens.StringType) {
-		returnType = expressions.StringType
-	} else if p.match(tokens.DoubleType) {
-		returnType = expressions.DoubleType
+	var returnType interfaces.ValueType = types.VoidType
+	if !p.check(tokens.BraceOpen) {
+		returnType, err = p.ParseType()
 	}
-
+	if returnType == nil {
+		return nil, p.error(p.peek(), "Expected return type.")
+	}
+	if err != nil && !p.check(tokens.BraceOpen) {
+		return nil, err
+	}
 	// Add all parameters to the current scope
 	for _, arg := range parameters {
 		p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{Name: arg.Name, Type: arg.Type})
 	}
-	p.functions = append(p.functions, interfaces.FuncDef{Name: name.Lexeme, Args: parameters, ReturnType: returnType})
+	p.functions[name.Lexeme] = interfaces.FuncDef{Name: name.Lexeme, Args: parameters, ReturnType: returnType}
+	p.currentScope = name.Lexeme
 	body, err := p.block()
 	if err != nil {
 		return nil, err
@@ -225,7 +279,7 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 				if _, ok := p.structs[p.previous().Lexeme]; !ok {
 					return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", p.previous().Lexeme))
 				}
-				fieldType = interfaces.ValueType(p.previous().Lexeme)
+				fieldType = types.StructTypeStruct{Name: p.previous().Lexeme}
 			} else {
 				return nil, p.error(p.peek(), "Expected field type.")
 			}
@@ -325,13 +379,17 @@ func (p *Parser) ifStatement() (statements.Stmt, error) {
 }
 
 func (p *Parser) returnStatement() (statements.Stmt, error) {
-	value, err := p.expression()
-	if err != nil {
-		return nil, err
+	var expr expressions.Expr = nil
+	var err error
+	if p.functions[p.currentScope].ReturnType != types.VoidType {
+		expr, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
 	}
 	_, err = p.consume(tokens.Semicolon, "Expected ';' after return statement.")
 	if err != nil {
 		return nil, err
 	}
-	return statements.ReturnStmt{Expression: value}, nil
+	return statements.ReturnStmt{Expression: expr}, nil
 }
