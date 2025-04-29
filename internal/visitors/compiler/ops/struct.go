@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	log "github.com/sirupsen/logrus"
-	"reflect"
 )
 
 func (o *Op) StructDefine(structType types.StructTypeStruct) string {
@@ -28,10 +27,10 @@ func (o *Op) StructToNbt(structType types.StructTypeStruct) string {
 		case types.StringType:
 			nbtData += "''"
 		default:
-			switch reflect.TypeOf(field.Type) {
-			case reflect.TypeOf(types.ListTypeStruct{}):
+			switch field.Type.(type) {
+			case types.ListTypeStruct:
 				nbtData += "[]"
-			case reflect.TypeOf(types.StructTypeStruct{}):
+			case types.StructTypeStruct:
 				nbtData += o.StructToNbt(field.Type.(types.StructTypeStruct))
 			}
 		}
