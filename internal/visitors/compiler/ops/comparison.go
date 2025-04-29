@@ -26,7 +26,8 @@ func (o *Op) CompNumbers(cond string, ifcond bool, ra string, rb string, rx stri
 	cmd += o.MakeConst("0", rx)
 	cmd += o.MoveScore(ra, ra)
 	cmd += o.MoveScore(rb, rb)
-	cmd += o.ExecCond(fmt.Sprintf("score %s %s %s %s %s", ra, o.Namespace, cond, rb, o.Namespace), ifcond, o.MakeConst("1", rx))
+	cmd += o.ExecCond(fmt.Sprintf("score %s %s %s %s %s", ra, o.Namespace, cond, rb, o.Namespace), ifcond, o.MakeConst("1", rx, false))
+	cmd += o.ExecCond(fmt.Sprintf("score %s %s %s %s %s", ra, o.Namespace, cond, rb, o.Namespace), !ifcond, o.MakeConst("0", rx, false))
 	return cmd
 }
 
