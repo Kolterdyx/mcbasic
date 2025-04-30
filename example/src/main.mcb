@@ -89,13 +89,15 @@ func main() {
     math:atan(0.0);
 
     # Lists are statically typed, and the type must be specified when creating a list
-    # Only 'int', 'double', and 'str' are supported for now
     let myList int[] = [1, 2, 3, 4, 5];
-    # You can also create empty lists
+    # You can also create empty lists and nested lists
     let myList2 int[] = [];
+	let myList3 int[][] = [[1, 2], [3, 4], [5, 6]];
 
     # You can access or assign list elements using the [] operator
     myList[0] = 42;
+    myList3[1][0] = 99;
     mcb:print("myList = " + myList);
     mcb:print("myList2 = " + myList2);
+    mcb:print("myList3 = " + myList3);
 }

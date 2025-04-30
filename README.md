@@ -136,7 +136,7 @@ func fizbuzz(n int) {
     # since for/while loops aren't supported yet, here is a cut down version of the fizzbuzz function
     # that evaluates a single value at a time instead of all the numbers up to n
     if (n % 3 == 0 and n % 5 == 0) {
-        mcb:print("FizzBuzz");
+        mcb:print("FizzBuzz!");
     } else if (n % 3 == 0) {
         mcb:print("Fizz");
     } else if (n % 5 == 0) {
@@ -197,7 +197,7 @@ func main() {
 	
 	
     # Some math functions
-    math:sqrt(4); # 2
+    math:sqrt(4.0); # 2
     math:floor(5.51); # 5
     math:ceil(5.51); # 6
     math:round(5.51); # 6
@@ -209,16 +209,19 @@ func main() {
     math:acos(1.0);
     math:asin(0.0);
     math:atan(0.0);
-    
+
     # Lists are statically typed, and the type must be specified when creating a list
-    # Only 'int', 'double', and 'str' are supported for now
-    let myList list<int> = [1, 2, 3, 4, 5];
-    # You can also create empty lists
-    let myList2 list<int> = [];
-    
+    let myList int[] = [1, 2, 3, 4, 5];
+    # You can also create empty lists and nested lists
+    let myList2 int[] = [];
+	let myList3 int[][] = [[1, 2], [3, 4], [5, 6]];
+
     # You can access or assign list elements using the [] operator
-    myList[0] = 10;
-    mcb:print(myList[0]);
+    myList[0] = 42;
+    myList3[1][0] = 99;
+    mcb:print("myList = " + myList);
+    mcb:print("myList2 = " + myList2);
+    mcb:print("myList3 = " + myList3);
 }
 ```
 
