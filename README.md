@@ -17,7 +17,7 @@ This is a list of features that are currently implemented or planned for the fut
 - [ ] **Control Flow**:
   - [x] **If-else statements**.
   - [x] **Recursion**.
-  - [ ] **Loops**.
+  - [ ] **Loops**. Classic for/while loops will not be implemented, but alternative methods of repeating execution are planned.
 - [x] **Operators**:
   - [x] **Arithmetic**.
   - [x] **Comparison**.
@@ -33,7 +33,7 @@ This is a list of features that are currently implemented or planned for the fut
 - [x] **String operations**:
   - [x] **Concatenation**.
   - [x] **Length**.
-  - [x] **Substring / slicing**.
+  - [ ] **Substring / slicing**.
 
 
 ## Quirks
