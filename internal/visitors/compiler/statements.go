@@ -45,12 +45,12 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 	// function wrapper that automatically loads the __call__ parameter
 	wrapperSource := ""
 	for _, arg := range stmt.Parameters {
-		wrapperSource += c.opHandler.LoadArgConst("internal/"+stmt.Name.Lexeme+"__wrapped", arg.Name, c.opHandler.Macro(arg.Name), arg.Type == types.StringType)
+		wrapperSource += c.opHandler.LoadArgConst("internal/"+stmt.Name.Lexeme, arg.Name, c.opHandler.Macro(arg.Name), arg.Type == types.StringType)
 	}
-	wrapperSource += c.opHandler.Call("internal/"+stmt.Name.Lexeme+"__wrapped", "")
+	wrapperSource += c.opHandler.Call("internal/"+stmt.Name.Lexeme, "")
 	wrapperSource += c.opHandler.Return()
 	c.createFunction(stmt.Name.Lexeme, c.opHandler.MacroReplace(wrapperSource), args, stmt.ReturnType)
-	c.createFunction("internal/"+stmt.Name.Lexeme+"__wrapped", c.opHandler.MacroReplace(source), args, stmt.ReturnType)
+	c.createFunction("internal/"+stmt.Name.Lexeme, c.opHandler.MacroReplace(source), args, stmt.ReturnType)
 	return ""
 }
 
