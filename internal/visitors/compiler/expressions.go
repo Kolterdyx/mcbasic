@@ -7,7 +7,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
-	"reflect"
 	"strconv"
 )
 
@@ -225,7 +224,7 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) string {
 	lenReg := c.newRegister(ops.RX)
 	cmd += c.opHandler.MakeConst(nbt.NewInt(0), ops.Cs(lenReg))
 
-	cmd += c.opHandler.SizeString(ops.Cs(ops.RX), ops.Cs(lenReg))
+	cmd += c.opHandler.Size(ops.Cs(ops.RX), ops.Cs(lenReg))
 
 	// If any of the indexes are negative, add the length of the string to them
 	cmd += c.opHandler.ExecCond(
@@ -250,20 +249,24 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) string {
 		true,
 		c.opHandler.Exception("Start index greater than end index"),
 	)
-	if expr.TargetExpr.ReturnType() == types.StringType {
-		cmd += c.opHandler.ExecCond(
-			fmt.Sprintf("score %s %s >= %s %s", ops.Cs(regIndexStart), c.Namespace, ops.Cs(lenReg), c.Namespace),
-			true,
-			c.opHandler.Exception("Start slice index out of bounds"),
-		)
-		cmd += c.opHandler.ExecCond(
-			fmt.Sprintf("score %s %s > %s %s", ops.Cs(regIndexEnd), c.Namespace, ops.Cs(lenReg), c.Namespace),
-			true,
-			c.opHandler.Exception("End slice index out of bounds"),
-		)
-		cmd += "###       Slice string ###\n"
-		cmd += c.opHandler.SliceString(ops.Cs(ops.RX), ops.Cs(regIndexStart), ops.Cs(regIndexEnd), ops.Cs(ops.RX))
-	} else if reflect.TypeOf(expr.TargetExpr.ReturnType()) == reflect.TypeOf(types.ListTypeStruct{}) {
+	switch expr.TargetExpr.ReturnType().(type) {
+	case types.PrimitiveTypeStruct:
+		switch expr.TargetExpr.ReturnType() {
+		case types.StringType:
+			cmd += c.opHandler.ExecCond(
+				fmt.Sprintf("score %s %s >= %s %s", ops.Cs(regIndexStart), c.Namespace, ops.Cs(lenReg), c.Namespace),
+				true,
+				c.opHandler.Exception("Start slice index out of bounds"),
+			)
+			cmd += c.opHandler.ExecCond(
+				fmt.Sprintf("score %s %s > %s %s", ops.Cs(regIndexEnd), c.Namespace, ops.Cs(lenReg), c.Namespace),
+				true,
+				c.opHandler.Exception("End slice index out of bounds"),
+			)
+			cmd += "###       Slice string ###\n"
+			cmd += c.opHandler.SliceString(ops.Cs(ops.RX), ops.Cs(regIndexStart), ops.Cs(regIndexEnd), ops.Cs(ops.RX))
+		}
+	case types.ListTypeStruct:
 		cmd += c.opHandler.ExecCond(
 			fmt.Sprintf("score %s %s >= %s %s", ops.Cs(regIndexStart), c.Namespace, ops.Cs(lenReg), c.Namespace),
 			true,

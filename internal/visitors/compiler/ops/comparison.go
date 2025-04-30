@@ -67,8 +67,8 @@ func (o *Op) EqStrings(ra string, rb string, rx string) string {
 	ralen := ra + "len"
 	rblen := rb + "len"
 	cmd += o.MakeConst(nbt.NewInt(1), rx)
-	cmd += o.SizeString(ra, ralen)
-	cmd += o.SizeString(rb, rblen)
+	cmd += o.Size(ra, ralen)
+	cmd += o.Size(rb, rblen)
 	cmd += o.MoveScore(ralen, ralen)
 	cmd += o.MoveScore(rblen, rblen)
 	cmd += o.ExecCond(
