@@ -124,7 +124,7 @@ func (c *Compiler) baseFunctions() {
 			c.opHandler.MakeConst(nbt.NewInt(0), ops.CALL)+
 			c.opHandler.MoveScore(ops.CALL, ops.CALL)+
 			cleanCall+
-			c.opHandler.LoadArgConst("log", "text", "MCB pack loaded", true)+
+			c.opHandler.LoadArgConst("log", "text", nbt.NewString("MCB pack loaded"))+
 			c.opHandler.Call("mcb:log", "")+
 			c.opHandler.Call("internal/struct_definitions", "")+
 			c.opHandler.Call("main", "")+

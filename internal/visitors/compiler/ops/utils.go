@@ -1,6 +1,9 @@
 package ops
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal/nbt"
+)
 
 type TextFormat struct {
 	Id     string
@@ -35,7 +38,7 @@ var (
 
 func (o *Op) Exception(message string) string {
 	cmd := ""
-	cmd += o.LoadArgConst("error", "text", fmt.Sprintf("Exception: %s", message), true)
+	cmd += o.LoadArgConst("error", "text", nbt.NewString(fmt.Sprintf("Exception: %s", message)))
 	cmd += o.Call("mcb:error", "")
 	// TODO: Implement schedule clear
 	cmd += o.Return()

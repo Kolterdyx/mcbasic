@@ -3,6 +3,7 @@ package ops
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	"strings"
@@ -72,8 +73,8 @@ func Cs(s string) string {
 
 func (o *Op) Trace(path string) string {
 	cmd := ""
-	cmd += o.LoadArgConst("internal/trace", "storage", fmt.Sprintf("%s:data", o.Namespace))
-	cmd += o.LoadArgConst("internal/trace", "path", path)
+	cmd += o.LoadArgConst("internal/trace", "storage", nbt.NewString(fmt.Sprintf("%s:data", o.Namespace)))
+	cmd += o.LoadArgConst("internal/trace", "path", nbt.NewString(path))
 	cmd += o.LoadArg("internal/trace", "value", path)
 	cmd += o.Call("mcb:internal/trace", "")
 	return cmd
@@ -81,8 +82,8 @@ func (o *Op) Trace(path string) string {
 
 func (o *Op) TraceRaw(path string) string {
 	cmd := ""
-	cmd += o.LoadArgConst("internal/trace", "storage", "N/A", true)
-	cmd += o.LoadArgConst("internal/trace", "path", path, true)
+	cmd += o.LoadArgConst("internal/trace", "storage", nbt.NewString("N/A"))
+	cmd += o.LoadArgConst("internal/trace", "path", nbt.NewString(path))
 	cmd += o.LoadArgRaw("internal/trace", "value", path)
 	cmd += o.Call("mcb:internal/trace", "")
 	return cmd

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	log "github.com/sirupsen/logrus"
-	"strconv"
 	"strings"
 )
 
@@ -48,13 +47,9 @@ func (o *Op) LoadArgRaw(funcName, argName string, varName string) string {
 	return fmt.Sprintf("data modify storage %s:data %s.%s.%s set from storage %s:data %s\n", o.Namespace, ArgPath, fn, argName, o.Namespace, varName)
 }
 
-func (o *Op) LoadArgConst(funcName, argName string, value string, quote ...bool) string {
-	// if value is not numeric, wrap it in quotes
-	if len(quote) > 0 && quote[0] {
-		value = strconv.Quote(value)
-	}
+func (o *Op) LoadArgConst(funcName, argName string, value nbt.Value) string {
 	_, fn := o.baseFuncName(funcName)
-	return fmt.Sprintf("data modify storage %s:data %s.%s.%s set value %s\n", o.Namespace, ArgPath, fn, argName, value)
+	return fmt.Sprintf("data modify storage %s:data %s.%s.%s set value %s\n", o.Namespace, ArgPath, fn, argName, value.ToString())
 }
 
 // baseFuncName returns the base function name and the namespace:
