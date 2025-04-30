@@ -1,12 +1,13 @@
 module github.com/Kolterdyx/mcbasic
 
-go 1.22
+go 1.23.0
 
 toolchain go1.24.2
 
 require (
 	github.com/BurntSushi/toml v1.3.2
 	github.com/Songmu/prompter v0.5.1
+	github.com/elliotchance/orderedmap/v3 v3.1.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v3 v3.1.1
 )
