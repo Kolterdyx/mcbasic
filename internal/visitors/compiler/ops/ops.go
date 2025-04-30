@@ -22,6 +22,8 @@ const (
 
 	RCF  = "$RCF"
 	CALL = "$CALL"
+
+	MaxCallCounter = 65536
 )
 
 type Op struct {
