@@ -285,22 +285,22 @@ func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx
 		}
 	case tokens.Greater:
 		if expr.Left.ReturnType() != types.IntType {
-			c.error(expr.SourceLocation, "Invalid type in binary operation")
+			c.error(expr.SourceLocation, fmt.Sprintf("Invalid type in binary operation: %s", expr.Left.ReturnType().ToString()))
 		}
 		cmd += c.opHandler.GtNumbers(ra, rb, rx)
 	case tokens.GreaterEqual:
 		if expr.Left.ReturnType() != types.IntType {
-			c.error(expr.SourceLocation, "Invalid type in binary operation")
+			c.error(expr.SourceLocation, fmt.Sprintf("Invalid type in binary operation: %s", expr.Left.ReturnType().ToString()))
 		}
 		cmd += c.opHandler.GteNumbers(ra, rb, rx)
 	case tokens.Less:
 		if expr.Left.ReturnType() != types.IntType {
-			c.error(expr.SourceLocation, "Invalid type in binary operation")
+			c.error(expr.SourceLocation, fmt.Sprintf("Invalid type in binary operation: %s", expr.Left.ReturnType().ToString()))
 		}
 		cmd += c.opHandler.LtNumbers(ra, rb, rx)
 	case tokens.LessEqual:
 		if expr.Left.ReturnType() != types.IntType {
-			c.error(expr.SourceLocation, "Invalid type in binary operation")
+			c.error(expr.SourceLocation, fmt.Sprintf("Invalid type in binary operation: %s", expr.Left.ReturnType().ToString()))
 		}
 		cmd += c.opHandler.LteNumbers(ra, rb, rx)
 	default:

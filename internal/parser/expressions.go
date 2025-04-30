@@ -295,7 +295,7 @@ func (p *Parser) functionCall(namespace tokens.Token, name tokens.Token, hasName
 			}
 			for i, arg := range args {
 				if arg.ReturnType() != f.Args[i].Type && f.Args[i].Type != types.VoidType {
-					return nil, p.error(p.peekCount(-(len(f.Args)-i)*2), fmt.Sprintf("Expected %s, got %s.", f.Args[i].Type, arg.ReturnType()))
+					return nil, p.error(p.peekCount(-(len(f.Args)-i)*2), fmt.Sprintf("Expected %s, got %s.", f.Args[i].Type.ToString(), arg.ReturnType().ToString()))
 				}
 			}
 			funcDef = &f
@@ -378,7 +378,7 @@ func (p *Parser) primary() (expressions.Expr, error) {
 			if contentType == types.VoidType {
 				contentType = expr.ReturnType()
 			} else if contentType != expr.ReturnType() {
-				return nil, p.error(p.previous(), fmt.Sprintf("Expected %s, got %s.", contentType, expr.ReturnType()))
+				return nil, p.error(p.previous(), fmt.Sprintf("Expected %s, got %s.", contentType.ToString(), expr.ReturnType().ToString()))
 			}
 			elems = append(elems, expr)
 			if p.check(tokens.BracketClose) {

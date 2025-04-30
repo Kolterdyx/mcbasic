@@ -1,4 +1,5 @@
 $scoreboard players set $FUNCEXIT $(namespace) 0
+$execute store result storage $(namespace):data vars.$CALL int 1 run scoreboard players get $CALL $(namespace)
 $data modify storage $(args).__call__ set from storage $(namespace):data vars.$CALL
 $scoreboard players add $CALL $(namespace) 1
 $execute store success score $FUNCEXIT $(namespace) run function $(function_namespace):$(function) with storage $(args)
