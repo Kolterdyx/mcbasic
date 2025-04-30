@@ -2,10 +2,10 @@ package compiler
 
 import (
 	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal/compiler/ops"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/types"
-	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 )
 
 func (c *Compiler) createBuiltinFunctions() {

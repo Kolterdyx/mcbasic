@@ -2,11 +2,11 @@ package compiler
 
 import (
 	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal/compiler/ops"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
-	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	"strconv"
 )
 
