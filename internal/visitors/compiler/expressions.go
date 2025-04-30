@@ -112,7 +112,7 @@ func (c *Compiler) VisitFunctionCall(expr expressions.FunctionCallExpr) string {
 		cmd += c.opHandler.LoadArg(expr.Name.Lexeme, argName, ops.Cs(ops.RX))
 	}
 	if expr.ReturnType() != types.VoidType {
-		cmd += c.opHandler.Call(expr.Name.Lexeme, ops.RX)
+		cmd += c.opHandler.Call(expr.Name.Lexeme, ops.Cs(ops.RX))
 	} else {
 		cmd += c.opHandler.Call(expr.Name.Lexeme, "")
 	}
