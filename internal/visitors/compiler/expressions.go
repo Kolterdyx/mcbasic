@@ -268,7 +268,8 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) string {
 			c.error(expr.SourceLocation, "List slicing is not supported")
 			return ""
 		}
-		cmd += c.opHandler.GetListIndex(ops.Cs(ops.RX), ops.Cs(regIndexStart), ops.Cs(ops.RX))
+		cmd += c.opHandler.MakeIndex(ops.Cs(regIndexStart), ops.Cs(regIndexStart))
+		cmd += c.opHandler.PathGet(ops.Cs(ops.RX), ops.Cs(regIndexStart), ops.Cs(ops.RX))
 	}
 	cmd += "### END   String slice operation ###\n"
 	return cmd
@@ -277,7 +278,7 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) string {
 func (c *Compiler) VisitList(expr expressions.ListExpr) string {
 	cmd := "### BEGIN List init operation ###\n"
 	regList := ops.Cs(c.newRegister(ops.RX))
-	cmd += c.opHandler.MakeList(regList)
+	cmd += c.opHandler.MakeConst(nbt.NewList(), regList)
 	for _, elem := range expr.Elements {
 		cmd += elem.Accept(c)
 		cmd += c.opHandler.AppendList(regList, ops.Cs(ops.RX))

@@ -15,5 +15,5 @@ func NewInt(value int64) *Int {
 }
 
 func (i *Int) ToString() string {
-	return fmt.Sprintf("%dL", i.value)
+	return fmt.Sprintf("%d", i.value)
 }

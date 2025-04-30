@@ -105,16 +105,17 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 		case types.StringType:
 			cmd += c.opHandler.MakeConst(nbt.NewString(""), ops.Cs(stmt.Name.Lexeme))
 		default:
-			if reflect.TypeOf(stmt.Type) == reflect.TypeOf(types.ListTypeStruct{}) {
-				cmd += c.opHandler.MakeList(ops.Cs(stmt.Name.Lexeme))
-			} else if reflect.TypeOf(stmt.Type) == reflect.TypeOf(types.StructTypeStruct{}) {
+			switch stmt.Type.(type) {
+			case types.ListTypeStruct:
+				cmd += c.opHandler.MakeConst(nbt.NewList(), ops.Cs(stmt.Name.Lexeme))
+			case types.StructTypeStruct:
 				cmd += c.opHandler.MoveRaw(
 					fmt.Sprintf("%s:data", c.Namespace),
 					fmt.Sprintf("%s.%s", ops.StructPath, stmt.Type),
 					fmt.Sprintf("%s:data", c.Namespace),
 					fmt.Sprintf("%s.%s", ops.VarPath, ops.Cs(stmt.Name.Lexeme)),
 				)
-			} else {
+			default:
 				c.error(stmt.Name.SourceLocation, fmt.Sprintf("Invalid type: %v", stmt.Type))
 			}
 		}
@@ -138,6 +139,7 @@ func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStm
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), valueReg)
 	if isIndexedAssignment {
 		pathReg := ops.Cs(c.newRegister(ops.RX))
+		cmd += c.opHandler.MakeConst(nbt.NewString(""), pathReg)
 		for i := 0; i < len(stmt.Accessors); i++ {
 			switch stmt.Accessors[i].(type) {
 			case statements.IndexAccessor:
@@ -157,7 +159,7 @@ func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStm
 				cmd += fmt.Sprintf("### END   Compute path part %v/%v ###\n", i+1, len(stmt.Accessors))
 			}
 		}
-		cmd += c.opHandler.SetListIndex(ops.Cs(stmt.Name.Lexeme), pathReg, valueReg)
+		cmd += c.opHandler.PathSet(ops.Cs(stmt.Name.Lexeme), pathReg, valueReg)
 	} else {
 		cmd += c.opHandler.Move(valueReg, ops.Cs(stmt.Name.Lexeme))
 	}

@@ -205,48 +205,52 @@ func (p *Parser) baseValue() (expressions.Expr, error) {
 // postfix wraps an Expr in as many [index] or .field as you find:
 func (p *Parser) postfix(expr expressions.Expr) (expressions.Expr, error) {
 	// If it’s “[”, parse a slice/index, then recurse:
-	if _, ok := expr.ReturnType().(types.ListTypeStruct); p.match(tokens.BracketOpen) && ok {
-		// read either slice or single index
-		start, err := p.expression()
-		if err != nil {
-			return nil, err
-		}
-		var end expressions.Expr
-		if p.match(tokens.Colon) {
-			end, err = p.expression()
+	switch expr.ReturnType().(type) {
+	case types.ListTypeStruct:
+		if p.match(tokens.BracketOpen) {
+			// read either slice or single index
+			start, err := p.expression()
 			if err != nil {
 				return nil, err
 			}
+			var end expressions.Expr
+			if p.match(tokens.Colon) {
+				end, err = p.expression()
+				if err != nil {
+					return nil, err
+				}
+			}
+			if _, err = p.consume(tokens.BracketClose, "Expected ']'"); err != nil {
+				return nil, err
+			}
+			expr = expressions.SliceExpr{
+				TargetExpr:     expr,
+				StartIndex:     start,
+				EndIndex:       end,
+				SourceLocation: p.location(),
+			}
+			// keep consuming more postfix:
+			return p.postfix(expr)
 		}
-		if _, err = p.consume(tokens.BracketClose, "Expected ']'"); err != nil {
-			return nil, err
-		}
-		expr = expressions.SliceExpr{
-			TargetExpr:     expr,
-			StartIndex:     start,
-			EndIndex:       end,
-			SourceLocation: p.location(),
-		}
-		// keep consuming more postfix:
-		return p.postfix(expr)
-	}
 	// If it’s “.”, parse a field access, then recurse:
-	if _, ok := expr.ReturnType().(types.StructTypeStruct); p.match(tokens.Dot) && ok {
-		fieldTok, err := p.consume(tokens.Identifier, "Expected field name after '.'")
-		if err != nil {
-			return nil, err
+	case types.StructTypeStruct:
+		if p.match(tokens.Dot) {
+			fieldTok, err := p.consume(tokens.Identifier, "Expected field name after '.'")
+			if err != nil {
+				return nil, err
+			}
+			fieldTokenType, err := p.getTokenAsValueType(fieldTok)
+			if err != nil {
+				return nil, err
+			}
+			expr = expressions.FieldAccessExpr{
+				Source:         expr,
+				Field:          fieldTok,
+				SourceLocation: p.location(),
+				Type:           fieldTokenType,
+			}
+			return p.postfix(expr)
 		}
-		fieldTokenType, err := p.getTokenAsValueType(fieldTok)
-		if err != nil {
-			return nil, err
-		}
-		expr = expressions.FieldAccessExpr{
-			Source:         expr,
-			Field:          fieldTok,
-			SourceLocation: p.location(),
-			Type:           fieldTokenType,
-		}
-		return p.postfix(expr)
 	}
 	return expr, nil
 }
