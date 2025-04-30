@@ -147,10 +147,13 @@ func (c *Compiler) baseFunctions() {
 		[]interfaces.FuncArg{},
 		types.VoidType,
 	)
+	tickSource := ""
+	tickSource += c.opHandler.MakeConst(nbt.NewInt(0), ops.CALL)
+	tickSource += c.opHandler.MoveScore(ops.CALL, ops.CALL)
 	c.createFunction(
 		"internal/tick",
 		c.opHandler.Call("tick", "")+
-			c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 1000..", ops.CALL, c.Namespace), true, c.opHandler.MakeConst(nbt.NewInt(0), ops.CALL))+
+			c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 1000..", ops.CALL, c.Namespace), true, tickSource)+
 			c.opHandler.Return(),
 		[]interfaces.FuncArg{},
 		types.VoidType,
