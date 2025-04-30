@@ -44,8 +44,8 @@ func (o *Op) DeleteListIndex(list, index string) string {
 
 func (o *Op) MakeIndex(res, index string) string {
 	cmd := ""
-	cmd += o.LoadArgConst("internal/list_index/make_index", "storage", fmt.Sprintf("%s:data", o.Namespace), false)
-	cmd += o.LoadArgConst("internal/list_index/make_index", "res", fmt.Sprintf("%s.%s", VarPath, RET), false)
+	cmd += o.LoadArgConst("internal/list_index/make_index", "storage", fmt.Sprintf("%s:data", o.Namespace), true)
+	cmd += o.LoadArgConst("internal/list_index/make_index", "res", fmt.Sprintf("%s.%s", VarPath, RET), true)
 	cmd += o.LoadArg("internal/list_index/make_index", "index", index)
 	cmd += o.Call("mcb:internal/list_index/make_index", res)
 	return cmd

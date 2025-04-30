@@ -2,6 +2,7 @@ package ops
 
 import (
 	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
@@ -16,20 +17,16 @@ func (o *Op) CallFunction(funcName string, args map[string]string, res string) s
 }
 
 func (o *Op) Call(funcName string, res string) string {
-	cmd := ""
-	cmd += o.LoadArg(funcName, "__call__", CALL)
-	cmd += o.Inc(CALL)
-	if strings.Contains(funcName, ":") {
-		cmd += fmt.Sprintf("function mcb:internal/call {function:'%s',args:'%s:data %s.%s',namespace:'%s'}\n", funcName, o.Namespace, ArgPath, o.baseFuncName(funcName), o.Namespace)
-	} else {
-		cmd += fmt.Sprintf("function mcb:internal/call {function:'%s:%s',args:'%s:data %s.%s',namespace:'%s'}\n", o.Namespace, funcName, o.Namespace, ArgPath, funcName, o.Namespace)
-	}
+	data := nbt.NewCompound()
+	ns, fn := o.baseFuncName(funcName)
+	data.Set("function", nbt.NewString(fn))
+	data.Set("namespace", nbt.NewString(ns))
+	data.Set("args", nbt.NewString(fmt.Sprintf("%s:data %s.%s", o.Namespace, ArgPath, fn)))
 	if res == "" {
-		return cmd
+		res = RET
 	}
-	cmd += o.Move(RET, Cs(res))
-
-	return cmd
+	data.Set("ret", nbt.NewString(res))
+	return fmt.Sprintf("function mcb:internal/call %s\n", data.ToString())
 }
 
 func (o *Op) LoadArgs(funcName string, args map[string]string) string {
@@ -41,11 +38,13 @@ func (o *Op) LoadArgs(funcName string, args map[string]string) string {
 }
 
 func (o *Op) LoadArg(funcName, argName string, varName string) string {
-	return fmt.Sprintf("data modify storage %s:data %s.%s.%s set from storage %s:data %s.%s\n", o.Namespace, ArgPath, o.baseFuncName(funcName), argName, o.Namespace, VarPath, Cs(varName))
+	_, fn := o.baseFuncName(funcName)
+	return fmt.Sprintf("data modify storage %s:data %s.%s.%s set from storage %s:data %s.%s\n", o.Namespace, ArgPath, fn, argName, o.Namespace, VarPath, Cs(varName))
 }
 
 func (o *Op) LoadArgRaw(funcName, argName string, varName string) string {
-	return fmt.Sprintf("data modify storage %s:data %s.%s.%s set from storage %s:data %s\n", o.Namespace, ArgPath, o.baseFuncName(funcName), argName, o.Namespace, varName)
+	_, fn := o.baseFuncName(funcName)
+	return fmt.Sprintf("data modify storage %s:data %s.%s.%s set from storage %s:data %s\n", o.Namespace, ArgPath, fn, argName, o.Namespace, varName)
 }
 
 func (o *Op) LoadArgConst(funcName, argName string, value string, quote ...bool) string {
@@ -53,16 +52,19 @@ func (o *Op) LoadArgConst(funcName, argName string, value string, quote ...bool)
 	if len(quote) > 0 && quote[0] {
 		value = strconv.Quote(value)
 	}
-	return fmt.Sprintf("data modify storage %s:data %s.%s.%s set value %s\n", o.Namespace, ArgPath, o.baseFuncName(funcName), argName, value)
+	_, fn := o.baseFuncName(funcName)
+	return fmt.Sprintf("data modify storage %s:data %s.%s.%s set value %s\n", o.Namespace, ArgPath, fn, argName, value)
 }
 
-func (o *Op) baseFuncName(funcName string) string {
+// baseFuncName returns the base function name and the namespace:
+// namespace, funcName
+func (o *Op) baseFuncName(funcName string) (string, string) {
 	if strings.Contains(funcName, ":") {
 		split := strings.Split(funcName, ":")
 		if len(split) == 2 {
-			return split[1]
+			return split[0], split[1]
 		}
 		log.Fatal("Function name is not valid: ", funcName)
 	}
-	return funcName
+	return o.Namespace, funcName
 }

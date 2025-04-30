@@ -35,7 +35,7 @@ var (
 
 func (o *Op) Exception(message string) string {
 	cmd := ""
-	cmd += o.LoadArgConst("error", "text", fmt.Sprintf("Exception: %s", message))
+	cmd += o.LoadArgConst("error", "text", fmt.Sprintf("Exception: %s", message), true)
 	cmd += o.Call("mcb:error", "")
 	// TODO: Implement schedule clear
 	cmd += o.Return()

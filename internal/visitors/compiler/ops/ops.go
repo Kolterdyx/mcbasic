@@ -47,7 +47,7 @@ func (o *Op) MacroReplace(source string) string {
 }
 
 func (o *Op) Return() string {
-	return fmt.Sprintf("return 1\n")
+	return fmt.Sprintf("return run scoreboard players set $FUNCEXIT %s 1\n", o.Namespace)
 }
 
 func (o *Op) GetStructFields(structType types.StructTypeStruct) []interfaces.StructField {
@@ -70,18 +70,20 @@ func Cs(s string) string {
 	return s + suffix
 }
 
-func (o *Op) Trace(name string) string {
+func (o *Op) Trace(path string) string {
 	cmd := ""
 	cmd += o.LoadArgConst("internal/trace", "storage", fmt.Sprintf("%s:data", o.Namespace))
-	cmd += o.LoadArgConst("internal/trace", "path", fmt.Sprintf("%s:%s", VarPath, name))
-	cmd += o.LoadArg("internal/trace", "value", name)
+	cmd += o.LoadArgConst("internal/trace", "path", path)
+	cmd += o.LoadArg("internal/trace", "value", path)
 	cmd += o.Call("mcb:internal/trace", "")
 	return cmd
 }
 
-func (o *Op) TraceRaw(name string) string {
+func (o *Op) TraceRaw(path string) string {
 	cmd := ""
-	cmd += o.LoadArgRaw("internal/trace", "value", name)
+	cmd += o.LoadArgConst("internal/trace", "storage", "N/A", true)
+	cmd += o.LoadArgConst("internal/trace", "path", path, true)
+	cmd += o.LoadArgRaw("internal/trace", "value", path)
 	cmd += o.Call("mcb:internal/trace", "")
 	return cmd
 }
