@@ -205,8 +205,11 @@ func (p *Parser) baseValue() (expressions.Expr, error) {
 // postfix wraps an Expr in as many [index] or .field as you find:
 func (p *Parser) postfix(expr expressions.Expr) (expressions.Expr, error) {
 	// If it’s “[”, parse a slice/index, then recurse:
-	switch expr.ReturnType().(type) {
-	case types.ListTypeStruct:
+	switch returnType := expr.ReturnType().(type) {
+	case types.ListTypeStruct, types.PrimitiveTypeStruct:
+		if returnType != types.StringType {
+			break
+		}
 		if p.match(tokens.BracketOpen) {
 			// read either slice or single index
 			start, err := p.expression()

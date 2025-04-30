@@ -136,6 +136,7 @@ func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStm
 	}
 	cmd += stmt.Value.Accept(c)
 	valueReg := ops.Cs(c.newRegister(ops.RX))
+	cmd += c.opHandler.MakeConst(nbt.NewInt(0), valueReg)
 	cmd += c.opHandler.Move(ops.Cs(ops.RX), valueReg)
 	if isIndexedAssignment {
 		pathReg := ops.Cs(c.newRegister(ops.RX))
@@ -149,6 +150,7 @@ func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStm
 				cmd += indexAccessor.Index.Accept(c)
 				cmd += "###       Move to its own register ###\n"
 				indexReg := ops.Cs(c.newRegister(ops.RX))
+				cmd += c.opHandler.MakeConst(nbt.NewInt(0), indexReg)
 				cmd += c.opHandler.Move(ops.Cs(ops.RX), indexReg)
 				// wrap index in brackets and append to pathReg
 				// pathReg += "[" + indexReg + "]"
@@ -175,6 +177,7 @@ func (c *Compiler) VisitIf(stmt statements.IfStmt) string {
 		elseSource = stmt.ElseBranch.Accept(c)
 	}
 	condVar := c.newRegister(ops.RX)
+	cmd += c.opHandler.MakeConst(nbt.NewInt(0), condVar)
 	cmd += c.opHandler.MoveScore(ops.Cs(ops.RX), ops.Cs(condVar))
 	cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 1", ops.Cs(condVar), c.Namespace), true, thenSource)
 	cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 1", ops.Cs(condVar), c.Namespace), false, elseSource)

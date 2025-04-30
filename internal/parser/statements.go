@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
@@ -260,7 +261,7 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	fields := make([]interfaces.StructField, 0)
+	compound := nbt.NewCompound()
 	for !p.check(tokens.BraceClose) && !p.IsAtEnd() {
 		fieldName, err := p.consume(tokens.Identifier, "Expected field name.")
 		if err != nil {
@@ -284,17 +285,34 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 				return nil, p.error(p.peek(), "Expected field type.")
 			}
 		}
-		fields = append(fields, interfaces.StructField{Name: fieldName.Lexeme, Type: fieldType})
+		switch fieldType.(type) {
+		case types.PrimitiveTypeStruct:
+			switch fieldType {
+			case types.IntType:
+				compound.Set(fieldName.Lexeme, nbt.NewInt(0))
+			case types.DoubleType:
+				compound.Set(fieldName.Lexeme, nbt.NewDouble(0))
+			case types.StringType:
+				compound.Set(fieldName.Lexeme, nbt.NewString(""))
+			}
+		case types.StructTypeStruct:
+			structStmt, _ := p.structs[fieldName.Lexeme]
+			compound.Set(fieldName.Lexeme, structStmt.Compound)
+		case types.ListTypeStruct:
+			compound.Set(fieldName.Lexeme, nbt.NewList())
+		default:
+			return nil, p.error(p.previous(), fmt.Sprintf("Invalid field type: %s", fieldType.ToString()))
+		}
 		if !p.match(tokens.Semicolon) {
 			break
 		}
 	}
 	_, err = p.consume(tokens.BraceClose, "Expected '}' after struct fields.")
-	if len(fields) == 0 {
+	if compound.Size() == 0 {
 		return nil, p.error(p.peek(), "Struct must have at least one field.")
 	}
-	p.structs[name.Lexeme] = statements.StructDeclarationStmt{Name: name, Fields: fields}
-	return statements.StructDeclarationStmt{Name: name, Fields: fields}, nil
+	p.structs[name.Lexeme] = statements.StructDeclarationStmt{Name: name, Compound: compound}
+	return statements.StructDeclarationStmt{Name: name, Compound: compound}, nil
 }
 
 func (p *Parser) block(checkBraces ...bool) (statements.BlockStmt, error) {

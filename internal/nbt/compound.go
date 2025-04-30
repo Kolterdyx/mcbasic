@@ -1,18 +1,19 @@
 package nbt
 
 type Compound struct {
-	Values map[string]Value
+	Value
+	values map[string]Value
 }
 
 func NewCompound() *Compound {
 	return &Compound{
-		Values: make(map[string]Value),
+		values: make(map[string]Value),
 	}
 }
 
 func (c *Compound) ToString() string {
 	var str string
-	for k, v := range c.Values {
+	for k, v := range c.values {
 		str += k + ": " + v.ToString() + ", "
 	}
 	if len(str) > 0 {
@@ -22,12 +23,16 @@ func (c *Compound) ToString() string {
 }
 
 func (c *Compound) Get(key string) Value {
-	return c.Values[key]
+	return c.values[key]
 }
 
 func (c *Compound) Set(key string, value Value) {
-	if c.Values == nil {
-		c.Values = make(map[string]Value)
+	if c.values == nil {
+		c.values = make(map[string]Value)
 	}
-	c.Values[key] = value
+	c.values[key] = value
+}
+
+func (c *Compound) Size() int {
+	return len(c.values)
 }

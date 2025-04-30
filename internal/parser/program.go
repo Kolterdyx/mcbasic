@@ -5,8 +5,8 @@ import (
 )
 
 type Program struct {
-	Functions []statements.FunctionDeclarationStmt
-	Structs   []statements.StructDeclarationStmt
+	Functions map[string]statements.FunctionDeclarationStmt
+	Structs   map[string]statements.StructDeclarationStmt
 }
 
 func (p Program) Visit(visitor statements.StmtVisitor) []interface{} {

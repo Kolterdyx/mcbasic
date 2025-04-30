@@ -114,27 +114,33 @@ func (c *Compiler) math() {
 func (c *Compiler) baseFunctions() {
 
 	cleanCall := ""
-	if c.Config.Project.CleanBeforeInit {
+	if c.Config.CleanBeforeInit {
 		cleanCall = c.opHandler.Call("mcb:internal/clean", "")
 	}
 
+	initSource := ""
+	initSource += cleanCall
+	initSource += fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)
+	if c.Config.Debug {
+		initSource += fmt.Sprintf("scoreboard objectives setdisplay sidebar %s\n", c.Namespace)
+	}
+	initSource += c.opHandler.MakeConst(nbt.NewInt(0), ops.CALL)
+	initSource += c.opHandler.MoveScore(ops.CALL, ops.CALL)
+	initSource += c.opHandler.LoadArgConst("log", "text", nbt.NewString("MCB pack loaded"))
+	initSource += c.opHandler.Call("mcb:log", "")
+	initSource += c.opHandler.Call("internal/struct_definitions", "")
+	initSource += c.opHandler.Call("main", "")
+	initSource += c.opHandler.Return()
 	c.createFunction(
 		"mcb:internal/init",
-		cleanCall+
-			fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
-			c.opHandler.MakeConst(nbt.NewInt(0), ops.CALL)+
-			c.opHandler.MoveScore(ops.CALL, ops.CALL)+
-			c.opHandler.LoadArgConst("log", "text", nbt.NewString("MCB pack loaded"))+
-			c.opHandler.Call("mcb:log", "")+
-			c.opHandler.Call("internal/struct_definitions", "")+
-			c.opHandler.Call("main", "")+
-			c.opHandler.Return(),
+		initSource,
 		[]interfaces.FuncArg{},
 		types.VoidType,
 	)
 	c.createFunction(
 		"mcb:internal/clean",
-		fmt.Sprintf("data remove storage %s:data vars\n", c.Namespace)+
+		fmt.Sprintf("scoreboard objectives remove %s\n", c.Namespace)+
+			fmt.Sprintf("data remove storage %s:data vars\n", c.Namespace)+
 			fmt.Sprintf("data remove storage %s:data structs\n", c.Namespace)+
 			fmt.Sprintf("data remove storage %s:data args\n", c.Namespace)+
 			c.opHandler.Return(),

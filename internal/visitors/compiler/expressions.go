@@ -37,7 +37,9 @@ func (c *Compiler) VisitBinary(expr expressions.BinaryExpr) string {
 	cmd := ""
 
 	regRa := c.newRegister(ops.RA)
+	cmd += c.opHandler.MakeConst(nbt.NewInt(0), ops.Cs(regRa))
 	regRb := c.newRegister(ops.RB)
+	cmd += c.opHandler.MakeConst(nbt.NewInt(0), ops.Cs(regRb))
 
 	cmd += "### BEGIN Binary operation ###\n"
 	cmd += "###       Left side ###\n"
@@ -152,10 +154,11 @@ func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) string {
 	leftSide := ""
 	rightSide := ""
 
-	regRa := c.newRegister(ops.RA)
-	regRb := c.newRegister(ops.RB)
-
 	cmd := ""
+	regRa := c.newRegister(ops.RA)
+	cmd += c.opHandler.MakeConst(nbt.NewInt(0), ops.Cs(regRa))
+	regRb := c.newRegister(ops.RB)
+	cmd += c.opHandler.MakeConst(nbt.NewInt(0), ops.Cs(regRb))
 
 	cmd += "### BEGIN Logical operation ###\n"
 	leftSide += "###       Logical operation left side ###\n"
@@ -199,6 +202,8 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) string {
 	regIndexEnd := c.newRegister(ops.RB)
 
 	cmd := ""
+	cmd += c.opHandler.MakeConst(nbt.NewInt(0), ops.Cs(regIndexStart))
+	cmd += c.opHandler.MakeConst(nbt.NewInt(0), ops.Cs(regIndexEnd))
 	cmd += "### BEGIN String slice operation ###\n"
 	cmd += "###       Accept start index ###\n"
 	cmd += expr.StartIndex.Accept(c)
@@ -218,6 +223,7 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) string {
 
 	cmd += "###       Cheking index bounds ###\n"
 	lenReg := c.newRegister(ops.RX)
+	cmd += c.opHandler.MakeConst(nbt.NewInt(0), ops.Cs(lenReg))
 
 	cmd += c.opHandler.SizeString(ops.Cs(ops.RX), ops.Cs(lenReg))
 
@@ -278,6 +284,7 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) string {
 func (c *Compiler) VisitList(expr expressions.ListExpr) string {
 	cmd := "### BEGIN List init operation ###\n"
 	regList := ops.Cs(c.newRegister(ops.RX))
+	cmd += c.opHandler.MakeConst(nbt.NewInt(0), regList)
 	cmd += c.opHandler.MakeConst(nbt.NewList(), regList)
 	for _, elem := range expr.Elements {
 		cmd += elem.Accept(c)

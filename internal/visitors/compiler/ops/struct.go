@@ -11,35 +11,12 @@ func (o *Op) StructDefine(structType types.StructTypeStruct) string {
 }
 
 func (o *Op) StructToNbt(structType types.StructTypeStruct) string {
-	nbtData := "{"
-	fields := o.GetStructFields(structType)
-	if fields == nil {
+	structStmt, ok := o.Structs[structType.Name]
+	if !ok {
 		log.Errorf("Struct %s not found", structType)
 		return ""
 	}
-	for i, field := range fields {
-		nbtData += field.Name + ": "
-		switch field.Type {
-		case types.IntType:
-			nbtData += "0L"
-		case types.DoubleType:
-			nbtData += "0.0d"
-		case types.StringType:
-			nbtData += "''"
-		default:
-			switch field.Type.(type) {
-			case types.ListTypeStruct:
-				nbtData += "[]"
-			case types.StructTypeStruct:
-				nbtData += o.StructToNbt(field.Type.(types.StructTypeStruct))
-			}
-		}
-		if i != len(fields)-1 {
-			nbtData += ", "
-		}
-	}
-	nbtData += "}"
-	return nbtData
+	return structStmt.Compound.ToString()
 }
 
 func (o *Op) StructGet(from, field, to string) string {

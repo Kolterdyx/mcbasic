@@ -2,10 +2,8 @@ package ops
 
 import (
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
-	"github.com/Kolterdyx/mcbasic/internal/types"
 	"strings"
 )
 
@@ -29,7 +27,7 @@ const (
 type Op struct {
 	Namespace string
 	Scope     string
-	Structs   []statements.StructDeclarationStmt
+	Structs   map[string]statements.StructDeclarationStmt
 }
 
 func (o *Op) Macro(argName string) string {
@@ -49,15 +47,6 @@ func (o *Op) MacroReplace(source string) string {
 
 func (o *Op) Return() string {
 	return fmt.Sprintf("return 1\n")
-}
-
-func (o *Op) GetStructFields(structType types.StructTypeStruct) []interfaces.StructField {
-	for _, s := range o.Structs {
-		if s.Name.Lexeme == structType.Name {
-			return s.Fields
-		}
-	}
-	return nil
 }
 
 func Cs(s string) string {

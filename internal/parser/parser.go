@@ -21,8 +21,8 @@ type Parser struct {
 }
 
 func (p *Parser) Parse() (Program, []error) {
-	var functions []statements.FunctionDeclarationStmt
-	var structs []statements.StructDeclarationStmt
+	functions := make(map[string]statements.FunctionDeclarationStmt)
+	structs := make(map[string]statements.StructDeclarationStmt)
 	p.functions = make(map[string]interfaces.FuncDef, 0)
 	for _, funcDef := range GetHeaderFuncDefs(p.Headers) {
 		p.functions[funcDef.Name] = funcDef
@@ -41,12 +41,12 @@ func (p *Parser) Parse() (Program, []error) {
 		}
 		if statement.StmtType() == statements.FunctionDeclarationStmtType {
 			funcStmt := statement.(statements.FunctionDeclarationStmt)
-			functions = append(functions, funcStmt)
+			functions[funcStmt.Name.Lexeme] = funcStmt
 			p.functions[funcStmt.Name.Lexeme] = interfaces.FuncDef{Name: funcStmt.Name.Lexeme, ReturnType: funcStmt.ReturnType, Args: funcStmt.Parameters}
 		}
 		if statement.StmtType() == statements.StructDeclarationStmtType {
 			structStmt := statement.(statements.StructDeclarationStmt)
-			structs = append(structs, structStmt)
+			structs[structStmt.Name.Lexeme] = structStmt
 		}
 	}
 	return Program{Functions: functions, Structs: structs}, p.Errors

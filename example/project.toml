@@ -1,3 +1,5 @@
+cleanBeforeInit = true
+debug = true
 
 [project]
 name = "example"
@@ -5,4 +7,3 @@ namespace = "example"
 version = "0.1.0"
 entrypoint = "src/main.mcb"
 description = "A simple project"
-cleanBeforeInit = true
