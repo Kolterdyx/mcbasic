@@ -328,10 +328,10 @@ func (p *Parser) slice(expr expressions.Expr) (expressions.Expr, error) {
 
 func (p *Parser) primary() (expressions.Expr, error) {
 	if p.match(tokens.False) {
-		return expressions.LiteralExpr{Value: 0, ValueType: types.IntType, SourceLocation: p.location()}, nil
+		return expressions.LiteralExpr{Value: "0", ValueType: types.IntType, SourceLocation: p.location()}, nil
 	}
 	if p.match(tokens.True) {
-		return expressions.LiteralExpr{Value: 1, ValueType: types.IntType, SourceLocation: p.location()}, nil
+		return expressions.LiteralExpr{Value: "1", ValueType: types.IntType, SourceLocation: p.location()}, nil
 	}
 	if p.match(tokens.Int) {
 		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: types.IntType, SourceLocation: p.location()}, nil

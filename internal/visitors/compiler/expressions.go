@@ -3,20 +3,30 @@ package compiler
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
+	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 	"reflect"
+	"strconv"
 )
 
 func (c *Compiler) VisitLiteral(expr expressions.LiteralExpr) string {
 	switch expr.ReturnType() {
 	case types.IntType:
-		return c.opHandler.MakeConst(expr.Value.(string), ops.Cs(ops.RX), false)
+		i, err := strconv.ParseInt(expr.Value, 10, 64)
+		if err != nil {
+			c.error(expr.SourceLocation, "Invalid integer literal")
+		}
+		return c.opHandler.MakeConst(nbt.NewInt(i), ops.Cs(ops.RX))
 	case types.StringType:
-		return c.opHandler.MakeConst(expr.Value.(string), ops.Cs(ops.RX), true)
+		return c.opHandler.MakeConst(nbt.NewString(expr.Value), ops.Cs(ops.RX))
 	case types.DoubleType:
-		return c.opHandler.MakeConst(expr.Value.(string), ops.Cs(ops.RX), false)
+		d, err := strconv.ParseFloat(expr.Value, 64)
+		if err != nil {
+			c.error(expr.SourceLocation, "Invalid double literal")
+		}
+		return c.opHandler.MakeConst(nbt.NewDouble(d), ops.Cs(ops.RX))
 	default:
 		c.error(expr.SourceLocation, "Invalid type in literal expression")
 	}
@@ -162,9 +172,9 @@ func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) string {
 		// If left side is false, return false
 		evalRightSide := ""
 		cmd += c.opHandler.MoveScore(regRa, regRa)
-		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), true, c.opHandler.MakeConst("0", ops.Cs(ops.RX), false))
+		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), true, c.opHandler.MakeConst(nbt.NewInt(0), ops.Cs(ops.RX)))
 		evalRightSide += rightSide
-		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), true, c.opHandler.MakeConst("0", ops.Cs(ops.RX), false))
+		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), true, c.opHandler.MakeConst(nbt.NewInt(0), ops.Cs(ops.RX)))
 		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), false, c.opHandler.Move(regRb, ops.Cs(ops.RX)))
 		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), false, evalRightSide)
 	case tokens.Or:
@@ -173,7 +183,7 @@ func (c *Compiler) VisitLogical(expr expressions.LogicalExpr) string {
 		cmd += c.opHandler.MoveScore(regRa, regRa)
 		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), false, c.opHandler.Move(regRa, ops.Cs(ops.RX)))
 		evalRightSide += rightSide
-		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), true, c.opHandler.MakeConst("0", ops.Cs(ops.RX), false))
+		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), true, c.opHandler.MakeConst(nbt.NewInt(0), ops.Cs(ops.RX)))
 		evalRightSide += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRb, c.Namespace), false, c.opHandler.Move(regRb, ops.Cs(ops.RX)))
 		cmd += c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 0", regRa, c.Namespace), true, evalRightSide)
 	default:

@@ -20,7 +20,8 @@ func (o *Op) Call(funcName string, res string) string {
 	data := nbt.NewCompound()
 	ns, fn := o.baseFuncName(funcName)
 	data.Set("function", nbt.NewString(fn))
-	data.Set("namespace", nbt.NewString(ns))
+	data.Set("function_namespace", nbt.NewString(ns))
+	data.Set("namespace", nbt.NewString(o.Namespace))
 	data.Set("args", nbt.NewString(fmt.Sprintf("%s:data %s.%s", o.Namespace, ArgPath, fn)))
 	if res == "" {
 		res = RET

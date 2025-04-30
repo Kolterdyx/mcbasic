@@ -3,6 +3,7 @@ package compiler
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
 )
@@ -120,7 +121,7 @@ func (c *Compiler) baseFunctions() {
 	c.createFunction(
 		"mcb:internal/init",
 		fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)+
-			c.opHandler.MakeConst("0", ops.CALL, false)+
+			c.opHandler.MakeConst(nbt.NewInt(0), ops.CALL)+
 			c.opHandler.MoveScore(ops.CALL, ops.CALL)+
 			cleanCall+
 			c.opHandler.LoadArgConst("log", "text", "MCB pack loaded", true)+
@@ -143,7 +144,7 @@ func (c *Compiler) baseFunctions() {
 	c.createFunction(
 		"internal/tick",
 		c.opHandler.Call("tick", "")+
-			c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 1000..", ops.CALL, c.Namespace), true, c.opHandler.MakeConst("0", ops.CALL, false))+
+			c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches 1000..", ops.CALL, c.Namespace), true, c.opHandler.MakeConst(nbt.NewInt(0), ops.CALL))+
 			c.opHandler.Return(),
 		[]interfaces.FuncArg{},
 		types.VoidType,

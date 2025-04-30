@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
@@ -262,7 +263,7 @@ func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx
 	case tokens.EqualEqual:
 		if expr.Left.ReturnType() != expr.Right.ReturnType() {
 			// Return false
-			cmd += c.opHandler.MakeConst("0", rx, false)
+			cmd += c.opHandler.MakeConst(nbt.NewInt(0), rx)
 		} else {
 			if expr.Left.ReturnType() == types.IntType {
 				cmd += c.opHandler.EqNumbers(ra, rb, rx)
@@ -273,7 +274,7 @@ func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx
 	case tokens.BangEqual:
 		if expr.Left.ReturnType() != expr.Right.ReturnType() {
 			// Return true
-			cmd += c.opHandler.MakeConst("1", rx, false)
+			cmd += c.opHandler.MakeConst(nbt.NewInt(1), rx)
 		} else {
 			if expr.Left.ReturnType() == types.IntType {
 				cmd += c.opHandler.NeqNumbers(ra, rb, rx)

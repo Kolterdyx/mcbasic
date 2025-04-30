@@ -2,7 +2,7 @@ package ops
 
 import (
 	"fmt"
-	"strconv"
+	"github.com/Kolterdyx/mcbasic/internal/nbt"
 )
 
 func (o *Op) MoveRaw(storageFrom, pathFrom, storageTo, pathTo string) string {
@@ -16,21 +16,8 @@ func (o *Op) Move(from, to string) string {
 	)
 }
 
-func (o *Op) MakeConst(value, to string, quote ...bool) string {
-	wrapInQuotes := true
-	if len(quote) > 0 {
-		wrapInQuotes = quote[0]
-	}
-	if wrapInQuotes {
-		value = strconv.Quote(value)
-	}
-	// if the value is a float, add a trailing L to store it as a long
-	n, err := strconv.ParseFloat(value, 64)
-	_, err2 := strconv.ParseInt(value, 10, 64)
-	if err == nil && err2 != nil {
-		value = fmt.Sprintf("%sd", strconv.FormatFloat(n, 'f', -1, 64))
-	}
-	return fmt.Sprintf("data modify storage %s:data %s.%s set value %s\n", o.Namespace, VarPath, to, value)
+func (o *Op) MakeConst(value nbt.Value, to string) string {
+	return fmt.Sprintf("data modify storage %s:data %s.%s set value %s\n", o.Namespace, VarPath, to, value.ToString())
 }
 
 func (o *Op) MoveScore(from string, to string) string {

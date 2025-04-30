@@ -5,10 +5,10 @@ import "fmt"
 type Int struct {
 	Value
 
-	value int
+	value int64
 }
 
-func NewInt(value int) *Int {
+func NewInt(value int64) *Int {
 	return &Int{
 		value: value,
 	}

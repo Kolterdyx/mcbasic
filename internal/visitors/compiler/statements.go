@@ -3,6 +3,7 @@ package compiler
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	"github.com/Kolterdyx/mcbasic/internal/visitors/compiler/ops"
@@ -18,7 +19,11 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 	cmd := ""
 	// For each parameter, copy the value to a variable with the same name
 	for _, arg := range stmt.Parameters {
-		cmd += c.opHandler.MakeConst(c.opHandler.Macro(arg.Name), ops.Cs(arg.Name), arg.Type == types.StringType)
+		var value nbt.Value = nbt.NewAny(c.opHandler.Macro(arg.Name))
+		if arg.Type == types.StringType {
+			value = nbt.NewString(c.opHandler.Macro(arg.Name))
+		}
+		cmd += c.opHandler.MakeConst(value, ops.Cs(arg.Name))
 	}
 
 	var source = cmd + stmt.Body.Accept(c)
@@ -90,11 +95,11 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 	} else {
 		switch stmt.Type {
 		case types.IntType:
-			cmd += c.opHandler.MakeConst("0L", ops.Cs(stmt.Name.Lexeme), false)
+			cmd += c.opHandler.MakeConst(nbt.NewInt(0), ops.Cs(stmt.Name.Lexeme))
 		case types.DoubleType:
-			cmd += c.opHandler.MakeConst("0.0d", ops.Cs(stmt.Name.Lexeme), false)
+			cmd += c.opHandler.MakeConst(nbt.NewDouble(0), ops.Cs(stmt.Name.Lexeme))
 		case types.StringType:
-			cmd += c.opHandler.MakeConst("", ops.Cs(stmt.Name.Lexeme))
+			cmd += c.opHandler.MakeConst(nbt.NewString(""), ops.Cs(stmt.Name.Lexeme))
 		default:
 			if reflect.TypeOf(stmt.Type) == reflect.TypeOf(types.ListTypeStruct{}) {
 				cmd += c.opHandler.MakeList(ops.Cs(stmt.Name.Lexeme))

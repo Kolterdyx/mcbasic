@@ -6,7 +6,7 @@ type LiteralExpr struct {
 	Expr
 	interfaces.SourceLocation
 
-	Value     interface{}
+	Value     string
 	ValueType interfaces.ValueType
 }
 

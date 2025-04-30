@@ -47,7 +47,7 @@ func (o *Op) MacroReplace(source string) string {
 }
 
 func (o *Op) Return() string {
-	return fmt.Sprintf("return run scoreboard players set $FUNCEXIT %s 1\n", o.Namespace)
+	return fmt.Sprintf("return 1\n")
 }
 
 func (o *Op) GetStructFields(structType types.StructTypeStruct) []interfaces.StructField {
