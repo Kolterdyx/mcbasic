@@ -177,8 +177,8 @@ func (p *Parser) baseValue() (expressions.Expr, error) {
 
 		// If this is a function call, delegate to functionCall (handles namespace)
 		if p.match(tokens.ParenOpen) {
-			if _, ok := p.structs[identifier.Lexeme]; ok {
-				//return p.structLiteral(identifier, structStmt.StructType)
+			if structStmt, ok := p.structs[identifier.Lexeme]; ok {
+				return p.structLiteral(identifier, structStmt.StructType)
 			} else {
 				return p.functionCall(namespaceToken, identifier, hasNamespace)
 			}

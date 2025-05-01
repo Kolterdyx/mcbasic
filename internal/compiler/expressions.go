@@ -314,7 +314,7 @@ func (c *Compiler) VisitStruct(expr expressions.StructExpr) string {
 	structFields := expr.StructType.GetFieldNames()
 	for i, arg := range expr.Args {
 		cmd += arg.Accept(c)
-		cmd += c.opHandler.StructSet(regStruct, structFields[i], ops.Cs(ops.RX))
+		cmd += c.opHandler.StructSet(ops.Cs(ops.RX), structFields[i], regStruct)
 	}
 	cmd += c.opHandler.Move(regStruct, ops.Cs(ops.RX))
 	cmd += "### END   Struct operation ###\n"
