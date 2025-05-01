@@ -169,7 +169,7 @@ func (p *Parser) getTokenAsValueType(token tokens.Token) (types.ValueType, error
 func (p *Parser) getNestedType(name tokens.Token, accessors []statements.Accessor) (types.ValueType, error) {
 	varType := p.getType(name)
 	if varType == nil {
-		return nil, p.error(name, fmt.Sprintf("Unknown variable type: %s", name.Lexeme))
+		return nil, p.error(name, "Undeclared identifier")
 	}
 	var err error
 	accessPath := name.Lexeme
