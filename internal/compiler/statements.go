@@ -142,9 +142,9 @@ func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStm
 		pathReg := ops.Cs(c.newRegister(ops.RX))
 		cmd += c.opHandler.MakeConst(nbt.NewString(""), pathReg)
 		for i := 0; i < len(stmt.Accessors); i++ {
+			cmd += fmt.Sprintf("### BEGIN Compute path part %v/%v ###\n", i+1, len(stmt.Accessors))
 			switch stmt.Accessors[i].(type) {
 			case statements.IndexAccessor:
-				cmd += fmt.Sprintf("### BEGIN Compute path part %v/%v ###\n", i+1, len(stmt.Accessors))
 				indexAccessor := stmt.Accessors[i].(statements.IndexAccessor)
 				cmd += "###       Compile index expression ###\n"
 				cmd += indexAccessor.Index.Accept(c)
@@ -158,8 +158,15 @@ func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStm
 				cmd += c.opHandler.MakeIndex(indexReg, indexReg)
 				cmd += "###       Append to path ###\n"
 				cmd += c.opHandler.Concat(pathReg, indexReg, pathReg)
-				cmd += fmt.Sprintf("### END   Compute path part %v/%v ###\n", i+1, len(stmt.Accessors))
+			case statements.FieldAccessor:
+				fieldAccessor := stmt.Accessors[i].(statements.FieldAccessor)
+				cmd += "###       Compile field expression ###\n"
+				fieldReg := ops.Cs(c.newRegister(ops.RX))
+				cmd += c.opHandler.MakeConst(nbt.NewString(fieldAccessor.ToString()), fieldReg)
+				cmd += "###       Append to path ###\n"
+				cmd += c.opHandler.Concat(pathReg, fieldReg, pathReg)
 			}
+			cmd += fmt.Sprintf("### END   Compute path part %v/%v ###\n", i+1, len(stmt.Accessors))
 		}
 		cmd += c.opHandler.PathSet(ops.Cs(stmt.Name.Lexeme), pathReg, valueReg)
 	} else {
