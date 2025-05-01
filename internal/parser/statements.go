@@ -64,7 +64,7 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 	if initializer != nil {
 		if list, ok := initializer.(expressions.ListExpr); ok {
 			// Allow assignment as long as varType is a list
-			if p.isListType(varType) {
+			if !p.isListType(varType) {
 				return nil, p.error(p.previous(), "Cannot assign empty list to non-list type.")
 			}
 			if len(list.Elements) == 0 {
@@ -118,19 +118,19 @@ func (p *Parser) ParseType() (types.ValueType, error) {
 	default:
 		return nil, p.error(p.peek(), "Expected type.")
 	}
-	if p.check(tokens.BracketOpen) {
-		var listType types.ListTypeStruct
-		for p.match(tokens.BracketOpen) {
-			if varType == types.VoidType {
-				return nil, p.error(p.peek(), "Cannot declare empty list.")
-			}
-			listType = types.NewListType(varType)
-			varType = listType
-			if !p.match(tokens.BracketClose) {
-				return nil, p.error(p.peek(), "Expected ']' after list type.")
-			}
+	return p.typePostfix(varType)
+}
+
+func (p *Parser) typePostfix(varType types.ValueType) (types.ValueType, error) {
+	for {
+		if !p.match(tokens.BracketOpen) {
+			break
 		}
-		varType = listType
+		_, err := p.consume(tokens.BracketClose, "Expected ']' after list type.")
+		if err != nil {
+			return nil, err
+		}
+		varType = types.NewListType(varType)
 	}
 	return varType, nil
 }
@@ -271,25 +271,7 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 		if err != nil {
 			return nil, err
 		}
-		var fieldType types.ValueType
-		if p.match(tokens.ValueTypes...) {
-			fieldType, err = p.getTokenAsValueType(p.previous())
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			// Check if the type is a struct
-			if p.match(tokens.Identifier) {
-				// Check if the struct is defined
-				structStmt, ok := p.structs[p.previous().Lexeme]
-				if !ok {
-					return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", p.previous().Lexeme))
-				}
-				fieldType = structStmt.StructType
-			} else {
-				return nil, p.error(p.peek(), "Expected field type.")
-			}
-		}
+		fieldType, err := p.ParseType()
 		switch fieldType.(type) {
 		case types.PrimitiveTypeStruct:
 			switch fieldType {

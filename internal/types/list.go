@@ -10,9 +10,9 @@ type ListTypeStruct struct {
 	ContentType ValueType
 }
 
-func NewListType(parent ValueType) ListTypeStruct {
+func NewListType(contentType ValueType) ListTypeStruct {
 	return ListTypeStruct{
-		ContentType: parent,
+		ContentType: contentType,
 	}
 }
 
