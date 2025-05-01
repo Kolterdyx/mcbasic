@@ -52,7 +52,6 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 	source := string(blob)
 	log.Debug("Source loaded successfully")
 
-	// Create a s
 	s := &scanner.Scanner{}
 	tokens := s.Scan(source)
 	if s.HadError {
@@ -108,11 +107,7 @@ func loadHeaders(headerPaths []string, projectRoot string, builtinHeaders embed.
 
 	for _, headerPath := range headerPaths {
 		log.Debug("Loading header: ", headerPath)
-		if _, err := os.Stat(headerPath); os.IsNotExist(err) {
-			log.Warnf("Header file %s does not exist, skipping...", headerPath)
-			continue
-		}
-		headerFile, err := os.ReadFile(headerPath)
+		headerFile, err := builtinHeaders.ReadFile(headerPath)
 		if err != nil {
 			return nil, err
 		}
