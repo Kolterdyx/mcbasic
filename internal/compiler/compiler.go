@@ -204,7 +204,7 @@ func (c *Compiler) createFunction(fullName string, source string, args []interfa
 	f.Args = append(f.Args, interfaces.FuncArg{Name: "__call__", Type: types.IntType})
 	c.functions[fullName] = f
 
-	err := os.WriteFile(c.getFuncPath(namespace)+"/"+filename, []byte(source), 0644)
+	err := os.WriteFile(c.getFuncPath(namespace)+"/"+filename, []byte(c.opHandler.MacroReplace(source)), 0644)
 	if err != nil {
 		log.Fatalln(err)
 	}

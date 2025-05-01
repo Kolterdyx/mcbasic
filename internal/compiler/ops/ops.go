@@ -40,7 +40,7 @@ func (o *Op) Macro(argName string) string {
 func (o *Op) MacroReplace(source string) string {
 	lines := strings.Split(source, "\n")
 	for i, line := range lines {
-		if strings.Contains(line, "$(") {
+		if strings.Contains(line, "$(") && !(line[0:1] == "$") {
 			lines[i] = "$" + line
 		}
 	}
@@ -62,20 +62,19 @@ func Cs(s string) string {
 	return s + suffix
 }
 
-func (o *Op) Trace(path string) string {
-	cmd := ""
-	cmd += o.LoadArgConst("internal/trace", "storage", nbt.NewString(fmt.Sprintf("%s:data", o.Namespace)))
-	cmd += o.LoadArgConst("internal/trace", "path", nbt.NewString(path))
-	cmd += o.LoadArg("internal/trace", "value", path)
-	cmd += o.Call("mcb:internal/trace", "")
-	return cmd
-}
+func (o *Op) Trace(storage, path string) string {
 
-func (o *Op) TraceRaw(path string) string {
-	cmd := ""
-	cmd += o.LoadArgConst("internal/trace", "storage", nbt.NewString("N/A"))
-	cmd += o.LoadArgConst("internal/trace", "path", nbt.NewString(path))
-	cmd += o.LoadArgRaw("internal/trace", "value", path)
-	cmd += o.Call("mcb:internal/trace", "")
-	return cmd
+	text := nbt.NewList(
+		nbt.NewCompound().
+			Set("text", nbt.NewString(path+": ")).
+			Set("color", nbt.NewString("green")),
+		nbt.NewCompound().
+			Set("type", nbt.NewAny("nbt")).
+			Set("source", nbt.NewAny("storage")).
+			Set("nbt", nbt.NewString(path)).
+			Set("storage", nbt.NewString(storage)).
+			Set("color", nbt.NewString("yellow")),
+	)
+
+	return fmt.Sprintf("tellraw @a[tag=mcblog] %s\n", text.ToString())
 }

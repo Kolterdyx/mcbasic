@@ -75,18 +75,18 @@ func main() {
 	
 	
     # Some math functions
-    math:sqrt(4.0); # 2
-    math:floor(5.51); # 5
-    math:ceil(5.51); # 6
-    math:round(5.51); # 6
+    mcb:print("math:sqrt(4.0): " + math:sqrt(4.0));
+    mcb:print("math:floor(5.51): " + math:floor(5.51));
+    mcb:print("math:ceil(5.51): " + math:ceil(5.51));
+    mcb:print("math:round(5.51): " + math:round(5.51));
 
     # Some trigonometric functions
-    math:cos(0.0);
-    math:sin(0.0);
-    math:tan(0.0);
-    math:acos(1.0);
-    math:asin(0.0);
-    math:atan(0.0);
+    mcb:print("math:cos(30.0): " + math:cos(30.0));
+    mcb:print("math:sin(30.0): " + math:sin(30.0));
+    mcb:print("math:tan(45.0): " + math:tan(45.0));
+    mcb:print("math:acos(0.5): " + math:acos(0.5));
+    mcb:print("math:asin(0.5): " + math:asin(0.5));
+    mcb:print("math:atan(1.0): " + math:atan(1.0));
 
     # Lists are statically typed, and the type must be specified when creating a list
     let myList int[] = [1, 2, 3, 4, 5];

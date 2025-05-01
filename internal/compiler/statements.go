@@ -58,8 +58,8 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 	}
 	wrapperSource += c.opHandler.Call("internal/"+stmt.Name.Lexeme, "")
 	wrapperSource += c.opHandler.Return()
-	c.createFunction(stmt.Name.Lexeme, c.opHandler.MacroReplace(wrapperSource), args, stmt.ReturnType)
-	c.createFunction("internal/"+stmt.Name.Lexeme, c.opHandler.MacroReplace(source), args, stmt.ReturnType)
+	c.createFunction(stmt.Name.Lexeme, wrapperSource, args, stmt.ReturnType)
+	c.createFunction("internal/"+stmt.Name.Lexeme, source, args, stmt.ReturnType)
 	return ""
 }
 

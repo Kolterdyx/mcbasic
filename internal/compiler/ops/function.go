@@ -11,7 +11,6 @@ func (o *Op) CallFunction(funcName string, args map[string]string, res string) s
 	cmd := ""
 	cmd += o.LoadArgs(funcName, args)
 	cmd += o.Call(funcName, res)
-
 	return cmd
 }
 

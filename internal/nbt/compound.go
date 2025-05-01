@@ -30,11 +30,12 @@ func (c *Compound) Get(key string) (Value, bool) {
 	return c.values.Get(key)
 }
 
-func (c *Compound) Set(key string, value Value) {
+func (c *Compound) Set(key string, value Value) *Compound {
 	if c.values == nil {
 		c.values = orderedmap.NewOrderedMap[string, Value]()
 	}
 	c.values.Set(key, value)
+	return c
 }
 
 func (c *Compound) Size() int {

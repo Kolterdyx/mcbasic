@@ -55,7 +55,11 @@ func (c *Compiler) math() {
 	)
 	c.createFunction(
 		"math:acos",
-		c.opHandler.DoubleAcos("x", ops.RET)+
+		c.opHandler.MoveRaw(
+			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf("%s.acos.x", ops.ArgPath),
+			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf(ops.Cs("%s.x"), ops.VarPath),
+		)+
+			c.opHandler.DoubleAcos("x", ops.RET)+
 			c.opHandler.Return(),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: types.DoubleType},
@@ -64,7 +68,11 @@ func (c *Compiler) math() {
 	)
 	c.createFunction(
 		"math:asin",
-		c.opHandler.DoubleAsin("x", ops.RET)+
+		c.opHandler.MoveRaw(
+			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf("%s.asin.x", ops.ArgPath),
+			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf(ops.Cs("%s.x"), ops.VarPath),
+		)+
+			c.opHandler.DoubleAsin("x", ops.RET)+
 			c.opHandler.Return(),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: types.DoubleType},
@@ -73,7 +81,11 @@ func (c *Compiler) math() {
 	)
 	c.createFunction(
 		"math:atan",
-		c.opHandler.DoubleAtan("x", ops.RET)+
+		c.opHandler.MoveRaw(
+			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf("%s.atan.x", ops.ArgPath),
+			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf(ops.Cs("%s.x"), ops.VarPath),
+		)+
+			c.opHandler.DoubleAtan("x", ops.RET)+
 			c.opHandler.Return(),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: types.DoubleType},
