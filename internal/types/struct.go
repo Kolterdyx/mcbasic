@@ -2,32 +2,34 @@ package types
 
 import (
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
+	"github.com/elliotchance/orderedmap/v3"
+	"slices"
 )
 
 type StructTypeStruct struct {
 	ValueType
 
 	Name   string
-	fields map[string]ValueType
+	fields *orderedmap.OrderedMap[string, ValueType]
 }
 
 func NewStructType(name string) StructTypeStruct {
 	return StructTypeStruct{
 		Name:   name,
-		fields: make(map[string]ValueType),
+		fields: orderedmap.NewOrderedMap[string, ValueType](),
 	}
 }
 
 func (s StructTypeStruct) SetField(name string, value ValueType) {
-	if s.fields == nil {
-		s.fields = make(map[string]ValueType)
-	}
-	s.fields[name] = value
+	s.fields.Set(name, value)
 }
 
 func (s StructTypeStruct) GetField(name string) (ValueType, bool) {
-	value, ok := s.fields[name]
-	return value, ok
+	return s.fields.Get(name)
+}
+
+func (s StructTypeStruct) GetFieldNames() []string {
+	return slices.Collect(s.fields.Keys())
 }
 
 func (s StructTypeStruct) Primitive() ValueType {
@@ -40,14 +42,14 @@ func (s StructTypeStruct) ToString() string {
 
 func (s StructTypeStruct) ToNBT() nbt.Value {
 	compound := nbt.NewCompound()
-	for name, value := range s.fields {
-		compound.Set(name, value.ToNBT())
+	for name, field := range s.fields.AllFromFront() {
+		compound.Set(name, field.ToNBT())
 	}
 	return compound
 }
 
 func (s StructTypeStruct) Size() int {
-	return len(s.fields)
+	return s.fields.Len()
 }
 
 func (s StructTypeStruct) Equals(other ValueType) bool {
@@ -58,11 +60,11 @@ func (s StructTypeStruct) Equals(other ValueType) bool {
 		if s.Name != other.Name {
 			return false
 		}
-		if len(s.fields) != len(other.fields) {
+		if s.fields.Len() != other.fields.Len() {
 			return false
 		}
-		for name, value := range s.fields {
-			if otherValue, ok := other.fields[name]; !ok || !value.Equals(otherValue) {
+		for name, field := range s.fields.AllFromFront() {
+			if otherField, ok := other.GetField(name); !ok || !field.Equals(otherField) {
 				return false
 			}
 		}

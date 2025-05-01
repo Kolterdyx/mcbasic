@@ -17,6 +17,7 @@ const (
 	LogicalExprType      ExprType = "Logical"
 	SliceExprType        ExprType = "SliceString"
 	ListExprType         ExprType = "List"
+	StructExprType       ExprType = "Struct"
 )
 
 type ExprVisitor interface {
@@ -30,6 +31,7 @@ type ExprVisitor interface {
 	VisitLogical(l LogicalExpr) string
 	VisitSlice(s SliceExpr) string
 	VisitList(s ListExpr) string
+	VisitStruct(s StructExpr) string
 }
 
 type Expr interface {

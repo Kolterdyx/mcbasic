@@ -177,7 +177,11 @@ func (p *Parser) baseValue() (expressions.Expr, error) {
 
 		// If this is a function call, delegate to functionCall (handles namespace)
 		if p.match(tokens.ParenOpen) {
-			return p.functionCall(namespaceToken, identifier, hasNamespace)
+			if _, ok := p.structs[identifier.Lexeme]; ok {
+				//return p.structLiteral(identifier, structStmt.StructType)
+			} else {
+				return p.functionCall(namespaceToken, identifier, hasNamespace)
+			}
 		}
 
 		// Otherwise, it's a variable reference.  If namespaced, prefix the lexeme.
@@ -312,6 +316,43 @@ func (p *Parser) functionCall(namespace tokens.Token, name tokens.Token, hasName
 		Literal:        name.Literal,
 		SourceLocation: name.SourceLocation,
 	}, Arguments: args, SourceLocation: location, Type: funcDef.ReturnType}, nil
+}
+
+func (p *Parser) structLiteral(name tokens.Token, structType types.StructTypeStruct) (expressions.Expr, error) {
+	var args []expressions.Expr
+	if !p.check(tokens.ParenClose) {
+		for {
+			exp, err := p.expression()
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, exp)
+			if len(args) >= 255 {
+				return nil, p.error(p.peek(), "Cannot have more than 255 arguments.")
+			}
+			if !p.match(tokens.Comma) {
+				break
+			}
+		}
+	}
+	_, err := p.consume(tokens.ParenClose, "Expected ')' after arguments.")
+	if err != nil {
+		return nil, err
+	}
+
+	if len(args) != structType.Size() {
+		return nil, p.error(name, fmt.Sprintf("Expected %d arguments, got %d.", structType.Size(), len(args)))
+	}
+
+	fieldNames := structType.GetFieldNames()
+	for i, arg := range args {
+		fieldType, _ := structType.GetField(fieldNames[i])
+		if !arg.ReturnType().Equals(fieldType) && !fieldType.Equals(types.VoidType) {
+			return nil, p.error(p.peekCount(-(structType.Size()-i)*2), fmt.Sprintf("Expected %s, got %s.", fieldType.ToString(), arg.ReturnType().ToString()))
+		}
+	}
+
+	return expressions.StructExpr{Args: args, StructType: structType}, nil
 }
 
 func (p *Parser) slice(expr expressions.Expr) (expressions.Expr, error) {

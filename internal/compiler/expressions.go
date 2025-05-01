@@ -103,6 +103,15 @@ func (c *Compiler) VisitVariable(expr expressions.VariableExpr) string {
 	return c.opHandler.Move(ops.Cs(expr.Name.Lexeme), ops.Cs(ops.RX))
 }
 
+func (c *Compiler) VisitFieldAccess(expr expressions.FieldAccessExpr) string {
+	cmd := "### BEGIN Struct field access operation ###\n"
+	cmd += expr.Source.Accept(c)
+	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(ops.RA))
+	cmd += c.opHandler.StructGet(ops.Cs(ops.RA), expr.Field.Lexeme, ops.Cs(ops.RX))
+	cmd += "### END   Struct field access operation ###\n"
+	return cmd
+}
+
 func (c *Compiler) VisitFunctionCall(expr expressions.FunctionCallExpr) string {
 	cmd := ""
 	for i, arg := range expr.Arguments {
@@ -298,11 +307,16 @@ func (c *Compiler) VisitList(expr expressions.ListExpr) string {
 	return cmd
 }
 
-func (c *Compiler) VisitFieldAccess(expr expressions.FieldAccessExpr) string {
-	cmd := "### BEGIN Struct field access operation ###\n"
-	cmd += expr.Source.Accept(c)
-	cmd += c.opHandler.Move(ops.Cs(ops.RX), ops.Cs(ops.RA))
-	cmd += c.opHandler.StructGet(ops.Cs(ops.RA), expr.Field.Lexeme, ops.Cs(ops.RX))
-	cmd += "### END   Struct field access operation ###\n"
+func (c *Compiler) VisitStruct(expr expressions.StructExpr) string {
+	cmd := "### BEGIN Struct init operation ###\n"
+	regStruct := ops.Cs(c.newRegister(ops.RX))
+	cmd += c.opHandler.MakeConst(expr.StructType.ToNBT(), regStruct)
+	structFields := expr.StructType.GetFieldNames()
+	for i, arg := range expr.Args {
+		cmd += arg.Accept(c)
+		cmd += c.opHandler.StructSet(regStruct, structFields[i], ops.Cs(ops.RX))
+	}
+	cmd += c.opHandler.Move(regStruct, ops.Cs(ops.RX))
+	cmd += "### END   Struct operation ###\n"
 	return cmd
 }
