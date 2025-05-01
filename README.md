@@ -117,113 +117,15 @@ Load the datapack in your Minecraft world and join or reload the world to see th
 if you are joining a world, the message may appear before you join the world. You can always run the command `/function <your_namespace>:main` to see the output again.
 
 
-## Example
+## Hello world example
 
 ```go # Go is used for syntax highlighting, but the language is not Go
-func add(a double, b double) double {
-    return a + b;
-}
-
-# Recursion is possible! Careful not to hit the maxCommandChainLength or the maxCommandForkCount limit
-func fib(n int) int {
-    if (n <= 1) {
-        return n;
-    }
-    return fib(n - 1) + fib(n - 2);
-}
-
-func fizbuzz(n int) {
-    # since for/while loops aren't supported yet, here is a cut down version of the fizzbuzz function
-    # that evaluates a single value at a time instead of all the numbers up to n
-    if (n % 3 == 0 and n % 5 == 0) {
-        mcb:print("FizzBuzz!");
-    } else if (n % 3 == 0) {
-        mcb:print("Fizz");
-    } else if (n % 5 == 0) {
-        mcb:print("Buzz");
-    } else {
-        mcb:print(n);
-    }
-}
-
-# Use recursion to print fizzbuzz from 1 to n
-func print_fizzbuzz(n int, max int) {
-	if (n <= max) {
-		fizbuzz(n);
-		print_fizzbuzz(n + 1, max);
-	}
-}
-
 func main() {
-
-    let x double = 5.51;
-    let y double = 10.73;
-    let z double = add(x, y);
-
-    # string concatenation
-    let hello str = "Hello" + " world!";
-
-    # print function can take any argument type
-    mcb:print(hello);
-    mcb:print(z);
-
-    # fizzbuzz!
-    print_fizzbuzz(1, 30);
-
-	# logs will only be shown to players with the 'mcblog' tag
-	mcb:log("This is a log message");
-
-    # Other types can be appended to strings. The string must be on the left side of the operation for this to work
-    mcb:log("10th fib: " + fib(10));
-
-    # You can also run raw commands with the built-in exec function
-    mcb:exec("say Hello, world!");
-
-    # You can also slice strings
-    mcb:log(hello[0:5]);
-    # Even with literals and negative indices
-    mcb:log("Hello world!"[-6:-1]);
-    # Expressions can be used as indices. The result must be an integer
-    mcb:log(hello[0:5 + 1]);
-    # Out of bounds exceptions are checked, and errors are logged to the chat to players with the 'mcblog' tag
-    # Negative indices are also checked
-    # mcb:log(hello[0:100]);
-    # mcb:log(hello[0:-100]);
-	
-	
-    # Math implementation comes from the https://github.com/gibbsly/gm project, which uses
-    # entity transforms to perform math operations.
-    # This includes base language math operators as +, -, *, /, %
-	
-	
-    # Some math functions
-    mcb:print("math:sqrt(4.0): " + math:sqrt(4.0));
-    mcb:print("math:floor(5.51): " + math:floor(5.51));
-    mcb:print("math:ceil(5.51): " + math:ceil(5.51));
-    mcb:print("math:round(5.51): " + math:round(5.51));
-
-    # Some trigonometric functions
-    mcb:print("math:cos(30.0): " + math:cos(30.0));
-    mcb:print("math:sin(30.0): " + math:sin(30.0));
-    mcb:print("math:tan(45.0): " + math:tan(45.0));
-    mcb:print("math:acos(0.5): " + math:acos(0.5));
-    mcb:print("math:asin(0.5): " + math:asin(0.5));
-    mcb:print("math:atan(1.0): " + math:atan(1.0));
-
-    # Lists are statically typed, and the type must be specified when creating a list
-    let myList int[] = [1, 2, 3, 4, 5];
-    # You can also create empty lists and nested lists
-    let myList2 int[] = [];
-	let myList3 int[][] = [[1, 2], [3, 4], [5, 6]];
-
-    # You can access or assign list elements using the [] operator
-    myList[0] = 42;
-    myList3[1][0] = 99;
-    mcb:print("myList = " + myList);
-    mcb:print("myList2 = " + myList2);
-    mcb:print("myList3 = " + myList3);
+    mcb:print("Hello, world!");
 }
 ```
+
+You can find more examples in the [examples](examples) folder.
 
 ## Contributing
 

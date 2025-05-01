@@ -1,0 +1,6 @@
+[project]
+name = "numbers"
+namespace = "numbers"
+version = "0.1.0"
+entrypoint = "src/main.mcb"
+description = "A demonstration of numbers and math in mcbasic"

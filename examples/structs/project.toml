@@ -1,0 +1,9 @@
+cleanBeforeInit = true
+debug = true
+
+[project]
+name = "structs"
+namespace = "structs"
+version = "0.1.0"
+entrypoint = "src/main.mcb"
+description = "A demonstration of structs in mcbasic"

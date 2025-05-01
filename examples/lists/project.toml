@@ -1,0 +1,9 @@
+cleanBeforeInit = true
+debug = true
+
+[project]
+name = "lists"
+namespace = "lists"
+version = "0.1.0"
+entrypoint = "src/main.mcb"
+description = "A demonstration of lists in mcbasic"

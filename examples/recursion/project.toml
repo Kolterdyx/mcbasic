@@ -1,0 +1,7 @@
+
+[project]
+name = "recursion"
+namespace = "recursion"
+version = "0.1.0"
+entrypoint = "src/main.mcb"
+description = "A demonstration of recursion in mcbasic"

@@ -1,0 +1,24 @@
+
+func main() {
+	let x int = 10;
+	let y double = 3.14;
+
+	# Math!
+	let z double = x + y;
+	let a double = x - y;
+	let b double = x * y;
+	let c double = x / y;
+
+	let d double = math:round(z);
+	let e double = math:floor(z);
+	let f double = math:ceil(z);
+	let g double = math:sqrt(z);
+
+	let h double = math:cos(z);
+	let i double = math:sin(z);
+	let j double = math:tan(z);
+
+	let k double = math:acos(z);
+	let l double = math:asin(z);
+	let m double = math:atan(z);
+}
