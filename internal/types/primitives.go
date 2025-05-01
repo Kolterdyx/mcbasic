@@ -1,28 +1,29 @@
 package types
 
 import (
-	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	log "github.com/sirupsen/logrus"
 )
 
+type PrimitiveType string
+
 const (
 	// PrimitiveErrorType  used for error handling
-	PrimitiveErrorType interfaces.PrimitiveType = "error"
+	PrimitiveErrorType PrimitiveType = "error"
 
-	PrimitiveVoidType   interfaces.PrimitiveType = "void"
-	PrimitiveIntType    interfaces.PrimitiveType = "int"
-	PrimitiveStringType interfaces.PrimitiveType = "str"
-	PrimitiveDoubleType interfaces.PrimitiveType = "double"
+	PrimitiveVoidType   PrimitiveType = "void"
+	PrimitiveIntType    PrimitiveType = "int"
+	PrimitiveStringType PrimitiveType = "str"
+	PrimitiveDoubleType PrimitiveType = "double"
 )
 
 type PrimitiveTypeStruct struct {
-	interfaces.ValueType
+	ValueType
 
-	primitiveType interfaces.PrimitiveType
+	primitiveType PrimitiveType
 }
 
-func (p PrimitiveTypeStruct) Primitive() interfaces.ValueType {
+func (p PrimitiveTypeStruct) Primitive() ValueType {
 	switch p.primitiveType {
 	case PrimitiveVoidType:
 		return VoidType
@@ -71,6 +72,16 @@ func (p PrimitiveTypeStruct) ToNBT() nbt.Value {
 	}
 	log.Fatalf("Should be unreachable: %v", p.primitiveType)
 	return nil
+}
+
+func (p PrimitiveTypeStruct) Equals(other ValueType) bool {
+	if other == nil {
+		return false
+	}
+	if other, ok := other.(PrimitiveTypeStruct); ok {
+		return p.primitiveType == other.primitiveType
+	}
+	return false
 }
 
 var (

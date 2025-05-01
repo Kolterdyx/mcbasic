@@ -23,6 +23,6 @@ func (l LogicalExpr) ExprType() ExprType {
 	return LogicalExprType
 }
 
-func (l LogicalExpr) ReturnType() interfaces.ValueType {
+func (l LogicalExpr) ReturnType() types.ValueType {
 	return types.IntType
 }

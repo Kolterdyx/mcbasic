@@ -366,7 +366,7 @@ func (p *Parser) primary() (expressions.Expr, error) {
 	}
 	if p.match(tokens.BracketOpen) {
 		var elems []expressions.Expr
-		var contentType interfaces.ValueType = types.VoidType
+		var contentType types.ValueType = types.VoidType
 		for !p.check(tokens.BracketClose) {
 			if p.match(tokens.Comma) {
 				continue

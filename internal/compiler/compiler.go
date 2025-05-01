@@ -22,7 +22,7 @@ import (
 
 type TypedIdentifier struct {
 	Name string
-	Type interfaces.ValueType
+	Type types.ValueType
 }
 
 type Compiler struct {
@@ -170,7 +170,7 @@ func (c *Compiler) createPackMeta() {
 	}
 }
 
-func (c *Compiler) createFunction(fullName string, source string, args []interfaces.FuncArg, returnType interfaces.ValueType) {
+func (c *Compiler) createFunction(fullName string, source string, args []interfaces.FuncArg, returnType types.ValueType) {
 	if fullName == c.LoadFuncName || fullName == c.TickFuncName {
 		return
 	}
@@ -247,10 +247,9 @@ func (c *Compiler) newRegister(regName string) string {
 }
 
 // Searches the current scope for functions and variables, returns the type of the variable or function
-func (c *Compiler) getReturnType(name string) interfaces.ValueType {
+func (c *Compiler) getReturnType(name string) types.ValueType {
 	for _, identifier := range c.scope[c.currentScope] {
 		if identifier.Name == name {
-			log.Debugf("Found %s in scope %s", name, c.currentScope)
 			return identifier.Type
 		}
 	}

@@ -91,8 +91,8 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 	}, nil
 }
 
-func (p *Parser) ParseType() (interfaces.ValueType, error) {
-	var varType interfaces.ValueType
+func (p *Parser) ParseType() (types.ValueType, error) {
+	var varType types.ValueType
 
 	// types are as follows:
 	// primitive types: int, double, str
@@ -174,7 +174,7 @@ func (p *Parser) variableAssignment() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	if valueExpr.ReturnType() != targetValueType {
+	if !valueExpr.ReturnType().Equals(targetValueType) {
 		return nil, p.error(p.previous(), fmt.Sprintf("Cannot assign %s to %s.", valueExpr.ReturnType().ToString(), targetValueType.ToString()))
 	}
 	if _, err := p.consume(tokens.Semicolon, "Expected ';' after assignment."); err != nil {
@@ -212,7 +212,7 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 				return nil, err
 			}
 			type_ := p.previous()
-			var valueType interfaces.ValueType
+			var valueType types.ValueType
 			switch type_.Type {
 			case tokens.StringType:
 				valueType = types.StringType
@@ -233,7 +233,7 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	var returnType interfaces.ValueType = types.VoidType
+	var returnType types.ValueType = types.VoidType
 	if !p.check(tokens.BraceOpen) {
 		returnType, err = p.ParseType()
 	}
@@ -271,7 +271,7 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 		if err != nil {
 			return nil, err
 		}
-		var fieldType interfaces.ValueType
+		var fieldType types.ValueType
 		if p.match(tokens.ValueTypes...) {
 			fieldType, err = p.getTokenAsValueType(p.previous())
 			if err != nil {

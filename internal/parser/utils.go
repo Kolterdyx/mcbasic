@@ -103,7 +103,7 @@ func (p *Parser) peekCount(offset int) tokens.Token {
 	return p.Tokens[p.current+offset]
 }
 
-func (p *Parser) getType(name tokens.Token) interfaces.ValueType {
+func (p *Parser) getType(name tokens.Token) types.ValueType {
 	// Search the variable in the current scope
 	for _, varDef := range p.variables[p.currentScope] {
 		if varDef.Name == name.Lexeme {
@@ -126,7 +126,7 @@ func (p *Parser) getType(name tokens.Token) interfaces.ValueType {
 	return nil
 }
 
-func (p *Parser) isListType(varType interfaces.ValueType) bool {
+func (p *Parser) isListType(varType types.ValueType) bool {
 	switch varType.(type) {
 	case types.ListTypeStruct:
 		return true
@@ -135,7 +135,7 @@ func (p *Parser) isListType(varType interfaces.ValueType) bool {
 	}
 }
 
-func (p *Parser) isStructType(varType interfaces.ValueType) bool {
+func (p *Parser) isStructType(varType types.ValueType) bool {
 	switch varType.(type) {
 	case types.StructTypeStruct:
 		return true
@@ -145,8 +145,8 @@ func (p *Parser) isStructType(varType interfaces.ValueType) bool {
 	}
 }
 
-func (p *Parser) getTokenAsValueType(token tokens.Token) (interfaces.ValueType, error) {
-	var varType interfaces.ValueType
+func (p *Parser) getTokenAsValueType(token tokens.Token) (types.ValueType, error) {
+	var varType types.ValueType
 	var err error
 	switch token.Type {
 	case tokens.IntType:
@@ -166,7 +166,7 @@ func (p *Parser) getTokenAsValueType(token tokens.Token) (interfaces.ValueType, 
 }
 
 // getNestedType traverses the accessors to find the type at the end
-func (p *Parser) getNestedType(name tokens.Token, accessors []statements.Accessor) (interfaces.ValueType, error) {
+func (p *Parser) getNestedType(name tokens.Token, accessors []statements.Accessor) (types.ValueType, error) {
 	varType := p.getType(name)
 	if varType == nil {
 		return nil, p.error(name, fmt.Sprintf("Unknown variable type: %s", name.Lexeme))
@@ -203,7 +203,7 @@ func (p *Parser) getNestedType(name tokens.Token, accessors []statements.Accesso
 	return varType, err
 }
 
-func parseType(valueType string) (interfaces.ValueType, error) {
+func parseType(valueType string) (types.ValueType, error) {
 	s := scanner.Scanner{}
 	p := Parser{
 		Tokens: s.Scan(valueType),

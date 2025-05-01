@@ -1,13 +1,16 @@
 package expressions
 
-import "github.com/Kolterdyx/mcbasic/internal/interfaces"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/types"
+)
 
 type LiteralExpr struct {
 	Expr
 	interfaces.SourceLocation
 
 	Value     string
-	ValueType interfaces.ValueType
+	ValueType types.ValueType
 }
 
 func (l LiteralExpr) Accept(v ExprVisitor) string {
@@ -18,6 +21,6 @@ func (l LiteralExpr) ExprType() ExprType {
 	return LiteralExprType
 }
 
-func (l LiteralExpr) ReturnType() interfaces.ValueType {
+func (l LiteralExpr) ReturnType() types.ValueType {
 	return l.ValueType
 }

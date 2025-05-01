@@ -23,14 +23,14 @@ func (s SliceExpr) ExprType() ExprType {
 	return SliceExprType
 }
 
-func (s SliceExpr) ReturnType() interfaces.ValueType {
+func (s SliceExpr) ReturnType() types.ValueType {
 	if s.StartIndex != nil && s.EndIndex == nil {
 		return getReturnIndexType(s.TargetExpr.ReturnType())
 	}
 	return s.TargetExpr.ReturnType()
 }
 
-func getReturnIndexType(valueType interfaces.ValueType) interfaces.ValueType {
+func getReturnIndexType(valueType types.ValueType) types.ValueType {
 	switch valueType.(type) {
 	case types.ListTypeStruct:
 		return valueType.(types.ListTypeStruct).ContentType

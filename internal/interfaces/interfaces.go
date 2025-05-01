@@ -1,14 +1,6 @@
 package interfaces
 
-import "github.com/Kolterdyx/mcbasic/internal/nbt"
-
-type PrimitiveType string
-
-type ValueType interface {
-	Primitive() ValueType
-	ToString() string
-	ToNBT() nbt.Value
-}
+import "github.com/Kolterdyx/mcbasic/internal/types"
 
 type Project struct {
 	Name        string   `toml:"name"`
@@ -50,13 +42,13 @@ type SourceLocation struct {
 
 type FuncArg struct {
 	Name string
-	Type ValueType
+	Type types.ValueType
 }
 
 type FuncDef struct {
 	Name       string
 	Args       []FuncArg
-	ReturnType ValueType
+	ReturnType types.ValueType
 }
 
 type Author struct {
@@ -71,5 +63,5 @@ func (a Author) String() string {
 // StructField represents a field in a struct declaration.
 type StructField struct {
 	Name string
-	Type ValueType
+	Type types.ValueType
 }

@@ -1,6 +1,8 @@
 package expressions
 
-import "github.com/Kolterdyx/mcbasic/internal/interfaces"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/types"
+)
 
 type ExprType string
 
@@ -33,5 +35,5 @@ type ExprVisitor interface {
 type Expr interface {
 	Accept(v ExprVisitor) string
 	ExprType() ExprType
-	ReturnType() interfaces.ValueType
+	ReturnType() types.ValueType
 }

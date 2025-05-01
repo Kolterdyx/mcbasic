@@ -23,7 +23,7 @@ func (b BinaryExpr) ExprType() ExprType {
 	return BinaryExprType
 }
 
-func (b BinaryExpr) ReturnType() interfaces.ValueType {
+func (b BinaryExpr) ReturnType() types.ValueType {
 	switch b.Left.ReturnType() {
 	case types.IntType:
 		switch b.Right.ReturnType() {

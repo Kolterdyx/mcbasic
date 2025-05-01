@@ -1,37 +1,36 @@
 package types
 
 import (
-	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
 )
 
 type StructTypeStruct struct {
-	interfaces.ValueType
+	ValueType
 
 	Name   string
-	fields map[string]interfaces.ValueType
+	fields map[string]ValueType
 }
 
 func NewStructType(name string) StructTypeStruct {
 	return StructTypeStruct{
 		Name:   name,
-		fields: make(map[string]interfaces.ValueType),
+		fields: make(map[string]ValueType),
 	}
 }
 
-func (s StructTypeStruct) SetField(name string, value interfaces.ValueType) {
+func (s StructTypeStruct) SetField(name string, value ValueType) {
 	if s.fields == nil {
-		s.fields = make(map[string]interfaces.ValueType)
+		s.fields = make(map[string]ValueType)
 	}
 	s.fields[name] = value
 }
 
-func (s StructTypeStruct) GetField(name string) (interfaces.ValueType, bool) {
+func (s StructTypeStruct) GetField(name string) (ValueType, bool) {
 	value, ok := s.fields[name]
 	return value, ok
 }
 
-func (s StructTypeStruct) Primitive() interfaces.ValueType {
+func (s StructTypeStruct) Primitive() ValueType {
 	return s
 }
 
@@ -49,4 +48,25 @@ func (s StructTypeStruct) ToNBT() nbt.Value {
 
 func (s StructTypeStruct) Size() int {
 	return len(s.fields)
+}
+
+func (s StructTypeStruct) Equals(other ValueType) bool {
+	if other == nil {
+		return false
+	}
+	if other, ok := other.(StructTypeStruct); ok {
+		if s.Name != other.Name {
+			return false
+		}
+		if len(s.fields) != len(other.fields) {
+			return false
+		}
+		for name, value := range s.fields {
+			if otherValue, ok := other.fields[name]; !ok || !value.Equals(otherValue) {
+				return false
+			}
+		}
+		return true
+	}
+	return false
 }

@@ -22,6 +22,6 @@ func (u UnaryExpr) ExprType() ExprType {
 	return UnaryExprType
 }
 
-func (u UnaryExpr) ReturnType() interfaces.ValueType {
+func (u UnaryExpr) ReturnType() types.ValueType {
 	return types.IntType
 }

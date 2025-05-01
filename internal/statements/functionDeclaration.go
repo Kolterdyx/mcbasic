@@ -3,6 +3,7 @@ package statements
 import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 type FunctionDeclarationStmt struct {
@@ -10,7 +11,7 @@ type FunctionDeclarationStmt struct {
 
 	Name       tokens.Token
 	Parameters []interfaces.FuncArg
-	ReturnType interfaces.ValueType
+	ReturnType types.ValueType
 	Body       BlockStmt
 }
 

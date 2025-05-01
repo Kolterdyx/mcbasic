@@ -3,6 +3,7 @@ package expressions
 import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 type FunctionCallExpr struct {
@@ -11,7 +12,7 @@ type FunctionCallExpr struct {
 
 	Name      tokens.Token
 	Arguments []Expr
-	Type      interfaces.ValueType
+	Type      types.ValueType
 }
 
 func (f FunctionCallExpr) Accept(visitor ExprVisitor) string {
@@ -22,6 +23,6 @@ func (f FunctionCallExpr) ExprType() ExprType {
 	return FunctionCallExprType
 }
 
-func (f FunctionCallExpr) ReturnType() interfaces.ValueType {
+func (f FunctionCallExpr) ReturnType() types.ValueType {
 	return f.Type
 }

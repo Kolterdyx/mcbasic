@@ -131,7 +131,7 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStmt) string {
 	cmd := ""
 	isIndexedAssignment := len(stmt.Accessors) > 0
-	if stmt.Value.ReturnType() != c.getReturnType(stmt.Name.Lexeme) && !isIndexedAssignment {
+	if !stmt.Value.ReturnType().Equals(c.getReturnType(stmt.Name.Lexeme)) && !isIndexedAssignment {
 		c.error(stmt.Name.SourceLocation, fmt.Sprintf("Assignment type mismatch: %v != %v", c.getReturnType(stmt.Name.Lexeme).ToString(), stmt.Value.ReturnType().ToString()))
 	}
 	cmd += stmt.Value.Accept(c)

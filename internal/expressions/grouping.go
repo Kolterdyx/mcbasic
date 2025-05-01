@@ -1,6 +1,9 @@
 package expressions
 
-import "github.com/Kolterdyx/mcbasic/internal/interfaces"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/types"
+)
 
 type GroupingExpr struct {
 	Expr
@@ -17,6 +20,6 @@ func (g GroupingExpr) ExprType() ExprType {
 	return GroupingExprType
 }
 
-func (g GroupingExpr) ReturnType() interfaces.ValueType {
+func (g GroupingExpr) ReturnType() types.ValueType {
 	return g.Expression.ReturnType()
 }
