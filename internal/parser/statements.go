@@ -72,6 +72,9 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 			}
 			initializer = list
 		}
+		if varType == nil {
+			varType = initializer.ReturnType()
+		}
 		if initializer.ReturnType() != varType {
 			return nil, p.error(p.previous(), fmt.Sprintf("Cannot assign %s to %s.", initializer.ReturnType().ToString(), varType.ToString()))
 		}
@@ -94,11 +97,6 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 func (p *Parser) ParseType() (types.ValueType, error) {
 	var varType types.ValueType
 
-	// types are as follows:
-	// primitive types: int, double, str
-	// structs: structName
-	// lists: int[], double[], str[], str[][], int[][], double[][], structName[], etc.
-	// Lists can be nested
 	switch {
 	case p.match(tokens.IntType):
 		varType = types.IntType

@@ -146,7 +146,7 @@ func (p *Parser) isStructType(varType types.ValueType) bool {
 }
 
 func (p *Parser) getTokenAsValueType(token tokens.Token) (types.ValueType, error) {
-	var varType types.ValueType
+	var varType types.ValueType = types.ErrorType
 	var err error
 	switch token.Type {
 	case tokens.IntType:

@@ -134,12 +134,10 @@ func (p *Parser) unary() (expressions.Expr, error) {
 }
 
 func (p *Parser) value() (expressions.Expr, error) {
-	// 1) Parse the “primary” thing (identifier, literal, function call, grouping, list literal…)
 	expr, err := p.baseValue()
 	if err != nil {
 		return nil, err
 	}
-	// 2) Repeatedly eat [] or .field, nesting the expression:
 	return p.postfix(expr)
 }
 
@@ -211,7 +209,7 @@ func (p *Parser) postfix(expr expressions.Expr) (expressions.Expr, error) {
 	// If it’s “[”, parse a slice/index, then recurse:
 	switch returnType := expr.ReturnType().(type) {
 	case types.ListTypeStruct, types.PrimitiveTypeStruct:
-		if returnType != types.StringType {
+		if returnType != types.StringType && !p.isListType(returnType) {
 			break
 		}
 		if p.match(tokens.BracketOpen) {
@@ -246,9 +244,9 @@ func (p *Parser) postfix(expr expressions.Expr) (expressions.Expr, error) {
 			if err != nil {
 				return nil, err
 			}
-			fieldTokenType, err := p.getTokenAsValueType(fieldTok)
-			if err != nil {
-				return nil, err
+			fieldTokenType, ok := returnType.GetField(fieldTok.Lexeme)
+			if !ok {
+				return nil, p.error(fieldTok, fmt.Sprintf("Field '%s' not found in struct '%s'", fieldTok.Lexeme, returnType.ToString()))
 			}
 			expr = expressions.FieldAccessExpr{
 				Source:         expr,
