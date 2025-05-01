@@ -1,4 +1,4 @@
-package ops
+package command_mapper
 
 import (
 	"fmt"
@@ -36,11 +36,11 @@ var (
 	Obfuscated    = TextFormat{Id: "obfuscated", Format: "§k"}
 )
 
-func (o *Op) Exception(message string) string {
+func (c *CommandMapper) Exception(message string) string {
 	cmd := ""
-	cmd += o.LoadArgConst("error", "text", nbt.NewString(fmt.Sprintf("Exception: %s", message)))
-	cmd += o.Call("mcb:error", "")
+	cmd += c.LoadArgConst("error", "text", nbt.NewString(fmt.Sprintf("Exception: %s", message)))
+	cmd += c.Call("mcb:error", "")
 	// TODO: Implement schedule clear
-	cmd += o.Return()
+	cmd += c.Return()
 	return cmd
 }
