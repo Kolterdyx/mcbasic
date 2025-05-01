@@ -1,7 +1,6 @@
 package statements
 
 import (
-	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
@@ -11,7 +10,6 @@ type StructDeclarationStmt struct {
 
 	Name       tokens.Token
 	StructType types.StructTypeStruct
-	Compound   *nbt.Compound
 }
 
 func (s StructDeclarationStmt) Accept(visitor StmtVisitor) string {

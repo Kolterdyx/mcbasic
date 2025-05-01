@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -53,6 +54,23 @@ func (p PrimitiveTypeStruct) ToString() string {
 	}
 	log.Fatalf("Should be unreachable: %v", p.primitiveType)
 	return ""
+}
+
+func (p PrimitiveTypeStruct) ToNBT() nbt.Value {
+	switch p.primitiveType {
+	case PrimitiveIntType:
+		return nbt.NewInt(0)
+	case PrimitiveStringType:
+		return nbt.NewString("")
+	case PrimitiveDoubleType:
+		return nbt.NewDouble(0)
+	case PrimitiveErrorType:
+		fallthrough
+	case PrimitiveVoidType:
+		break
+	}
+	log.Fatalf("Should be unreachable: %v", p.primitiveType)
+	return nil
 }
 
 var (

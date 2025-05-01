@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/nbt"
 )
 
 type ListTypeStruct struct {
@@ -22,4 +23,8 @@ func (l ListTypeStruct) Primitive() interfaces.ValueType {
 
 func (l ListTypeStruct) ToString() string {
 	return l.ContentType.ToString() + "[]"
+}
+
+func (l ListTypeStruct) ToNBT() nbt.Value {
+	return nbt.NewList()
 }

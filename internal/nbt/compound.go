@@ -1,23 +1,19 @@
 package nbt
 
-import (
-	"github.com/elliotchance/orderedmap/v3"
-)
-
 type Compound struct {
 	Value
-	values *orderedmap.OrderedMap[string, Value]
+	values map[string]Value
 }
 
-func NewCompound() *Compound {
-	return &Compound{
-		values: orderedmap.NewOrderedMap[string, Value](),
+func NewCompound() Compound {
+	return Compound{
+		values: make(map[string]Value),
 	}
 }
 
-func (c *Compound) ToString() string {
+func (c Compound) ToString() string {
 	var str string
-	for k, v := range c.values.AllFromFront() {
+	for k, v := range c.values {
 		str += k + ": " + v.ToString() + ", "
 	}
 	if len(str) > 0 {
@@ -26,18 +22,19 @@ func (c *Compound) ToString() string {
 	return "{" + str + "}"
 }
 
-func (c *Compound) Get(key string) (Value, bool) {
-	return c.values.Get(key)
+func (c Compound) Get(key string) (Value, bool) {
+	val, ok := c.values[key]
+	return val, ok
 }
 
-func (c *Compound) Set(key string, value Value) *Compound {
+func (c Compound) Set(key string, value Value) Compound {
 	if c.values == nil {
-		c.values = orderedmap.NewOrderedMap[string, Value]()
+		c.values = make(map[string]Value)
 	}
-	c.values.Set(key, value)
+	c.values[key] = value
 	return c
 }
 
-func (c *Compound) Size() int {
-	return c.values.Len()
+func (c Compound) Size() int {
+	return len(c.values)
 }

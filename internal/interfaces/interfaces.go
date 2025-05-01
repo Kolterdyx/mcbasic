@@ -1,10 +1,13 @@
 package interfaces
 
+import "github.com/Kolterdyx/mcbasic/internal/nbt"
+
 type PrimitiveType string
 
 type ValueType interface {
 	Primitive() ValueType
 	ToString() string
+	ToNBT() nbt.Value
 }
 
 type Project struct {
