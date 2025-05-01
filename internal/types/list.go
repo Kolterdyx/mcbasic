@@ -10,10 +10,16 @@ type ListTypeStruct struct {
 	Parent interfaces.ValueType
 }
 
-func (l ListTypeStruct) Primitive() interfaces.ValueType {
+func NewListType(parent interfaces.ValueType) *ListTypeStruct {
+	return &ListTypeStruct{
+		Parent: parent,
+	}
+}
+
+func (l *ListTypeStruct) Primitive() interfaces.ValueType {
 	return l.Parent.Primitive()
 }
 
-func (l ListTypeStruct) ToString() string {
+func (l *ListTypeStruct) ToString() string {
 	return l.Parent.ToString() + "[]"
 }

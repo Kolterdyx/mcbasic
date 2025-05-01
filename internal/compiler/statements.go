@@ -106,12 +106,12 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 			cmd += c.opHandler.MakeConst(nbt.NewString(""), ops.Cs(stmt.Name.Lexeme))
 		default:
 			switch stmt.Type.(type) {
-			case types.ListTypeStruct:
+			case *types.ListTypeStruct:
 				cmd += c.opHandler.MakeConst(nbt.NewList(), ops.Cs(stmt.Name.Lexeme))
-			case types.StructTypeStruct:
+			case *types.StructTypeStruct:
 				cmd += c.opHandler.MoveRaw(
 					fmt.Sprintf("%s:data", c.Namespace),
-					fmt.Sprintf("%s.%s", ops.StructPath, stmt.Type),
+					fmt.Sprintf("%s.%s", ops.StructPath, stmt.Type.ToString()),
 					fmt.Sprintf("%s:data", c.Namespace),
 					fmt.Sprintf("%s.%s", ops.VarPath, ops.Cs(stmt.Name.Lexeme)),
 				)
@@ -186,5 +186,5 @@ func (c *Compiler) VisitIf(stmt statements.IfStmt) string {
 }
 
 func (c *Compiler) VisitStructDeclaration(stmt statements.StructDeclarationStmt) string {
-	return c.opHandler.StructDefine(c.getReturnType(stmt.Name.Lexeme).(types.StructTypeStruct))
+	return c.opHandler.StructDefine(stmt)
 }

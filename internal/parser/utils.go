@@ -125,7 +125,7 @@ func (p *Parser) getType(name tokens.Token) interfaces.ValueType {
 
 func (p *Parser) isListType(varType interfaces.ValueType) bool {
 	switch varType.(type) {
-	case types.ListTypeStruct:
+	case *types.ListTypeStruct:
 		return true
 	default:
 		return false

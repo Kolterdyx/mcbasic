@@ -250,6 +250,7 @@ func (c *Compiler) newRegister(regName string) string {
 func (c *Compiler) getReturnType(name string) interfaces.ValueType {
 	for _, identifier := range c.scope[c.currentScope] {
 		if identifier.Name == name {
+			log.Debugf("Found %s in scope %s", name, c.currentScope)
 			return identifier.Type
 		}
 	}

@@ -206,7 +206,7 @@ func (p *Parser) baseValue() (expressions.Expr, error) {
 func (p *Parser) postfix(expr expressions.Expr) (expressions.Expr, error) {
 	// If it’s “[”, parse a slice/index, then recurse:
 	switch returnType := expr.ReturnType().(type) {
-	case types.ListTypeStruct, types.PrimitiveTypeStruct:
+	case *types.ListTypeStruct, *types.PrimitiveTypeStruct:
 		if returnType != types.StringType {
 			break
 		}
@@ -236,7 +236,7 @@ func (p *Parser) postfix(expr expressions.Expr) (expressions.Expr, error) {
 			return p.postfix(expr)
 		}
 	// If it’s “.”, parse a field access, then recurse:
-	case types.StructTypeStruct:
+	case *types.StructTypeStruct:
 		if p.match(tokens.Dot) {
 			fieldTok, err := p.consume(tokens.Identifier, "Expected field name after '.'")
 			if err != nil {
@@ -396,7 +396,7 @@ func (p *Parser) primary() (expressions.Expr, error) {
 		return expressions.ListExpr{
 			Elements:       elems,
 			SourceLocation: p.location(),
-			ValueType:      types.ListTypeStruct{Parent: contentType},
+			ValueType:      types.NewListType(contentType),
 		}, nil
 	}
 	errorToken := p.peek()

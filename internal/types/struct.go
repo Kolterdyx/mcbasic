@@ -10,10 +10,16 @@ type StructTypeStruct struct {
 	Name string
 }
 
-func (s StructTypeStruct) Primitive() interfaces.ValueType {
+func NewStructType(name string) *StructTypeStruct {
+	return &StructTypeStruct{
+		Name: name,
+	}
+}
+
+func (s *StructTypeStruct) Primitive() interfaces.ValueType {
 	return s
 }
 
-func (s StructTypeStruct) ToString() string {
+func (s *StructTypeStruct) ToString() string {
 	return s.Name
 }

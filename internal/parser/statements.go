@@ -65,7 +65,7 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 	if initializer != nil {
 		if list, ok := initializer.(expressions.ListExpr); ok {
 			// Allow assignment as long as varType is a list
-			if _, isList := varType.(types.ListTypeStruct); !isList {
+			if _, isList := varType.(*types.ListTypeStruct); !isList {
 				return nil, p.error(p.previous(), "Cannot assign empty list to non-list type.")
 			}
 			if len(list.Elements) == 0 {
@@ -114,17 +114,17 @@ func (p *Parser) ParseType() (interfaces.ValueType, error) {
 		if _, ok := p.structs[structName]; !ok {
 			return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", structName))
 		}
-		varType = types.StructTypeStruct{Name: structName}
+		varType = types.NewStructType(structName)
 	default:
 		return nil, p.error(p.peek(), "Expected type.")
 	}
 	if p.check(tokens.BracketOpen) {
-		var listType types.ListTypeStruct
+		var listType *types.ListTypeStruct
 		for p.match(tokens.BracketOpen) {
 			if varType == types.VoidType {
 				return nil, p.error(p.peek(), "Cannot declare empty list.")
 			}
-			listType = types.ListTypeStruct{Parent: varType}
+			listType = types.NewListType(varType)
 			varType = listType
 			if !p.match(tokens.BracketClose) {
 				return nil, p.error(p.peek(), "Expected ']' after list type.")
@@ -280,13 +280,13 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 				if _, ok := p.structs[p.previous().Lexeme]; !ok {
 					return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", p.previous().Lexeme))
 				}
-				fieldType = types.StructTypeStruct{Name: p.previous().Lexeme}
+				fieldType = types.NewStructType(p.previous().Lexeme)
 			} else {
 				return nil, p.error(p.peek(), "Expected field type.")
 			}
 		}
 		switch fieldType.(type) {
-		case types.PrimitiveTypeStruct:
+		case *types.PrimitiveTypeStruct:
 			switch fieldType {
 			case types.IntType:
 				compound.Set(fieldName.Lexeme, nbt.NewInt(0))
@@ -295,10 +295,10 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 			case types.StringType:
 				compound.Set(fieldName.Lexeme, nbt.NewString(""))
 			}
-		case types.StructTypeStruct:
+		case *types.StructTypeStruct:
 			structStmt, _ := p.structs[fieldName.Lexeme]
 			compound.Set(fieldName.Lexeme, structStmt.Compound)
-		case types.ListTypeStruct:
+		case *types.ListTypeStruct:
 			compound.Set(fieldName.Lexeme, nbt.NewList())
 		default:
 			return nil, p.error(p.previous(), fmt.Sprintf("Invalid field type: %s", fieldType.ToString()))

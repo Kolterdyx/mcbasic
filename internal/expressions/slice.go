@@ -32,8 +32,8 @@ func (s SliceExpr) ReturnType() interfaces.ValueType {
 
 func getReturnIndexType(valueType interfaces.ValueType) interfaces.ValueType {
 	switch valueType.(type) {
-	case types.ListTypeStruct:
-		return valueType.(types.ListTypeStruct).Parent
+	case *types.ListTypeStruct:
+		return valueType.(*types.ListTypeStruct).Parent
 	default:
 		log.Errorf("Can't index type: %v", valueType)
 		return types.ErrorType
