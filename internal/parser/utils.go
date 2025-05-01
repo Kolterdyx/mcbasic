@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/scanner"
+	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	log "github.com/sirupsen/logrus"
+	"reflect"
 	"strings"
 )
 
@@ -103,11 +105,9 @@ func (p *Parser) peekCount(offset int) tokens.Token {
 
 func (p *Parser) getType(name tokens.Token) interfaces.ValueType {
 	// Search the variable in the current scope
-	for _, v := range p.variables {
-		for _, def := range v {
-			if def.Name == name.Lexeme {
-				return def.Type
-			}
+	for _, varDef := range p.variables[p.currentScope] {
+		if varDef.Name == name.Lexeme {
+			return varDef.Type
 		}
 	}
 	for _, f := range p.functions {
@@ -120,14 +120,27 @@ func (p *Parser) getType(name tokens.Token) interfaces.ValueType {
 			return f.ReturnType
 		}
 	}
+	if structStmt, ok := p.structs[name.Lexeme]; ok {
+		return structStmt.StructType
+	}
 	return nil
 }
 
 func (p *Parser) isListType(varType interfaces.ValueType) bool {
 	switch varType.(type) {
-	case *types.ListTypeStruct:
+	case types.ListTypeStruct:
 		return true
 	default:
+		return false
+	}
+}
+
+func (p *Parser) isStructType(varType interfaces.ValueType) bool {
+	switch varType.(type) {
+	case types.StructTypeStruct:
+		return true
+	default:
+		log.Debugf("isStructType: %+v", reflect.TypeOf(varType))
 		return false
 	}
 }
@@ -148,6 +161,44 @@ func (p *Parser) getTokenAsValueType(token tokens.Token) (interfaces.ValueType, 
 		// structs and lists?
 	default:
 		return nil, p.error(p.peek(), "Expected variable type.")
+	}
+	return varType, err
+}
+
+// getNestedType traverses the accessors to find the type at the end
+func (p *Parser) getNestedType(name tokens.Token, accessors []statements.Accessor) (interfaces.ValueType, error) {
+	varType := p.getType(name)
+	if varType == nil {
+		return nil, p.error(name, fmt.Sprintf("Unknown variable type: %s", name.Lexeme))
+	}
+	var err error
+	accessPath := name.Lexeme
+	for _, accessor := range accessors {
+		accessPath += accessor.ToString()
+		switch accessor.(type) {
+		case statements.IndexAccessor:
+			if p.isListType(varType) {
+				varType = varType.(types.ListTypeStruct).ContentType
+			} else {
+				return nil, p.error(p.peek(), "Expected list type.")
+			}
+		case statements.FieldAccessor:
+			fieldAccessor := accessor.(statements.FieldAccessor)
+			if p.isStructType(varType) {
+				vtype, ok := varType.(types.StructTypeStruct).GetField(fieldAccessor.Field.Lexeme)
+				if !ok {
+					return nil, p.error(fieldAccessor.Field, fmt.Sprintf("Unknown field: %s", fieldAccessor.Field.Lexeme))
+				}
+				varType = vtype
+			} else {
+				return nil, p.error(p.peek(), "Expected struct type.")
+			}
+		default:
+			return nil, p.error(p.peek(), "Unknown accessor type.")
+		}
+	}
+	if varType == nil {
+		return nil, p.error(name, fmt.Sprintf("Unknown variable type: %s", name.Lexeme))
 	}
 	return varType, err
 }

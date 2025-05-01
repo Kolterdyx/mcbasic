@@ -250,7 +250,7 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) string {
 		c.opHandler.Exception("Start index greater than end index"),
 	)
 	switch expr.TargetExpr.ReturnType().(type) {
-	case *types.PrimitiveTypeStruct:
+	case types.PrimitiveTypeStruct:
 		switch expr.TargetExpr.ReturnType() {
 		case types.StringType:
 			cmd += c.opHandler.ExecCond(
@@ -266,7 +266,7 @@ func (c *Compiler) VisitSlice(expr expressions.SliceExpr) string {
 			cmd += "###       Slice string ###\n"
 			cmd += c.opHandler.SliceString(ops.Cs(ops.RX), ops.Cs(regIndexStart), ops.Cs(regIndexEnd), ops.Cs(ops.RX))
 		}
-	case *types.ListTypeStruct:
+	case types.ListTypeStruct:
 		cmd += c.opHandler.ExecCond(
 			fmt.Sprintf("score %s %s >= %s %s", ops.Cs(regIndexStart), c.Namespace, ops.Cs(lenReg), c.Namespace),
 			true,

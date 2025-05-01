@@ -106,9 +106,9 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 			cmd += c.opHandler.MakeConst(nbt.NewString(""), ops.Cs(stmt.Name.Lexeme))
 		default:
 			switch stmt.Type.(type) {
-			case *types.ListTypeStruct:
+			case types.ListTypeStruct:
 				cmd += c.opHandler.MakeConst(nbt.NewList(), ops.Cs(stmt.Name.Lexeme))
-			case *types.StructTypeStruct:
+			case types.StructTypeStruct:
 				cmd += c.opHandler.MoveRaw(
 					fmt.Sprintf("%s:data", c.Namespace),
 					fmt.Sprintf("%s.%s", ops.StructPath, stmt.Type.ToString()),

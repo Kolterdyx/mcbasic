@@ -7,19 +7,19 @@ import (
 type ListTypeStruct struct {
 	interfaces.ValueType
 
-	Parent interfaces.ValueType
+	ContentType interfaces.ValueType
 }
 
-func NewListType(parent interfaces.ValueType) *ListTypeStruct {
-	return &ListTypeStruct{
-		Parent: parent,
+func NewListType(parent interfaces.ValueType) ListTypeStruct {
+	return ListTypeStruct{
+		ContentType: parent,
 	}
 }
 
-func (l *ListTypeStruct) Primitive() interfaces.ValueType {
-	return l.Parent.Primitive()
+func (l ListTypeStruct) Primitive() interfaces.ValueType {
+	return l.ContentType.Primitive()
 }
 
-func (l *ListTypeStruct) ToString() string {
-	return l.Parent.ToString() + "[]"
+func (l ListTypeStruct) ToString() string {
+	return l.ContentType.ToString() + "[]"
 }

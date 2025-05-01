@@ -21,7 +21,7 @@ type PrimitiveTypeStruct struct {
 	primitiveType interfaces.PrimitiveType
 }
 
-func (p *PrimitiveTypeStruct) Primitive() interfaces.ValueType {
+func (p PrimitiveTypeStruct) Primitive() interfaces.ValueType {
 	switch p.primitiveType {
 	case PrimitiveVoidType:
 		return VoidType
@@ -38,7 +38,7 @@ func (p *PrimitiveTypeStruct) Primitive() interfaces.ValueType {
 	return nil
 }
 
-func (p *PrimitiveTypeStruct) ToString() string {
+func (p PrimitiveTypeStruct) ToString() string {
 	switch p.primitiveType {
 	case PrimitiveVoidType:
 		return "void"
@@ -56,9 +56,9 @@ func (p *PrimitiveTypeStruct) ToString() string {
 }
 
 var (
-	VoidType   = &PrimitiveTypeStruct{primitiveType: PrimitiveVoidType}
-	IntType    = &PrimitiveTypeStruct{primitiveType: PrimitiveIntType}
-	StringType = &PrimitiveTypeStruct{primitiveType: PrimitiveStringType}
-	DoubleType = &PrimitiveTypeStruct{primitiveType: PrimitiveDoubleType}
-	ErrorType  = &PrimitiveTypeStruct{primitiveType: PrimitiveErrorType}
+	VoidType   = PrimitiveTypeStruct{primitiveType: PrimitiveVoidType}
+	IntType    = PrimitiveTypeStruct{primitiveType: PrimitiveIntType}
+	StringType = PrimitiveTypeStruct{primitiveType: PrimitiveStringType}
+	DoubleType = PrimitiveTypeStruct{primitiveType: PrimitiveDoubleType}
+	ErrorType  = PrimitiveTypeStruct{primitiveType: PrimitiveErrorType}
 )

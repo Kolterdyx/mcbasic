@@ -25,7 +25,7 @@ func (p *Parser) statement() (statements.Stmt, error) {
 	case p.match(tokens.Struct):
 		return p.structDeclaration()
 	case p.match(tokens.Identifier):
-		if p.check(tokens.Equal) || p.check(tokens.BracketOpen) {
+		if p.check(tokens.Equal) || p.check(tokens.BracketOpen) || p.check(tokens.Dot) {
 			return p.variableAssignment()
 		} else if p.check(tokens.ParenOpen) {
 			p.stepBack()
@@ -65,7 +65,7 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 	if initializer != nil {
 		if list, ok := initializer.(expressions.ListExpr); ok {
 			// Allow assignment as long as varType is a list
-			if _, isList := varType.(*types.ListTypeStruct); !isList {
+			if p.isListType(varType) {
 				return nil, p.error(p.previous(), "Cannot assign empty list to non-list type.")
 			}
 			if len(list.Elements) == 0 {
@@ -111,15 +111,16 @@ func (p *Parser) ParseType() (interfaces.ValueType, error) {
 		varType = types.VoidType
 	case p.match(tokens.Identifier):
 		structName := p.previous().Lexeme
-		if _, ok := p.structs[structName]; !ok {
+		structStmt, ok := p.structs[structName]
+		if !ok {
 			return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", structName))
 		}
-		varType = types.NewStructType(structName)
+		varType = structStmt.StructType
 	default:
 		return nil, p.error(p.peek(), "Expected type.")
 	}
 	if p.check(tokens.BracketOpen) {
-		var listType *types.ListTypeStruct
+		var listType types.ListTypeStruct
 		for p.match(tokens.BracketOpen) {
 			if varType == types.VoidType {
 				return nil, p.error(p.peek(), "Cannot declare empty list.")
@@ -163,15 +164,19 @@ func (p *Parser) variableAssignment() (statements.Stmt, error) {
 		}
 		break
 	}
-
-	// TODO: Traverse result: var.field[index].etc to make sure the types are compatible
-
 	if _, err := p.consume(tokens.Equal, "Expected '=' after variable target."); err != nil {
 		return nil, err
 	}
 	valueExpr, err := p.expression()
 	if err != nil {
 		return nil, err
+	}
+	targetValueType, err := p.getNestedType(name, accessors)
+	if err != nil {
+		return nil, err
+	}
+	if valueExpr.ReturnType() != targetValueType {
+		return nil, p.error(p.previous(), fmt.Sprintf("Cannot assign %s to %s.", valueExpr.ReturnType().ToString(), targetValueType.ToString()))
 	}
 	if _, err := p.consume(tokens.Semicolon, "Expected ';' after assignment."); err != nil {
 		return nil, err
@@ -262,6 +267,7 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 		return nil, err
 	}
 	compound := nbt.NewCompound()
+	structType := types.NewStructType(name.Lexeme)
 	for !p.check(tokens.BraceClose) && !p.IsAtEnd() {
 		fieldName, err := p.consume(tokens.Identifier, "Expected field name.")
 		if err != nil {
@@ -277,29 +283,35 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 			// Check if the type is a struct
 			if p.match(tokens.Identifier) {
 				// Check if the struct is defined
-				if _, ok := p.structs[p.previous().Lexeme]; !ok {
+				structStmt, ok := p.structs[p.previous().Lexeme]
+				if !ok {
 					return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", p.previous().Lexeme))
 				}
-				fieldType = types.NewStructType(p.previous().Lexeme)
+				fieldType = structStmt.StructType
 			} else {
 				return nil, p.error(p.peek(), "Expected field type.")
 			}
 		}
 		switch fieldType.(type) {
-		case *types.PrimitiveTypeStruct:
+		case types.PrimitiveTypeStruct:
 			switch fieldType {
 			case types.IntType:
 				compound.Set(fieldName.Lexeme, nbt.NewInt(0))
+				structType.SetField(fieldName.Lexeme, types.IntType)
 			case types.DoubleType:
 				compound.Set(fieldName.Lexeme, nbt.NewDouble(0))
+				structType.SetField(fieldName.Lexeme, types.DoubleType)
 			case types.StringType:
 				compound.Set(fieldName.Lexeme, nbt.NewString(""))
+				structType.SetField(fieldName.Lexeme, types.StringType)
 			}
-		case *types.StructTypeStruct:
+		case types.StructTypeStruct:
 			structStmt, _ := p.structs[fieldName.Lexeme]
 			compound.Set(fieldName.Lexeme, structStmt.Compound)
-		case *types.ListTypeStruct:
+			structType.SetField(fieldName.Lexeme, fieldType.(types.StructTypeStruct))
+		case types.ListTypeStruct:
 			compound.Set(fieldName.Lexeme, nbt.NewList())
+			structType.SetField(fieldName.Lexeme, fieldType.(types.ListTypeStruct))
 		default:
 			return nil, p.error(p.previous(), fmt.Sprintf("Invalid field type: %s", fieldType.ToString()))
 		}
@@ -311,8 +323,13 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 	if compound.Size() == 0 {
 		return nil, p.error(p.peek(), "Struct must have at least one field.")
 	}
-	p.structs[name.Lexeme] = statements.StructDeclarationStmt{Name: name, Compound: compound}
-	return statements.StructDeclarationStmt{Name: name, Compound: compound}, nil
+	stmt := statements.StructDeclarationStmt{
+		Name:       name,
+		Compound:   compound,
+		StructType: structType,
+	}
+	p.structs[name.Lexeme] = stmt
+	return stmt, nil
 }
 
 func (p *Parser) block(checkBraces ...bool) (statements.BlockStmt, error) {
