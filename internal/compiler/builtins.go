@@ -2,7 +2,7 @@ package compiler
 
 import (
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal/compiler/mapping"
+	"github.com/Kolterdyx/mcbasic/internal/compiler/ops"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/types"
@@ -17,8 +17,8 @@ func (c *Compiler) math() {
 	// Others
 	c.createFunction(
 		"math:sqrt",
-		c.commandMapper.DoubleSqrt("x", mapping.RET)+
-			c.commandMapper.Return(),
+		c.opHandler.DoubleSqrt("x", ops.RET)+
+			c.opHandler.Return(),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: types.DoubleType},
 		},
@@ -28,8 +28,8 @@ func (c *Compiler) math() {
 	// Trigonometric functions
 	c.createFunction(
 		"math:cos",
-		c.commandMapper.DoubleCos("x", mapping.RET)+
-			c.commandMapper.Return(),
+		c.opHandler.DoubleCos("x", ops.RET)+
+			c.opHandler.Return(),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: types.DoubleType},
 		},
@@ -37,8 +37,8 @@ func (c *Compiler) math() {
 	)
 	c.createFunction(
 		"math:sin",
-		c.commandMapper.DoubleSin("x", mapping.RET)+
-			c.commandMapper.Return(),
+		c.opHandler.DoubleSin("x", ops.RET)+
+			c.opHandler.Return(),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: types.DoubleType},
 		},
@@ -46,8 +46,8 @@ func (c *Compiler) math() {
 	)
 	c.createFunction(
 		"math:tan",
-		c.commandMapper.DoubleTan("x", mapping.RET)+
-			c.commandMapper.Return(),
+		c.opHandler.DoubleTan("x", ops.RET)+
+			c.opHandler.Return(),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: types.DoubleType},
 		},
@@ -55,12 +55,12 @@ func (c *Compiler) math() {
 	)
 	c.createFunction(
 		"math:acos",
-		c.commandMapper.MoveRaw(
-			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf("%s.acos.x", mapping.ArgPath),
-			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf(c.commandMapper.Cs("%s.x"), mapping.VarPath),
+		c.opHandler.MoveRaw(
+			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf("%s.acos.x", ops.ArgPath),
+			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf(ops.Cs("%s.x"), ops.VarPath),
 		)+
-			c.commandMapper.DoubleAcos("x", mapping.RET)+
-			c.commandMapper.Return(),
+			c.opHandler.DoubleAcos("x", ops.RET)+
+			c.opHandler.Return(),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: types.DoubleType},
 		},
@@ -68,12 +68,12 @@ func (c *Compiler) math() {
 	)
 	c.createFunction(
 		"math:asin",
-		c.commandMapper.MoveRaw(
-			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf("%s.asin.x", mapping.ArgPath),
-			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf(c.commandMapper.Cs("%s.x"), mapping.VarPath),
+		c.opHandler.MoveRaw(
+			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf("%s.asin.x", ops.ArgPath),
+			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf(ops.Cs("%s.x"), ops.VarPath),
 		)+
-			c.commandMapper.DoubleAsin("x", mapping.RET)+
-			c.commandMapper.Return(),
+			c.opHandler.DoubleAsin("x", ops.RET)+
+			c.opHandler.Return(),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: types.DoubleType},
 		},
@@ -81,12 +81,12 @@ func (c *Compiler) math() {
 	)
 	c.createFunction(
 		"math:atan",
-		c.commandMapper.MoveRaw(
-			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf("%s.atan.x", mapping.ArgPath),
-			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf(c.commandMapper.Cs("%s.x"), mapping.VarPath),
+		c.opHandler.MoveRaw(
+			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf("%s.atan.x", ops.ArgPath),
+			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf(ops.Cs("%s.x"), ops.VarPath),
 		)+
-			c.commandMapper.DoubleAtan("x", mapping.RET)+
-			c.commandMapper.Return(),
+			c.opHandler.DoubleAtan("x", ops.RET)+
+			c.opHandler.Return(),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: types.DoubleType},
 		},
@@ -96,8 +96,8 @@ func (c *Compiler) math() {
 	// Rounding functions
 	c.createFunction(
 		"math:floor",
-		c.commandMapper.DoubleFloor("x", mapping.RET)+
-			c.commandMapper.Return(),
+		c.opHandler.DoubleFloor("x", ops.RET)+
+			c.opHandler.Return(),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: types.DoubleType},
 		},
@@ -105,8 +105,8 @@ func (c *Compiler) math() {
 	)
 	c.createFunction(
 		"math:ceil",
-		c.commandMapper.DoubleCeil("x", mapping.RET)+
-			c.commandMapper.Return(),
+		c.opHandler.DoubleCeil("x", ops.RET)+
+			c.opHandler.Return(),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: types.DoubleType},
 		},
@@ -114,8 +114,8 @@ func (c *Compiler) math() {
 	)
 	c.createFunction(
 		"math:round",
-		c.commandMapper.DoubleRound("x", mapping.RET)+
-			c.commandMapper.Return(),
+		c.opHandler.DoubleRound("x", ops.RET)+
+			c.opHandler.Return(),
 		[]interfaces.FuncArg{
 			{Name: "x", Type: types.DoubleType},
 		},
@@ -127,7 +127,7 @@ func (c *Compiler) baseFunctions() {
 
 	cleanCall := ""
 	if c.Config.CleanBeforeInit {
-		cleanCall = c.commandMapper.Call("mcb:internal/clean", "")
+		cleanCall = c.opHandler.Call("mcb:internal/clean", "")
 	}
 
 	initSource := ""
@@ -136,13 +136,13 @@ func (c *Compiler) baseFunctions() {
 	if c.Config.Debug {
 		initSource += fmt.Sprintf("scoreboard objectives setdisplay sidebar %s\n", c.Namespace)
 	}
-	initSource += c.commandMapper.MakeConst(nbt.NewInt(0), mapping.CALL)
-	initSource += c.commandMapper.MoveScore(mapping.CALL, mapping.CALL)
-	initSource += c.commandMapper.LoadArgConst("log", "text", nbt.NewString("MCB pack loaded"))
-	initSource += c.commandMapper.Call("mcb:log", "")
-	initSource += c.commandMapper.Call("internal/struct_definitions", "")
-	initSource += c.commandMapper.Call("main", "")
-	initSource += c.commandMapper.Return()
+	initSource += c.opHandler.MakeConst(nbt.NewInt(0), ops.CALL)
+	initSource += c.opHandler.MoveScore(ops.CALL, ops.CALL)
+	initSource += c.opHandler.LoadArgConst("log", "text", nbt.NewString("MCB pack loaded"))
+	initSource += c.opHandler.Call("mcb:log", "")
+	initSource += c.opHandler.Call("internal/struct_definitions", "")
+	initSource += c.opHandler.Call("main", "")
+	initSource += c.opHandler.Return()
 	c.createFunction(
 		"mcb:internal/init",
 		initSource,
@@ -155,24 +155,24 @@ func (c *Compiler) baseFunctions() {
 			fmt.Sprintf("data remove storage %s:data vars\n", c.Namespace)+
 			fmt.Sprintf("data remove storage %s:data structs\n", c.Namespace)+
 			fmt.Sprintf("data remove storage %s:data args\n", c.Namespace)+
-			c.commandMapper.Return(),
+			c.opHandler.Return(),
 		[]interfaces.FuncArg{},
 		types.VoidType,
 	)
 	tickSource := ""
-	tickSource += c.commandMapper.MakeConst(nbt.NewInt(0), mapping.CALL)
-	tickSource += c.commandMapper.MoveScore(mapping.CALL, mapping.CALL)
+	tickSource += c.opHandler.MakeConst(nbt.NewInt(0), ops.CALL)
+	tickSource += c.opHandler.MoveScore(ops.CALL, ops.CALL)
 	c.createFunction(
 		"internal/tick",
-		c.commandMapper.Call("tick", "")+
-			c.commandMapper.ExecCond(fmt.Sprintf("score %s %s matches %d..", mapping.CALL, c.Namespace, mapping.MaxCallCounter), true, tickSource)+
-			c.commandMapper.Return(),
+		c.opHandler.Call("tick", "")+
+			c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches %d..", ops.CALL, c.Namespace, ops.MaxCallCounter), true, tickSource)+
+			c.opHandler.Return(),
 		[]interfaces.FuncArg{},
 		types.VoidType,
 	)
 	c.createFunction(
 		"tick",
-		c.commandMapper.Return(),
+		c.opHandler.Return(),
 		[]interfaces.FuncArg{},
 		types.VoidType,
 	)

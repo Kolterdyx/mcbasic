@@ -1,11 +1,11 @@
-package command_mapper
+package ops
 
 import (
 	"fmt"
 	"strings"
 )
 
-func (c *CommandMapper) ExecCond(condition string, ifcond bool, source string) string {
+func (o *Op) ExecCond(condition string, ifcond bool, source string) string {
 	splitSource := strings.Split(source, "\n")
 	cmd := ""
 	condType := "if"

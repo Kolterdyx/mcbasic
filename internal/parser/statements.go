@@ -241,7 +241,7 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 	if err != nil && !p.check(tokens.BraceOpen) {
 		return nil, err
 	}
-	// IntAdd all parameters to the current scope
+	// Add all parameters to the current scope
 	for _, arg := range parameters {
 		p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{Name: arg.Name, Type: arg.Type})
 	}
