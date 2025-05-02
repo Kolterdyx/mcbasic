@@ -33,6 +33,10 @@ func (c *Compiler) CopyVar(from, to string) (cmd string) {
 	return c.Copy(c.varPath(from), c.varPath(to))
 }
 
+func (c *Compiler) CopyArg(varName, funcName, argName string) string {
+	return c.Copy(c.varPath(varName), c.argPath(funcName, argName))
+}
+
 func (c *Compiler) Load(path, score string) string {
 	return c.inst(Load, c.varPath(path), score)
 }
@@ -61,6 +65,10 @@ func (c *Compiler) Log(text string) string {
 	return c.inst(Log, text)
 }
 
+func (c *Compiler) Size(source, res string) string {
+	return c.inst(Size, c.varPath(source), c.varPath(res))
+}
+
 func (c *Compiler) Func(name string) string {
 	return c.inst(Func, name)
 }
@@ -70,17 +78,17 @@ func (c *Compiler) Append(listPath, valuePath string) string {
 }
 
 func (c *Compiler) MakeIndex(valuePath, res string) (cmd string) {
-	cmd += c.Copy(c.varPath(valuePath), c.argPath("internal/path/make_index", "index"))
-	cmd += c.Copy(c.varPath(res), c.argPath("internal/path/make_index", "res"))
-	cmd += c.Set(c.argPath("internal/path/make_index", "storage"), nbt.NewString(c.storage))
+	cmd += c.CopyArg(valuePath, "internal/path/make_index", "index")
+	cmd += c.CopyArg(res, "internal/path/make_index", "res")
+	cmd += c.SetArg("internal/path/make_index", "storage", nbt.NewString(c.storage))
 	cmd += c.Call("mcb:internal/path/make_index")
 	return
 }
 
 func (c *Compiler) IntCompare(regRa, regRb string, operator tokens.TokenType, res string) (cmd string) {
-	cmd += c.Load(c.varPath(regRa), regRa)
-	cmd += c.Load(c.varPath(regRb), regRb)
-	cmd += c.inst(Cmp, c.varPath(regRa), operator.String(), c.varPath(regRb), c.varPath(res))
+	cmd += c.Load(regRa, regRa)
+	cmd += c.Load(regRb, regRb)
+	cmd += c.inst(Cmp, regRa, operator.String(), regRb, c.varPath(res))
 	return
 }
 
@@ -89,11 +97,18 @@ func (c *Compiler) DoubleCompare(regRa, regRb string, operator tokens.TokenType,
 }
 
 func (c *Compiler) If(condVar, inst string) (cmd string) {
+	cmd += c.Load(condVar, condVar)
 	cmd += c.inst(If, condVar, inst[:len(inst)-1])
 	return
 }
 
 func (c *Compiler) Unless(condVar, inst string) (cmd string) {
 	cmd += c.inst(Unless, condVar, inst[:len(inst)-1])
+	return
+}
+
+func (c *Compiler) Exception(message string) (cmd string) {
+	cmd += c.SetArg("mcb:error", "text", nbt.NewString(message))
+	cmd += c.Call("mcb:error")
 	return
 }

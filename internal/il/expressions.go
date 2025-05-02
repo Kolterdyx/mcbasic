@@ -173,8 +173,59 @@ func (c *Compiler) VisitLogical(l expressions.LogicalExpr) (cmd string) {
 }
 
 func (c *Compiler) VisitSlice(s expressions.SliceExpr) (cmd string) {
-	//TODO implement me
-	panic("implement me")
+	regIndexStart := c.makeReg(RA)
+	regIndexEnd := c.makeReg(RB)
+
+	cmd += s.StartIndex.Accept(c)
+	cmd += c.CopyVar(RX, regIndexStart)
+	if s.EndIndex == nil {
+		cmd += c.CopyVar(regIndexStart, regIndexEnd)
+	} else {
+		cmd += s.EndIndex.Accept(c)
+		cmd += c.CopyVar(RX, regIndexEnd)
+	}
+	targetReg := c.makeReg(RX)
+	cmd += s.TargetExpr.Accept(c)
+	cmd += c.CopyVar(RX, targetReg)
+	lenReg := c.makeReg(RX)
+	cmd += c.Size(targetReg, lenReg)
+	cmd += c.Load(lenReg, lenReg)
+	cmd += c.Score(RX, nbt.NewInt(-1))
+	cmd += c.IntCompare(regIndexStart, RX, tokens.LessEqual, RX)
+	cmd += c.If(RX, c.IntAdd(regIndexStart, lenReg, regIndexStart))
+	cmd += c.IntCompare(regIndexEnd, RX, tokens.LessEqual, RX)
+	cmd += c.If(RX, c.IntAdd(regIndexEnd, lenReg, regIndexEnd))
+	if s.EndIndex == nil {
+		cmd += c.IntCompare(regIndexStart, regIndexEnd, tokens.Greater, RX)
+		cmd += c.If(RX, c.Exception(fmt.Sprintf("Exception at %s: Invalid slice range. End index can't be smaller than start index", s.SourceLocation.ToString())))
+		cmd += c.If(RX, c.Ret())
+	}
+
+	switch s.TargetExpr.ReturnType().(type) {
+	case types.PrimitiveTypeStruct:
+		switch s.TargetExpr.ReturnType() {
+		case types.StringType:
+			cmd += c.IntCompare(regIndexStart, lenReg, tokens.GreaterEqual, RX)
+			cmd += c.If(RX, c.Exception(fmt.Sprintf("Exception at %s: Invalid slice range. Start index out of bounds", s.SourceLocation.ToString())))
+			cmd += c.If(RX, c.Ret())
+			if s.EndIndex != nil {
+				cmd += c.IntCompare(regIndexEnd, lenReg, tokens.GreaterEqual, RX)
+				cmd += c.If(RX, c.Exception(fmt.Sprintf("Exception at %s: Invalid slice range. Start index out of bounds", s.SourceLocation.ToString())))
+				cmd += c.If(RX, c.Ret())
+			}
+			cmd += c.StringSlice(targetReg, regIndexStart, regIndexEnd, RX)
+		}
+	case types.ListTypeStruct:
+		cmd += c.IntCompare(regIndexStart, lenReg, tokens.GreaterEqual, RX)
+		cmd += c.If(RX, c.Exception(fmt.Sprintf("Exception at %s: Invalid slice range. Index out of bounds", s.SourceLocation.ToString())))
+		cmd += c.If(RX, c.Ret())
+		if s.EndIndex != nil {
+			c.error(s.SourceLocation, "List slices are not supported.")
+		}
+		cmd += c.MakeIndex(regIndexStart, lenReg)
+		cmd += c.PathGet(targetReg, regIndexStart, RX)
+	}
+	return
 }
 
 func (c *Compiler) VisitList(s expressions.ListExpr) (cmd string) {

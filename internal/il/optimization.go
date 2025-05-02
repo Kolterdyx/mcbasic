@@ -4,8 +4,39 @@ import (
 	"strings"
 )
 
+type OptFunc func(instrs []Instruction, i int) (matched bool, consumed int, replacement []Instruction)
+
 func OptimizeFunctionBody(f Function) Function {
-	return peepholeOptimize(f)
+	optimized := make([]Instruction, 0)
+
+	opts := []OptFunc{
+		optSkipMacroSet,
+		optCollapseCopyChain,
+		optSetCopyToSet,
+		optDedupRet,
+	}
+
+	i := 0
+	for i < len(f.Instructions) {
+		applied := false
+
+		for _, opt := range opts {
+			if matched, consumed, repl := opt(f.Instructions, i); matched {
+				optimized = append(optimized, repl...)
+				i += consumed
+				applied = true
+				break
+			}
+		}
+
+		if !applied {
+			optimized = append(optimized, f.Instructions[i])
+			i++
+		}
+	}
+
+	f.Instructions = optimized
+	return f
 }
 
 func isMacroPath(path string) bool {
@@ -31,88 +62,65 @@ func sameLocation(storageA, pathA, storageB, pathB string) bool {
 	return storageA == storageB && pathA == pathB
 }
 
-func peepholeOptimize(f Function) Function {
-	optimized := make([]Instruction, 0)
+func optSkipMacroSet(instrs []Instruction, i int) (bool, int, []Instruction) {
+	curr := instrs[i]
+	if curr.Type == Set && isMacroSetPattern(curr) {
+		return true, 1, []Instruction{curr}
+	}
+	return false, 0, nil
+}
 
-	i := 0
-	for i < len(f.Instructions) {
-		curr := f.Instructions[i]
-
-		if curr.Type == Set && isMacroSetPattern(curr) {
-			// Skip macro var copy-in from $(...) to vars.X
-			optimized = append(optimized, curr)
-			i++
-			continue
-		}
-
-		// Try to collapse copy chains
-		if curr.Type == Copy && len(curr.Args) == 4 {
-			srcStorage, srcPath := curr.Args[0], curr.Args[1]
-			curDstStorage, curDstPath := curr.Args[2], curr.Args[3]
-
-			// Begin chain
-			chainEnd := i + 1
-
-			for chainEnd < len(f.Instructions) {
-				next := f.Instructions[chainEnd]
-				if next.Type != Copy || len(next.Args) != 4 {
-					break
-				}
-
-				// Check if next source matches current destination
-				if !sameLocation(curDstStorage, curDstPath, next.Args[0], next.Args[1]) {
-					break
-				}
-
-				// Check for macros
-				if isMacroPath(next.Args[1]) || isMacroPath(next.Args[3]) {
-					break
-				}
-
-				// Extend chain
-				curDstStorage, curDstPath = next.Args[2], next.Args[3]
-				chainEnd++
-			}
-
-			// Collapse to a single copy if chain length > 1
-			if chainEnd > i+1 {
-				optimized = append(optimized, Instruction{
-					Type: Copy,
-					Args: []string{srcStorage, srcPath, curDstStorage, curDstPath},
-				})
-				i = chainEnd
-				continue
-			}
-		}
-
-		// Pattern: set + copy → set
-		if i+1 < len(f.Instructions) &&
-			curr.Type == Set && len(curr.Args) == 3 &&
-			f.Instructions[i+1].Type == Copy && len(f.Instructions[i+1].Args) == 4 {
-			next := f.Instructions[i+1]
-
-			if sameLocation(curr.Args[0], curr.Args[1], next.Args[0], next.Args[1]) &&
-				!isMacroPath(curr.Args[1]) && !isMacroPath(next.Args[3]) {
-
-				optimized = append(optimized, Instruction{
-					Type: Set,
-					Args: []string{next.Args[2], next.Args[3], curr.Args[2]},
-				})
-				i += 2
-				continue
-			}
-		}
-
-		if curr.Type == Ret && len(optimized) > 0 && optimized[len(optimized)-1].Type == Ret {
-			i++
-			continue
-		}
-
-		// Otherwise keep instruction as-is
-		optimized = append(optimized, curr)
-		i++
+func optCollapseCopyChain(instrs []Instruction, i int) (bool, int, []Instruction) {
+	if instrs[i].Type != Copy || len(instrs[i].Args) != 4 {
+		return false, 0, nil
 	}
 
-	f.Instructions = optimized
-	return f
+	srcStorage, srcPath := instrs[i].Args[0], instrs[i].Args[1]
+	curDstStorage, curDstPath := instrs[i].Args[2], instrs[i].Args[3]
+
+	chainEnd := i + 1
+	for chainEnd < len(instrs) {
+		next := instrs[chainEnd]
+		if next.Type != Copy || len(next.Args) != 4 {
+			break
+		}
+		if !sameLocation(curDstStorage, curDstPath, next.Args[0], next.Args[1]) {
+			break
+		}
+		curDstStorage, curDstPath = next.Args[2], next.Args[3]
+		chainEnd++
+	}
+
+	if chainEnd > i+1 {
+		return true, chainEnd - i, []Instruction{{
+			Type: Copy,
+			Args: []string{srcStorage, srcPath, curDstStorage, curDstPath},
+		}}
+	}
+	return false, 0, nil
+}
+
+func optSetCopyToSet(instrs []Instruction, i int) (bool, int, []Instruction) {
+	if i+1 >= len(instrs) {
+		return false, 0, nil
+	}
+
+	curr, next := instrs[i], instrs[i+1]
+	if curr.Type == Set && len(curr.Args) == 3 &&
+		next.Type == Copy && len(next.Args) == 4 &&
+		sameLocation(curr.Args[0], curr.Args[1], next.Args[0], next.Args[1]) {
+
+		return true, 2, []Instruction{{
+			Type: Set,
+			Args: []string{next.Args[2], next.Args[3], curr.Args[2]},
+		}}
+	}
+	return false, 0, nil
+}
+
+func optDedupRet(instrs []Instruction, i int) (bool, int, []Instruction) {
+	if instrs[i].Type == Ret && i > 0 && instrs[i-1].Type == Ret {
+		return true, 1, nil // skip duplicate Ret
+	}
+	return false, 0, nil
 }

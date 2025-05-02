@@ -170,9 +170,20 @@ func (c *Compiler) makeBranchFunction(branchName string, body statements.BlockSt
 	for i, stmt := range body.Statements {
 		if _, ok := stmt.(statements.ReturnStmt); ok {
 			body.Statements = append(body.Statements[:i], append([]statements.Stmt{
-				statements.ScoreStmt{
-					Target: RETF,
-					Score:  1,
+				statements.VariableDeclarationStmt{
+					Name: tokens.Token{
+						Type:   tokens.Identifier,
+						Lexeme: RETF,
+					},
+					Type: types.IntType,
+					Initializer: expressions.LiteralExpr{
+						Value: "1",
+						SourceLocation: interfaces.SourceLocation{
+							Row: 0,
+							Col: 0,
+						},
+						ValueType: types.IntType,
+					},
 				},
 			}, body.Statements[i:]...)...)
 			break

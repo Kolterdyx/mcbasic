@@ -1,8 +1,8 @@
 package il
 
 func (c *Compiler) intOperation(x, y, to, operator string) (cmd string) {
-	cmd += c.Load(c.varPath(x), RA)
-	cmd += c.Load(c.varPath(y), RB)
+	cmd += c.Load(x, RA)
+	cmd += c.Load(y, RB)
 	cmd += c.MathOp(operator)
 	cmd += c.Store(RX, c.varPath(to))
 	return

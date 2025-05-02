@@ -13,7 +13,7 @@ func (c *Compiler) inst(instruction InstructionType, args ...string) string {
 }
 
 func (c *Compiler) error(location interfaces.SourceLocation, message string) {
-	log.Errorf("[Position %d:%d] Error: %s\n", location.Row+1, location.Col+1, message)
+	log.Errorf("[Position %s] Exception: %s\n", location.ToString(), message)
 }
 
 func (c *Compiler) varPath(path string) string {

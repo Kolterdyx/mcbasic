@@ -61,7 +61,7 @@ func (p *Parser) error(token tokens.Token, message string) error {
 }
 
 func (p *Parser) report(line int, pos int, s string, message string) error {
-	return fmt.Errorf("[Position %d:%d] Error%s: %s\n", line+1, pos+1, s, message)
+	return fmt.Errorf("[Position %d:%d] Exception%s: %s\n", line+1, pos+1, s, message)
 }
 
 func (p *Parser) consume(tokenType tokens.TokenType, message string) (tokens.Token, error) {
@@ -220,7 +220,7 @@ func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interface
 
 			returnType, err := parseType(function.ReturnType)
 			if err != nil {
-				log.Errorf("Error parsing function return type: %s", err)
+				log.Errorf("Exception parsing function return type: %s", err)
 				continue
 			}
 			f := interfaces.FuncDef{
@@ -231,7 +231,7 @@ func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interface
 			for _, parameter := range function.Args {
 				parameterType, err := parseType(parameter.Type)
 				if err != nil {
-					log.Errorf("Error parsing function parameter type: %s", err)
+					log.Errorf("Exception parsing function parameter type: %s", err)
 					continue
 				}
 				f.Args = append(f.Args, interfaces.TypedIdentifier{

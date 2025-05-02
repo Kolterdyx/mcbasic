@@ -123,7 +123,7 @@ func (c *Compiler) VisitIf(stmt statements.IfStmt) (cmd string) {
 	c.branchCounter++
 	elseBranchName := fmt.Sprintf("%s_%d", c.currentScope, c.branchCounter)
 
-	cmd += c.Score(RETF, nbt.NewInt(0))
+	cmd += c.SetVar(RETF, nbt.NewInt(0))
 	c.compiledFunctions[thenBranchName] = c.makeBranchFunction(thenBranchName, stmt.ThenBranch).Accept(c)
 
 	hasElseBranch := stmt.ElseBranch != nil

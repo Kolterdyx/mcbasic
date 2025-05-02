@@ -97,16 +97,16 @@ func (c *Compiler) Compile(program parser.Program) {
 	for _, function := range program.Functions {
 		f := interfaces.FuncDef{
 			Name:       function.Name.Lexeme,
-			Args:       make([]interfaces.FuncArg, 0),
+			Args:       make([]interfaces.TypedIdentifier, 0),
 			ReturnType: function.ReturnType,
 		}
 		for _, parameter := range function.Parameters {
-			f.Args = append(f.Args, interfaces.FuncArg{
+			f.Args = append(f.Args, interfaces.TypedIdentifier{
 				Name: parameter.Name,
 				Type: parameter.Type,
 			})
 		}
-		f.Args = append(f.Args, interfaces.FuncArg{
+		f.Args = append(f.Args, interfaces.TypedIdentifier{
 			Name: "__call__",
 			Type: types.IntType,
 		})
@@ -170,7 +170,7 @@ func (c *Compiler) createPackMeta() {
 	}
 }
 
-func (c *Compiler) createFunction(fullName string, source string, args []interfaces.FuncArg, returnType types.ValueType) {
+func (c *Compiler) createFunction(fullName string, source string, args []interfaces.TypedIdentifier, returnType types.ValueType) {
 	if fullName == c.LoadFuncName || fullName == c.TickFuncName {
 		return
 	}
@@ -195,13 +195,13 @@ func (c *Compiler) createFunction(fullName string, source string, args []interfa
 
 	f := interfaces.FuncDef{
 		Name:       name,
-		Args:       make([]interfaces.FuncArg, 0),
+		Args:       make([]interfaces.TypedIdentifier, 0),
 		ReturnType: returnType,
 	}
 	for _, parameter := range args {
-		f.Args = append(f.Args, interfaces.FuncArg{Name: parameter.Name, Type: parameter.Type})
+		f.Args = append(f.Args, interfaces.TypedIdentifier{Name: parameter.Name, Type: parameter.Type})
 	}
-	f.Args = append(f.Args, interfaces.FuncArg{Name: "__call__", Type: types.IntType})
+	f.Args = append(f.Args, interfaces.TypedIdentifier{Name: "__call__", Type: types.IntType})
 	c.functions[fullName] = f
 
 	err := os.WriteFile(c.getFuncPath(namespace)+"/"+filename, []byte(c.opHandler.MacroReplace(source)), 0644)
@@ -238,7 +238,7 @@ func (c *Compiler) createFunctionTags() {
 }
 
 func (c *Compiler) error(location interfaces.SourceLocation, message string) {
-	log.Errorf("[Position %d:%d] Error: %s\n", location.Row+1, location.Col+1, message)
+	log.Errorf("[Position %d:%d] Exception: %s\n", location.Row+1, location.Col+1, message)
 }
 
 func (c *Compiler) newRegister(regName string) string {

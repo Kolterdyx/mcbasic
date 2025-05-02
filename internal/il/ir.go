@@ -16,6 +16,7 @@ const (
 	Store                  = "store"  // `store <score> <path>`
 	Score                  = "score"  // `score <target> <score>`
 	Append                 = "append" // `append <listPath> <valuePath>`
+	Size                   = "size"   // `size <source> <res>`
 	Run                    = "run"    // `run <command>`
 	Cmp                    = "cmp"    // `cmp <score> <condition> <score>`
 	If                     = "if"     // `if <score> <instruction>`

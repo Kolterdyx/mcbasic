@@ -1,6 +1,9 @@
 package interfaces
 
-import "github.com/Kolterdyx/mcbasic/internal/types"
+import (
+	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal/types"
+)
 
 type Project struct {
 	Name        string   `toml:"name"`
@@ -38,6 +41,10 @@ type DatapackHeader struct {
 type SourceLocation struct {
 	Row int
 	Col int
+}
+
+func (l SourceLocation) ToString() string {
+	return fmt.Sprintf("%d:%d", l.Row+1, l.Col+1)
 }
 
 type TypedIdentifier struct {
