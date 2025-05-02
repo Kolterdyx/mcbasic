@@ -270,6 +270,9 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 			return nil, err
 		}
 		fieldType, err := p.ParseType()
+		if err != nil {
+			return nil, err
+		}
 		switch fieldType.(type) {
 		case types.PrimitiveTypeStruct:
 			switch fieldType {

@@ -2,30 +2,30 @@ package il
 
 func (c *Compiler) intOperation(x, y, to, operator string) (cmd string) {
 	cmd += c.Load(x, RA)
-	cmd += c.Load(y, RB)
+	cmd += c.Load(y, RX)
 	cmd += c.MathOp(operator)
 	cmd += c.Store(RX, c.varPath(to))
 	return
 }
 
 func (c *Compiler) IntAdd(a, b, to string) string {
-	return c.intOperation(a, b, to, "add")
+	return c.intOperation(a, b, to, "+=")
 }
 
 func (c *Compiler) IntSub(a, b, to string) string {
-	return c.intOperation(a, b, to, "sub")
+	return c.intOperation(a, b, to, "-=")
 }
 
 func (c *Compiler) IntMul(a, b, to string) string {
-	return c.intOperation(a, b, to, "mul")
+	return c.intOperation(a, b, to, "*=")
 }
 
 func (c *Compiler) IntDiv(a, b, to string) string {
-	return c.intOperation(a, b, to, "div")
+	return c.intOperation(a, b, to, "/=")
 }
 
 func (c *Compiler) IntMod(a, b, to string) string {
-	return c.intOperation(a, b, to, "mod")
+	return c.intOperation(a, b, to, "%=")
 }
 
 func (c *Compiler) DoubleAdd(a, b, to string) string {

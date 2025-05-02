@@ -53,16 +53,8 @@ func (c *Compiler) MathOp(operator string) string {
 	return c.inst(Math, operator)
 }
 
-func (c *Compiler) Run(command string) string {
-	return c.inst(Run, command)
-}
-
 func (c *Compiler) Ret() string {
 	return c.inst(Ret)
-}
-
-func (c *Compiler) Log(text string) string {
-	return c.inst(Log, text)
 }
 
 func (c *Compiler) Size(source, res string) string {
@@ -88,7 +80,7 @@ func (c *Compiler) MakeIndex(valuePath, res string) (cmd string) {
 func (c *Compiler) IntCompare(regRa, regRb string, operator tokens.TokenType, res string) (cmd string) {
 	cmd += c.Load(regRa, regRa)
 	cmd += c.Load(regRb, regRb)
-	cmd += c.inst(Cmp, regRa, operator.String(), regRb, c.varPath(res))
+	cmd += c.inst(Cmp, regRa, c.cmpOperator(operator), regRb, c.varPath(res))
 	return
 }
 

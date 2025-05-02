@@ -119,9 +119,9 @@ func (c *Compiler) VisitWhile(stmt statements.WhileStmt) (cmd string) {
 func (c *Compiler) VisitIf(stmt statements.IfStmt) (cmd string) {
 
 	c.branchCounter++
-	thenBranchName := fmt.Sprintf("%s_%d", c.currentScope, c.branchCounter)
+	thenBranchName := fmt.Sprintf("internal/zzz/%s_%d", c.currentScope, c.branchCounter)
 	c.branchCounter++
-	elseBranchName := fmt.Sprintf("%s_%d", c.currentScope, c.branchCounter)
+	elseBranchName := fmt.Sprintf("internal/zzz/%s_%d", c.currentScope, c.branchCounter)
 
 	cmd += c.SetVar(RETF, nbt.NewInt(0))
 	c.compiledFunctions[thenBranchName] = c.makeBranchFunction(thenBranchName, stmt.ThenBranch).Accept(c)

@@ -81,7 +81,7 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 	}
 
 	//c := compiler.NewCompiler(config, projectRoot, headers, libs)
-	c := il.NewCompiler(config.Project.Namespace, program.Structs, headers, libs)
+	c := il.NewCompiler(config, headers, libs)
 	c.Compile(program)
 	log.Info("Compilation complete")
 	return nil

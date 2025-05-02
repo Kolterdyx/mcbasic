@@ -45,3 +45,16 @@ func (c *Compiler) getReturnType(name string) types.ValueType {
 	}
 	return types.VoidType
 }
+
+func (c *Compiler) macroLineIdentifier(source string) string {
+	lines := strings.Split(source, "\n")
+	if len(lines) == 0 {
+		return ""
+	}
+	for i, line := range lines {
+		if strings.Contains(line, "$(") && !(line[0:1] == "$") {
+			lines[i] = "$" + line
+		}
+	}
+	return strings.Join(lines, "\n")
+}
