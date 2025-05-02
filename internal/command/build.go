@@ -5,7 +5,7 @@ import (
 	"embed"
 	"encoding/json"
 	"github.com/BurntSushi/toml"
-	"github.com/Kolterdyx/mcbasic/internal/compiler"
+	"github.com/Kolterdyx/mcbasic/internal/il"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
 	"github.com/Kolterdyx/mcbasic/internal/scanner"
@@ -80,7 +80,8 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 		return err
 	}
 
-	c := compiler.NewCompiler(config, projectRoot, headers, libs)
+	//c := compiler.NewCompiler(config, projectRoot, headers, libs)
+	c := il.NewCompiler(config.Project.Namespace, program.Structs, headers, libs)
 	c.Compile(program)
 	log.Info("Compilation complete")
 	return nil

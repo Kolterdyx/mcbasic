@@ -40,14 +40,14 @@ type SourceLocation struct {
 	Col int
 }
 
-type FuncArg struct {
+type TypedIdentifier struct {
 	Name string
 	Type types.ValueType
 }
 
 type FuncDef struct {
 	Name       string
-	Args       []FuncArg
+	Args       []TypedIdentifier
 	ReturnType types.ValueType
 }
 

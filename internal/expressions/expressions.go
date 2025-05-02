@@ -21,21 +21,21 @@ const (
 )
 
 type ExprVisitor interface {
-	VisitBinary(b BinaryExpr) string
-	VisitGrouping(g GroupingExpr) string
-	VisitLiteral(l LiteralExpr) string
-	VisitUnary(u UnaryExpr) string
-	VisitVariable(v VariableExpr) string
-	VisitFieldAccess(v FieldAccessExpr) string
-	VisitFunctionCall(f FunctionCallExpr) string
-	VisitLogical(l LogicalExpr) string
-	VisitSlice(s SliceExpr) string
-	VisitList(s ListExpr) string
-	VisitStruct(s StructExpr) string
+	VisitBinary(b BinaryExpr) (cmd string)
+	VisitGrouping(g GroupingExpr) (cmd string)
+	VisitLiteral(l LiteralExpr) (cmd string)
+	VisitUnary(u UnaryExpr) (cmd string)
+	VisitVariable(v VariableExpr) (cmd string)
+	VisitFieldAccess(v FieldAccessExpr) (cmd string)
+	VisitFunctionCall(f FunctionCallExpr) (cmd string)
+	VisitLogical(l LogicalExpr) (cmd string)
+	VisitSlice(s SliceExpr) (cmd string)
+	VisitList(s ListExpr) (cmd string)
+	VisitStruct(s StructExpr) (cmd string)
 }
 
 type Expr interface {
-	Accept(v ExprVisitor) string
+	Accept(v ExprVisitor) (cmd string)
 	ExprType() ExprType
 	ReturnType() types.ValueType
 }

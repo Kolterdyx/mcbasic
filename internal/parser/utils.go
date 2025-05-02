@@ -225,7 +225,7 @@ func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interface
 			}
 			f := interfaces.FuncDef{
 				Name:       funcName,
-				Args:       make([]interfaces.FuncArg, 0),
+				Args:       make([]interfaces.TypedIdentifier, 0),
 				ReturnType: returnType,
 			}
 			for _, parameter := range function.Args {
@@ -234,7 +234,7 @@ func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interface
 					log.Errorf("Error parsing function parameter type: %s", err)
 					continue
 				}
-				f.Args = append(f.Args, interfaces.FuncArg{
+				f.Args = append(f.Args, interfaces.TypedIdentifier{
 					Name: parameter.Name,
 					Type: parameterType,
 				})

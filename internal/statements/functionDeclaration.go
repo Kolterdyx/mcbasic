@@ -10,7 +10,7 @@ type FunctionDeclarationStmt struct {
 	Stmt
 
 	Name       tokens.Token
-	Parameters []interfaces.FuncArg
+	Parameters []interfaces.TypedIdentifier
 	ReturnType types.ValueType
 	Body       BlockStmt
 }

@@ -12,21 +12,23 @@ const (
 	WhileStmtType               StmtType = "While"
 	IfStmtType                  StmtType = "If"
 	ReturnStmtType              StmtType = "Return"
+	ScoreStmtType               StmtType = "Score"
 )
 
 type StmtVisitor interface {
-	VisitExpression(ExpressionStmt) string
-	VisitVariableDeclaration(VariableDeclarationStmt) string
-	VisitFunctionDeclaration(FunctionDeclarationStmt) string
-	VisitVariableAssignment(VariableAssignmentStmt) string
-	VisitStructDeclaration(StructDeclarationStmt) string
-	VisitBlock(BlockStmt) string
-	VisitWhile(WhileStmt) string
-	VisitIf(IfStmt) string
-	VisitReturn(ReturnStmt) string
+	VisitExpression(ExpressionStmt) (cmd string)
+	VisitVariableDeclaration(VariableDeclarationStmt) (cmd string)
+	VisitFunctionDeclaration(FunctionDeclarationStmt) (cmd string)
+	VisitVariableAssignment(VariableAssignmentStmt) (cmd string)
+	VisitStructDeclaration(StructDeclarationStmt) (cmd string)
+	VisitBlock(BlockStmt) (cmd string)
+	VisitWhile(WhileStmt) (cmd string)
+	VisitIf(IfStmt) (cmd string)
+	VisitReturn(ReturnStmt) (cmd string)
+	VisitScore(ScoreStmt) (cmd string)
 }
 
 type Stmt interface {
-	Accept(StmtVisitor) string
+	Accept(StmtVisitor) (cmd string)
 	StmtType() StmtType
 }

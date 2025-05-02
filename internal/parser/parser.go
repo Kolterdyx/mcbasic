@@ -14,7 +14,7 @@ type Parser struct {
 	currentScope string
 	current      int
 
-	variables map[string][]statements.VarDef
+	variables map[string][]interfaces.TypedIdentifier
 	functions map[string]interfaces.FuncDef
 	Errors    []error
 	structs   map[string]statements.StructDeclarationStmt
@@ -23,12 +23,12 @@ type Parser struct {
 func (p *Parser) Parse() (Program, []error) {
 	functions := make(map[string]statements.FunctionDeclarationStmt)
 	structs := make(map[string]statements.StructDeclarationStmt)
-	p.functions = make(map[string]interfaces.FuncDef, 0)
+	p.functions = make(map[string]interfaces.FuncDef)
 	for _, funcDef := range GetHeaderFuncDefs(p.Headers) {
 		p.functions[funcDef.Name] = funcDef
 	}
 	p.structs = make(map[string]statements.StructDeclarationStmt)
-	p.variables = make(map[string][]statements.VarDef)
+	p.variables = make(map[string][]interfaces.TypedIdentifier)
 	for !p.IsAtEnd() {
 		statement, err := p.statement()
 		if err != nil {
