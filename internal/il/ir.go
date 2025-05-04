@@ -65,12 +65,10 @@ func (i Instruction) ToMCCommand() string {
 		return fmt.Sprintf("execute unless score %s %s matches 1.. run %s", i.Args[0], i.Namespace, parseInstruction(i.Args[1:], i.Namespace, i.Storage).ToMCCommand())
 	case Ret:
 		return "return 0"
-	case Func:
-		return ""
 	case Call:
 		return fmt.Sprintf("function mcb:%s {function:'%s', function_namespace:'%s', args:'%s', namespace:'%s'}", path.Join(paths.Internal, "call"), i.Args[0], i.Args[1], i.Args[2], i.Namespace)
+	case Func:
 	default:
-		return ""
 	}
 	return ""
 }
