@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
+	"github.com/Kolterdyx/mcbasic/internal/paths"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/types"
+	"path"
 	"strings"
 )
 
@@ -119,9 +121,9 @@ func (c *Compiler) VisitWhile(stmt statements.WhileStmt) (cmd string) {
 func (c *Compiler) VisitIf(stmt statements.IfStmt) (cmd string) {
 
 	c.branchCounter++
-	thenBranchName := fmt.Sprintf("internal/zzz/%s_%d", c.currentScope, c.branchCounter)
+	thenBranchName := path.Join(paths.FunctionBranches, fmt.Sprintf("%s_%d", c.currentScope, c.branchCounter))
 	c.branchCounter++
-	elseBranchName := fmt.Sprintf("internal/zzz/%s_%d", c.currentScope, c.branchCounter)
+	elseBranchName := path.Join(paths.FunctionBranches, fmt.Sprintf("%s_%d", c.currentScope, c.branchCounter))
 
 	cmd += c.SetVar(RETF, nbt.NewInt(0))
 	c.compiledFunctions[thenBranchName] = c.makeBranchFunction(thenBranchName, stmt.ThenBranch).Accept(c)

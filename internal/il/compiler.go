@@ -6,6 +6,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
+	"github.com/Kolterdyx/mcbasic/internal/paths"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
@@ -295,16 +296,13 @@ func (c *Compiler) createDirectoryTree() error {
 	c.DatapackRoot, _ = filepath.Abs(path.Join(c.Config.OutputDir, c.Config.Project.Name))
 	log.Infof("Compiling to %s\n", c.DatapackRoot)
 	c.funcPath = c.getFuncPath(c.Namespace)
-	c.mcbFuncPath = c.getFuncPath("mcb")
-	c.tagsPath = path.Join(c.DatapackRoot, "/data/minecraft/tags")
-	mathPath := path.Join(c.DatapackRoot, "/data/math/function")
 
 	errs := []error{
-		os.MkdirAll(path.Join(c.funcPath, "/internal"), 0755),
-		os.MkdirAll(path.Join(c.funcPath, "/internal/zzz"), 0755),
-		os.MkdirAll(path.Join(c.mcbFuncPath, "/internal"), 0755),
-		os.MkdirAll(c.tagsPath, 0755),
-		os.MkdirAll(mathPath, 0755),
+		os.MkdirAll(path.Join(c.funcPath, paths.Internal), 0755),
+		os.MkdirAll(path.Join(c.funcPath, paths.FunctionBranches), 0755),
+		os.MkdirAll(path.Join(paths.McbFunctions, paths.Internal), 0755),
+		os.MkdirAll(path.Join(c.DatapackRoot, paths.MinecraftTags), 0755),
+		os.MkdirAll(path.Join(c.DatapackRoot, paths.MathFunctions), 0755),
 	}
 	for _, err := range errs {
 		if err != nil {
@@ -332,7 +330,7 @@ func (c *Compiler) createPackMeta() {
 }
 
 func (c *Compiler) getFuncPath(namespace string) string {
-	return path.Join(c.DatapackRoot, "data", namespace, "function")
+	return path.Join(c.DatapackRoot, paths.Data, namespace, paths.Functions)
 }
 
 func (c *Compiler) createFunction(fullName string, source string, args []interfaces.TypedIdentifier, returnType types.ValueType) {
