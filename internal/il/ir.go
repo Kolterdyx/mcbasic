@@ -56,7 +56,7 @@ func (i Instruction) ToMCCommand() string {
 	case Append:
 		log.Fatalln("Not implemented")
 	case Size:
-		log.Fatalln("Not implemented")
+		return fmt.Sprintf("execute store result storage %s %s int 1 run data get storage %s %s", i.Storage, i.Args[1], i.Storage, i.Args[0])
 	case Cmp:
 		return fmt.Sprintf("execute if score %s %s %s %s %s run data modify storage %s %s set value 1", i.Args[0], i.Namespace, i.Args[1], i.Args[2], i.Namespace, i.Storage, i.Args[3])
 	case If:
