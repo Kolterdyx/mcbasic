@@ -75,9 +75,7 @@ type Compiler struct {
 	libs    embed.FS
 	headers []interfaces.DatapackHeader
 
-	funcPath    string
-	mcbFuncPath string
-	tagsPath    string
+	funcPath string
 }
 
 func NewCompiler(
