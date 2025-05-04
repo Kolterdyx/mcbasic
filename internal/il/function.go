@@ -2,13 +2,12 @@ package il
 
 import (
 	"fmt"
-	"strings"
 )
 
-func (c *Compiler) Call(funcName string) string {
-	if strings.Contains(funcName, ":") {
-		return c.inst(Call, funcName)
-	} else {
-		return c.inst(Call, fmt.Sprintf("%s:%s", c.Namespace, funcName))
+func (c *Compiler) Call(funcName, ret string) string {
+	ns, fn := splitFunctionName(funcName, c.Namespace)
+	if ret == "" {
+		ret = RET
 	}
+	return c.inst(Call, fn, ns, fmt.Sprintf("%s.%s", ArgPath, fn), ret)
 }

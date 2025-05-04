@@ -154,10 +154,10 @@ func (c *Compiler) Compile(program parser.Program) {
 	}
 }
 
-func (c *Compiler) splitFunctionName(lexeme string) (string, string) {
+func splitFunctionName(lexeme, namespace string) (string, string) {
 	parts := strings.Split(lexeme, ":")
 	if len(parts) == 1 {
-		return c.Namespace, parts[0]
+		return namespace, parts[0]
 	}
 	if len(parts) == 2 {
 		return parts[0], parts[1]
@@ -341,7 +341,7 @@ func (c *Compiler) createFunction(fullName string, source string, args []interfa
 		c.error(interfaces.SourceLocation{}, "Function name cannot be empty")
 		return
 	}
-	namespace, name := c.splitFunctionName(fullName)
+	namespace, name := splitFunctionName(fullName, c.Namespace)
 	filename := name + ".mcfunction"
 
 	f := interfaces.FunctionDefinition{

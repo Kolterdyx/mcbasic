@@ -135,10 +135,10 @@ func (c *Compiler) VisitIf(stmt statements.IfStmt) (cmd string) {
 	cmd += stmt.Condition.Accept(c)
 	condVar := c.makeReg(RX)
 	cmd += c.CopyVar(RX, condVar)
-	cmd += c.If(condVar, c.Call(thenBranchName))
+	cmd += c.If(condVar, c.Call(thenBranchName, ""))
 	cmd += c.If(RETF, c.Ret())
 	if hasElseBranch {
-		cmd += c.Unless(condVar, c.Call(elseBranchName))
+		cmd += c.Unless(condVar, c.Call(elseBranchName, ""))
 		cmd += c.If(RETF, c.Ret())
 	}
 	return

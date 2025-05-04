@@ -2,6 +2,9 @@ package il
 
 import (
 	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal/paths"
+	log "github.com/sirupsen/logrus"
+	"path"
 	"strings"
 )
 
@@ -51,9 +54,9 @@ func (i Instruction) ToMCCommand() string {
 	case Score:
 		return fmt.Sprintf("scoreboard players set %s %s %s", i.Args[0], i.Namespace, i.Args[1])
 	case Append:
-		panic("not implemented")
+		log.Fatalln("Not implemented")
 	case Size:
-		panic("not implemented")
+		log.Fatalln("Not implemented")
 	case Cmp:
 		return fmt.Sprintf("execute if score %s %s %s %s %s run data modify storage %s %s set value 1", i.Args[0], i.Namespace, i.Args[1], i.Args[2], i.Namespace, i.Storage, i.Args[3])
 	case If:
@@ -64,9 +67,12 @@ func (i Instruction) ToMCCommand() string {
 		return "return 0"
 	case Func:
 		return ""
+	case Call:
+		return fmt.Sprintf("function mcb:%s {function:'%s', function_namespace:'%s', args:'%s', namespace:'%s', ret: '%s'}", path.Join(paths.Internal, "call"), i.Args[0], i.Args[1], i.Args[2], i.Namespace, i.Args[3])
 	default:
 		return ""
 	}
+	return ""
 }
 
 type Function struct {
