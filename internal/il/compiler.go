@@ -67,7 +67,7 @@ type Compiler struct {
 	compiledFunctions map[string]string
 	branchCounter     int
 
-	functions    map[string]interfaces.FuncDef
+	functions    map[string]interfaces.FunctionDefinition
 	scopes       map[string][]interfaces.TypedIdentifier
 	currentScope string
 
@@ -110,7 +110,7 @@ func (c *Compiler) Compile(program parser.Program) {
 	c.createPackMeta()
 
 	for _, function := range program.Functions {
-		f := interfaces.FuncDef{
+		f := interfaces.FunctionDefinition{
 			Name:       function.Name.Lexeme,
 			Args:       make([]interfaces.TypedIdentifier, 0),
 			ReturnType: function.ReturnType,
@@ -348,7 +348,7 @@ func (c *Compiler) createFunction(fullName string, source string, args []interfa
 	namespace, name := c.splitFunctionName(fullName)
 	filename := name + ".mcfunction"
 
-	f := interfaces.FuncDef{
+	f := interfaces.FunctionDefinition{
 		Name:       name,
 		Args:       make([]interfaces.TypedIdentifier, 0),
 		ReturnType: returnType,

@@ -289,7 +289,7 @@ func (p *Parser) functionCall(namespace tokens.Token, name tokens.Token, hasName
 		lexeme = fmt.Sprintf("%s:%s", namespace.Lexeme, name.Lexeme)
 	}
 
-	var funcDef *interfaces.FuncDef = nil
+	var funcDef *interfaces.FunctionDefinition = nil
 	for _, f := range p.functions {
 		if f.Name == lexeme {
 			if len(f.Args) != len(args) {

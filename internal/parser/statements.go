@@ -243,7 +243,7 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 	}
 	// Add all parameters to the current scope
 	p.currentScope = name.Lexeme
-	p.functions[p.currentScope] = interfaces.FuncDef{Name: name.Lexeme, Args: parameters, ReturnType: returnType}
+	p.functions[p.currentScope] = interfaces.FunctionDefinition{Name: name.Lexeme, Args: parameters, ReturnType: returnType}
 	for _, arg := range parameters {
 		p.variables[p.currentScope] = append(p.variables[p.currentScope], interfaces.TypedIdentifier{Name: arg.Name, Type: arg.Type})
 	}

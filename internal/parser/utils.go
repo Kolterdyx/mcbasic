@@ -211,8 +211,8 @@ func parseType(valueType string) (types.ValueType, error) {
 	return p.ParseType()
 }
 
-func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interfaces.FuncDef {
-	funcDefs := make(map[string]interfaces.FuncDef)
+func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interfaces.FunctionDefinition {
+	funcDefs := make(map[string]interfaces.FunctionDefinition)
 	for _, header := range headers {
 		log.Debugf("Loading header: %s. Functions: %v", header.Namespace, len(header.Definitions.Functions))
 		for _, function := range header.Definitions.Functions {
@@ -223,7 +223,7 @@ func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interface
 				log.Errorf("Exception parsing function return type: %s", err)
 				continue
 			}
-			f := interfaces.FuncDef{
+			f := interfaces.FunctionDefinition{
 				Name:       funcName,
 				Args:       make([]interfaces.TypedIdentifier, 0),
 				ReturnType: returnType,
