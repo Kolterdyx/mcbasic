@@ -142,9 +142,9 @@ func (c *Compiler) VisitFunctionCall(f expressions.FunctionCallExpr) (cmd string
 	for j, arg := range f.Arguments {
 		cmd += arg.Accept(c)
 		argName := c.functions[f.Name.Lexeme].Args[j].Name
-		cmd += c.Copy(c.varPath(RX), c.argPath(f.Name.Lexeme, argName))
+		cmd += c.CopyArg(RX, f.Name.Lexeme, argName)
 	}
-	cmd += c.Call(f.Name.Lexeme, "")
+	cmd += c.Call(f.Name.Lexeme)
 	if f.ReturnType() != types.VoidType {
 		cmd += c.CopyVar(RET, RX)
 	}

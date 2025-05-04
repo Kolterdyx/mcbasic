@@ -60,15 +60,15 @@ func (i Instruction) ToMCCommand() string {
 	case Cmp:
 		return fmt.Sprintf("execute if score %s %s %s %s %s run data modify storage %s %s set value 1", i.Args[0], i.Namespace, i.Args[1], i.Args[2], i.Namespace, i.Storage, i.Args[3])
 	case If:
-		return fmt.Sprintf("execute if score %s matches 1.. run %s", i.Args[0], parseInstruction(i.Args[1:], i.Namespace, i.Storage).ToMCCommand())
+		return fmt.Sprintf("execute if score %s %s matches 1.. run %s", i.Args[0], i.Namespace, parseInstruction(i.Args[1:], i.Namespace, i.Storage).ToMCCommand())
 	case Unless:
-		return fmt.Sprintf("execute unless score %s matches 1.. run %s", i.Args[0], parseInstruction(i.Args[1:], i.Namespace, i.Storage).ToMCCommand())
+		return fmt.Sprintf("execute unless score %s %s matches 1.. run %s", i.Args[0], i.Namespace, parseInstruction(i.Args[1:], i.Namespace, i.Storage).ToMCCommand())
 	case Ret:
 		return "return 0"
 	case Func:
 		return ""
 	case Call:
-		return fmt.Sprintf("function mcb:%s {function:'%s', function_namespace:'%s', args:'%s', namespace:'%s', ret: '%s'}", path.Join(paths.Internal, "call"), i.Args[0], i.Args[1], i.Args[2], i.Namespace, i.Args[3])
+		return fmt.Sprintf("function mcb:%s {function:'%s', function_namespace:'%s', args:'%s', namespace:'%s'}", path.Join(paths.Internal, "call"), i.Args[0], i.Args[1], i.Args[2], i.Namespace)
 	default:
 		return ""
 	}

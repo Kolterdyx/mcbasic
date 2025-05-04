@@ -18,7 +18,8 @@ func (c *Compiler) SetVar(name string, value nbt.Value) string {
 }
 
 func (c *Compiler) SetArg(funcName, argName string, value nbt.Value) string {
-	return c.Set(c.argPath(funcName, argName), value)
+	_, fn := splitFunctionName(funcName, c.Namespace)
+	return c.Set(c.argPath(fn, argName), value)
 }
 
 func (c *Compiler) XCopy(storageFrom, from, storageTo, to string) string {
@@ -34,7 +35,8 @@ func (c *Compiler) CopyVar(from, to string) (cmd string) {
 }
 
 func (c *Compiler) CopyArg(varName, funcName, argName string) string {
-	return c.Copy(c.varPath(varName), c.argPath(funcName, argName))
+	_, fn := splitFunctionName(funcName, c.Namespace)
+	return c.Copy(c.varPath(varName), c.argPath(fn, argName))
 }
 
 func (c *Compiler) Load(path, score string) string {
@@ -73,7 +75,7 @@ func (c *Compiler) MakeIndex(valuePath, res string) (cmd string) {
 	cmd += c.CopyArg(valuePath, "internal/path/make_index", "index")
 	cmd += c.CopyArg(res, "internal/path/make_index", "res")
 	cmd += c.SetArg("internal/path/make_index", "storage", nbt.NewString(c.storage))
-	cmd += c.Call("mcb:internal/path/make_index", "")
+	cmd += c.Call("mcb:internal/path/make_index")
 	return
 }
 
@@ -101,6 +103,6 @@ func (c *Compiler) Unless(condVar, inst string) (cmd string) {
 
 func (c *Compiler) Exception(message string) (cmd string) {
 	cmd += c.SetArg("mcb:error", "text", nbt.NewString(message))
-	cmd += c.Call("mcb:error", "")
+	cmd += c.Call("mcb:error")
 	return
 }

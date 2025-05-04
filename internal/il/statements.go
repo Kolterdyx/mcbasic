@@ -130,15 +130,15 @@ func (c *Compiler) VisitIf(stmt statements.IfStmt) (cmd string) {
 
 	hasElseBranch := stmt.ElseBranch != nil
 	if hasElseBranch {
-		c.compiledFunctions[elseBranchName] = c.makeBranchFunction(thenBranchName, *stmt.ElseBranch).Accept(c)
+		c.compiledFunctions[elseBranchName] = c.makeBranchFunction(elseBranchName, *stmt.ElseBranch).Accept(c)
 	}
 	cmd += stmt.Condition.Accept(c)
 	condVar := c.makeReg(RX)
 	cmd += c.CopyVar(RX, condVar)
-	cmd += c.If(condVar, c.Call(thenBranchName, ""))
+	cmd += c.If(condVar, c.Call(thenBranchName))
 	cmd += c.If(RETF, c.Ret())
 	if hasElseBranch {
-		cmd += c.Unless(condVar, c.Call(elseBranchName, ""))
+		cmd += c.Unless(condVar, c.Call(elseBranchName))
 		cmd += c.If(RETF, c.Ret())
 	}
 	return
