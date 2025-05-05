@@ -206,58 +206,92 @@ func (p *Parser) baseValue() (expressions.Expr, error) {
 
 // postfix wraps an Expr in as many [index] or .field as you find:
 func (p *Parser) postfix(expr expressions.Expr) (expressions.Expr, error) {
-	// If it’s “[”, parse a slice/index, then recurse:
 	switch returnType := expr.ReturnType().(type) {
-	case types.ListTypeStruct, types.PrimitiveTypeStruct:
-		if returnType != types.StringType && !p.isListType(returnType) {
+	case types.PrimitiveTypeStruct:
+		if returnType != types.StringType {
 			break
 		}
 		if p.match(tokens.BracketOpen) {
-			// read either slice or single index
-			start, err := p.expression()
-			if err != nil {
-				return nil, err
-			}
-			var end expressions.Expr
-			if p.match(tokens.Colon) {
-				end, err = p.expression()
-				if err != nil {
-					return nil, err
-				}
-			}
-			if _, err = p.consume(tokens.BracketClose, "Expected ']'"); err != nil {
-				return nil, err
-			}
-			expr = expressions.SliceExpr{
-				TargetExpr:     expr,
-				StartIndex:     start,
-				EndIndex:       end,
-				SourceLocation: p.location(),
-			}
-			// keep consuming more postfix:
-			return p.postfix(expr)
+			return p.bracketPostfix(expr)
 		}
-	// If it’s “.”, parse a field access, then recurse:
+		if p.match(tokens.Dot) {
+			if p.match(tokens.Identifier) {
+				if p.previous().Lexeme != "length" {
+					return nil, p.error(p.previous(), "Expected 'length' after '.'")
+				}
+				return expressions.FieldAccessExpr{
+					Source:         expr,
+					Field:          p.previous(),
+					SourceLocation: p.location(),
+					Type:           types.IntType,
+				}, nil
+			}
+		}
+	case types.ListTypeStruct:
+		if p.match(tokens.BracketOpen) {
+			return p.bracketPostfix(expr)
+		}
+		if p.match(tokens.Dot) {
+			if p.match(tokens.Identifier) {
+				if p.previous().Lexeme != "length" {
+					return nil, p.error(p.previous(), "Expected 'length' after '.'")
+				}
+				return expressions.FieldAccessExpr{
+					Source:         expr,
+					Field:          p.previous(),
+					SourceLocation: p.location(),
+					Type:           types.IntType,
+				}, nil
+			}
+		}
 	case types.StructTypeStruct:
 		if p.match(tokens.Dot) {
-			fieldTok, err := p.consume(tokens.Identifier, "Expected field name after '.'")
-			if err != nil {
-				return nil, err
-			}
-			fieldTokenType, ok := returnType.GetField(fieldTok.Lexeme)
-			if !ok {
-				return nil, p.error(fieldTok, fmt.Sprintf("Field '%s' not found in struct '%s'", fieldTok.Lexeme, returnType.ToString()))
-			}
-			expr = expressions.FieldAccessExpr{
-				Source:         expr,
-				Field:          fieldTok,
-				SourceLocation: p.location(),
-				Type:           fieldTokenType,
-			}
-			return p.postfix(expr)
+			return p.fieldPostfix(expr, returnType)
 		}
 	}
 	return expr, nil
+}
+
+func (p *Parser) fieldPostfix(expr expressions.Expr, returnType types.StructTypeStruct) (expressions.Expr, error) {
+	fieldTok, err := p.consume(tokens.Identifier, "Expected field name after '.'")
+	if err != nil {
+		return nil, err
+	}
+	fieldTokenType, ok := returnType.GetField(fieldTok.Lexeme)
+	if !ok {
+		return nil, p.error(fieldTok, fmt.Sprintf("Field '%s' not found in struct '%s'", fieldTok.Lexeme, returnType.ToString()))
+	}
+	expr = expressions.FieldAccessExpr{
+		Source:         expr,
+		Field:          fieldTok,
+		SourceLocation: p.location(),
+		Type:           fieldTokenType,
+	}
+	return p.postfix(expr)
+}
+
+func (p *Parser) bracketPostfix(expr expressions.Expr) (expressions.Expr, error) {
+	start, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	var end expressions.Expr
+	if p.match(tokens.Colon) {
+		end, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+	if _, err = p.consume(tokens.BracketClose, "Expected ']'"); err != nil {
+		return nil, err
+	}
+	expr = expressions.SliceExpr{
+		TargetExpr:     expr,
+		StartIndex:     start,
+		EndIndex:       end,
+		SourceLocation: p.location(),
+	}
+	return p.postfix(expr)
 }
 
 func (p *Parser) functionCall(namespace tokens.Token, name tokens.Token, hasNamespace bool) (expressions.Expr, error) {
