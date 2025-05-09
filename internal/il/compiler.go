@@ -8,7 +8,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/parser"
 	"github.com/Kolterdyx/mcbasic/internal/paths"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
-	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	log "github.com/sirupsen/logrus"
 	"io"
@@ -68,9 +67,9 @@ type Compiler struct {
 	compiledFunctions map[string]string
 	branchCounter     int
 
-	functions    map[string]interfaces.FunctionDefinition
-	scopes       map[string][]interfaces.TypedIdentifier
-	currentScope string
+	functionDefinitions map[string]interfaces.FunctionDefinition
+	scopes              map[string][]interfaces.TypedIdentifier
+	currentScope        string
 
 	libs    embed.FS
 	headers []interfaces.DatapackHeader
@@ -95,9 +94,17 @@ func NewCompiler(
 func (c *Compiler) Compile(program parser.Program) {
 	c.Structs = program.Structs
 	c.compiledFunctions = make(map[string]string)
-	c.functions = parser.GetHeaderFuncDefs(c.headers)
 	c.scopes = make(map[string][]interfaces.TypedIdentifier)
 
+	c.createBasePack()
+	c.setFunctionDefinitions(program)
+	c.compileToIR(program)
+	ir := c.optimizeIRCode()
+	ir = c.addStructDeclarationFunction(program, ir)
+	c.compileIRtoDatapack(ir)
+}
+
+func (c *Compiler) createBasePack() {
 	err := c.createDirectoryTree()
 	if err != nil {
 		log.Fatalln(err)
@@ -107,7 +114,48 @@ func (c *Compiler) Compile(program parser.Program) {
 		log.Fatalln(err)
 	}
 	c.createPackMeta()
+}
 
+func (c *Compiler) compileIRtoDatapack(ir []Function) {
+	for _, f := range ir {
+		compiledFunc := f.ToMCFunction()
+		c.createFunction(f.Name, compiledFunc, nil, types.VoidType)
+	}
+}
+
+func (c *Compiler) addStructDeclarationFunction(program parser.Program, ir []Function) []Function {
+	structDefFuncSource := ""
+	for _, structDef := range program.Structs {
+		structDefFuncSource += structDef.Accept(c)
+	}
+	structDefFuncSource = "func internal/struct_definitions\n" + structDefFuncSource + "\nret\n"
+	structIr := ParseIL(structDefFuncSource, c.Namespace, c.storage)
+	if len(structIr) != 1 {
+		log.Fatalln("Struct definition function should have one function")
+	}
+	return append(ir, structIr[0])
+}
+
+func (c *Compiler) optimizeIRCode() []Function {
+	ilSource := strings.Join(slices.Collect(maps.Values(c.compiledFunctions)), "\n")
+	ir := ParseIL(ilSource, c.Namespace, c.storage)
+	optimizationPasses := 3
+	for i, f := range ir {
+		for j := 0; j < optimizationPasses; j++ {
+			ir[i] = OptimizeFunctionBody(f)
+		}
+	}
+	return ir
+}
+
+func (c *Compiler) compileToIR(program parser.Program) {
+	for _, f := range program.Functions {
+		c.compiledFunctions[f.Name.Lexeme] = f.Accept(c)
+	}
+}
+
+func (c *Compiler) setFunctionDefinitions(program parser.Program) {
+	c.functionDefinitions = parser.GetHeaderFuncDefs(c.headers)
 	for _, function := range program.Functions {
 		f := interfaces.FunctionDefinition{
 			Name:       function.Name.Lexeme,
@@ -124,78 +172,7 @@ func (c *Compiler) Compile(program parser.Program) {
 			Name: "__call__",
 			Type: types.IntType,
 		})
-		c.functions[function.Name.Lexeme] = f
-	}
-
-	for _, f := range program.Functions {
-		c.compiledFunctions[f.Name.Lexeme] = f.Accept(c)
-	}
-	ilSource := strings.Join(slices.Collect(maps.Values(c.compiledFunctions)), "\n")
-	ir := ParseIL(ilSource, c.Namespace, c.storage)
-	optimizationPasses := 3
-	for i, f := range ir {
-		for j := 0; j < optimizationPasses; j++ {
-			ir[i] = OptimizeFunctionBody(f)
-		}
-	}
-	structDefFuncSource := ""
-	for _, structDef := range program.Structs {
-		structDefFuncSource += structDef.Accept(c)
-	}
-	structDefFuncSource = "func internal/struct_definitions\n" + structDefFuncSource + "\nret\n"
-	structIr := ParseIL(structDefFuncSource, c.Namespace, c.storage)
-	if len(structIr) != 1 {
-		log.Fatalln("Struct definition function should have one function")
-	}
-	ir = append(ir, structIr[0])
-	for _, f := range ir {
-		compiledFunc := f.ToMCFunction()
-		c.createFunction(f.Name, compiledFunc, nil, types.VoidType)
-	}
-}
-
-func splitFunctionName(lexeme, namespace string) (string, string) {
-	parts := strings.Split(lexeme, ":")
-	if len(parts) == 1 {
-		return namespace, parts[0]
-	}
-	if len(parts) == 2 {
-		return parts[0], parts[1]
-	}
-	panic(fmt.Sprintf("Invalid function name: %s", lexeme))
-}
-
-func (c *Compiler) makeBranchFunction(branchName string, body statements.BlockStmt) statements.FunctionDeclarationStmt {
-
-	// If the body contains a return statement, add a statement before to set the RETF flag
-	for i, stmt := range body.Statements {
-		if _, ok := stmt.(statements.ReturnStmt); ok {
-			body.Statements = append(body.Statements[:i], append([]statements.Stmt{
-				statements.VariableDeclarationStmt{
-					Name: tokens.Token{
-						Type:   tokens.Identifier,
-						Lexeme: RETF,
-					},
-					Type: types.IntType,
-					Initializer: expressions.LiteralExpr{
-						Value: "1",
-						SourceLocation: interfaces.SourceLocation{
-							Row: 0,
-							Col: 0,
-						},
-						ValueType: types.IntType,
-					},
-				},
-			}, body.Statements[i:]...)...)
-			break
-		}
-	}
-	return statements.FunctionDeclarationStmt{
-		Name: tokens.Token{
-			Type:   tokens.Identifier,
-			Lexeme: branchName,
-		},
-		Body: body,
+		c.functionDefinitions[function.Name.Lexeme] = f
 	}
 }
 
@@ -217,7 +194,6 @@ func (c *Compiler) copyEmbeddedLibs() error {
 	return err
 }
 
-// copyDirRecursive recursively copies a directory and its contents from source to destination
 func (c *Compiler) copyDirRecursive(srcDir, baseDir, destDir string) error {
 	// Read the files inside the srcDir
 	files, err := c.libs.ReadDir(filepath.Join(baseDir, srcDir))
@@ -252,7 +228,6 @@ func (c *Compiler) copyDirRecursive(srcDir, baseDir, destDir string) error {
 	return nil
 }
 
-// copyFile copies a single file from the source to the destination
 func (c *Compiler) copyFile(srcFile, baseDir, destDir string) error {
 	// Open the source file
 	srcPath := filepath.Join(baseDir, srcFile)
@@ -327,10 +302,6 @@ func (c *Compiler) createPackMeta() {
 	}
 }
 
-func (c *Compiler) getFuncPath(namespace string) string {
-	return path.Join(c.DatapackRoot, paths.Data, namespace, paths.Functions)
-}
-
 func (c *Compiler) createFunction(fullName string, source string, args []interfaces.TypedIdentifier, returnType types.ValueType) {
 	//if fullName == c.LoadFuncName || fullName == c.TickFuncName {
 	//	return
@@ -353,30 +324,10 @@ func (c *Compiler) createFunction(fullName string, source string, args []interfa
 		f.Args = append(f.Args, interfaces.TypedIdentifier{Name: parameter.Name, Type: parameter.Type})
 	}
 	f.Args = append(f.Args, interfaces.TypedIdentifier{Name: "__call__", Type: types.IntType})
-	c.functions[fullName] = f
+	c.functionDefinitions[fullName] = f
 
 	err := os.WriteFile(c.getFuncPath(namespace)+"/"+filename, []byte(c.macroLineIdentifier(source)), 0644)
 	if err != nil {
 		log.Fatalln(err)
 	}
-}
-
-func (c *Compiler) cmpOperator(operator tokens.TokenType) string {
-	switch operator {
-	case tokens.Greater:
-		return ">"
-	case tokens.GreaterEqual:
-		return ">="
-	case tokens.Less:
-		return "<"
-	case tokens.LessEqual:
-		return "<="
-	case tokens.EqualEqual:
-		return "="
-	case tokens.BangEqual:
-		return "!="
-	default:
-	}
-	log.Fatalln("unknown operator")
-	return ""
 }
