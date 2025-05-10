@@ -39,6 +39,23 @@ func (c *Compiler) CopyArg(varName, funcName, argName string) string {
 	return c.Copy(c.varPath(varName), c.argPath(fn, argName))
 }
 
+func (c *Compiler) XRemove(storage, path string) string {
+	return c.inst(Remove, storage, path)
+}
+
+func (c *Compiler) Remove(path string) string {
+	return c.XRemove(c.storage, path)
+}
+
+func (c *Compiler) RemoveVar(name string) string {
+	return c.Remove(c.varPath(name))
+}
+
+func (c *Compiler) RemoveArg(funcName, argName string) string {
+	_, fn := splitFunctionName(funcName, c.Namespace)
+	return c.Remove(c.argPath(fn, argName))
+}
+
 func (c *Compiler) Load(path, score string) string {
 	return c.inst(Load, c.varPath(path), score)
 }

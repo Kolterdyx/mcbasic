@@ -14,6 +14,7 @@ const (
 	_      InstructionType = ""
 	Set                    = "set"    // `set <storage> <path> <value>`
 	Copy                   = "copy"   // `copy <storage from> <path from> <storage to> <path to>`
+	Remove                 = "remove" // `remove <storage> <path>`
 	Math                   = "math"   // `math <operation>`
 	Load                   = "load"   // `load <path> <score>`
 	Store                  = "store"  // `store <score> <path>`
@@ -25,7 +26,8 @@ const (
 	Unless                 = "unless" // `unless <score> <instruction>`
 	Ret                    = "ret"    // `ret`
 	Func                   = "func"   // `func <name>\n\t<code>`
-	Call                   = "call"   // `call <name>`
+	Call                   = "call"   // `call <name>
+	Branch                 = "branch" // `branch <name>`
 )
 
 type Instruction struct {
@@ -45,6 +47,8 @@ func (i Instruction) ToMCCommand() string {
 		return fmt.Sprintf("data modify storage %s %s set value %s", i.Args[0], i.Args[1], i.Args[2])
 	case Copy:
 		return fmt.Sprintf("data modify storage %s %s set from storage %s %s", i.Args[2], i.Args[3], i.Args[0], i.Args[1])
+	case Remove:
+		return fmt.Sprintf("data remove storage %s %s", i.Args[0], i.Args[1])
 	case Math:
 		return fmt.Sprintf("execute store result storage %s %s int 1 run scoreboard players operation %s %s %s %s %s", i.Storage, RX, RX, i.DPNamespace, i.Args[0], RA, i.DPNamespace)
 	case Load:
@@ -65,8 +69,8 @@ func (i Instruction) ToMCCommand() string {
 		return fmt.Sprintf("execute unless score %s %s matches 1.. run %s", i.Args[0], i.DPNamespace, parseInstruction(i.Args[1:], i.DPNamespace, i.Storage).ToMCCommand())
 	case Ret:
 		return "return 0"
-	case Call:
-		return fmt.Sprintf("function mcb:%s {function:'%s', function_namespace:'%s', args:'%s', namespace:'%s'}", path.Join(paths.Internal, "call"), i.Args[0], i.Args[1], i.Args[2], i.DPNamespace)
+	case Call, Branch:
+		return fmt.Sprintf("function mcb:%s {function:'%s', function_namespace:'%s', args:'%s', namespace:'%s'}", path.Join(paths.Internal, string(i.Type)), i.Args[0], i.Args[1], i.Args[2], i.DPNamespace)
 	case Func:
 		// This is not a valid command, but a placeholder for the function definition
 	default:

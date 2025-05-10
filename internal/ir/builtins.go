@@ -16,7 +16,7 @@ func (c *Compiler) compileBuiltins() []Function {
 
 func (c *Compiler) math() []Function {
 	return []Function{
-		c.createIrFunction(
+		c.createIRFunction(
 			"math:sqrt",
 			c.DoubleSqrt("x", RET)+
 				c.Ret(),
@@ -27,7 +27,7 @@ func (c *Compiler) math() []Function {
 		),
 
 		// Trigonometric functions
-		c.createIrFunction(
+		c.createIRFunction(
 			"math:cos",
 			c.DoubleCos("x", RET)+
 				c.Ret(),
@@ -36,7 +36,7 @@ func (c *Compiler) math() []Function {
 			},
 			types.DoubleType,
 		),
-		c.createIrFunction(
+		c.createIRFunction(
 			"math:sin",
 			c.DoubleSin("x", RET)+
 				c.Ret(),
@@ -45,7 +45,7 @@ func (c *Compiler) math() []Function {
 			},
 			types.DoubleType,
 		),
-		c.createIrFunction(
+		c.createIRFunction(
 			"math:tan",
 			c.DoubleTan("x", RET)+
 				c.Ret(),
@@ -54,7 +54,7 @@ func (c *Compiler) math() []Function {
 			},
 			types.DoubleType,
 		),
-		c.createIrFunction(
+		c.createIRFunction(
 			"math:acos",
 			c.Copy(
 				fmt.Sprintf("%s.acos.x", ArgPath),
@@ -67,7 +67,7 @@ func (c *Compiler) math() []Function {
 			},
 			types.DoubleType,
 		),
-		c.createIrFunction(
+		c.createIRFunction(
 			"math:asin",
 			c.Copy(
 				fmt.Sprintf("%s.asin.x", ArgPath),
@@ -80,7 +80,7 @@ func (c *Compiler) math() []Function {
 			},
 			types.DoubleType,
 		),
-		c.createIrFunction(
+		c.createIRFunction(
 			"math:atan",
 			c.Copy(
 				fmt.Sprintf("%s.atan.x", ArgPath),
@@ -95,7 +95,7 @@ func (c *Compiler) math() []Function {
 		),
 
 		// Rounding functions
-		c.createIrFunction(
+		c.createIRFunction(
 			"math:floor",
 			c.DoubleFloor("x", RET)+
 				c.Ret(),
@@ -104,7 +104,7 @@ func (c *Compiler) math() []Function {
 			},
 			types.DoubleType,
 		),
-		c.createIrFunction(
+		c.createIRFunction(
 			"math:ceil",
 			c.DoubleCeil("x", RET)+
 				c.Ret(),
@@ -113,7 +113,7 @@ func (c *Compiler) math() []Function {
 			},
 			types.DoubleType,
 		),
-		c.createIrFunction(
+		c.createIRFunction(
 			"math:round",
 			c.DoubleRound("x", RET)+
 				c.Ret(),
@@ -149,18 +149,18 @@ func (c *Compiler) baseFunctions() []Function {
 	initSource += c.Ret()
 	funcs = append(
 		funcs,
-		c.createIrFunction(
+		c.createIRFunction(
 			"mcb:internal/init",
 			initSource,
 			[]interfaces.TypedIdentifier{},
 			types.VoidType,
 		),
-		c.createIrFunction(
+		c.createIRFunction(
 			"mcb:internal/clean",
-			fmt.Sprintf("scoreboard objectives remove %s\n", c.Namespace)+
-				fmt.Sprintf("data remove storage %s:data vars\n", c.Namespace)+
-				fmt.Sprintf("data remove storage %s:data structs\n", c.Namespace)+
-				fmt.Sprintf("data remove storage %s:data args\n", c.Namespace)+
+			//fmt.Sprintf("scoreboard objectives remove %s\n", c.Namespace)+
+			c.Remove(VarPath)+
+				c.Remove(StructPath)+
+				c.Remove(ArgPath)+
 				c.Ret(),
 			[]interfaces.TypedIdentifier{},
 			types.VoidType,
@@ -174,7 +174,7 @@ func (c *Compiler) baseFunctions() []Function {
 	compResult := c.makeReg(RET)
 	funcs = append(
 		funcs,
-		c.createIrFunction(
+		c.createIRFunction(
 			"internal/tick",
 			c.Call("tick")+
 				c.Set(maxCallCounterReg, nbt.NewInt(MaxCallCounter))+
@@ -184,7 +184,7 @@ func (c *Compiler) baseFunctions() []Function {
 			[]interfaces.TypedIdentifier{},
 			types.VoidType,
 		),
-		c.createIrFunction(
+		c.createIRFunction(
 			"tick",
 			c.Ret(),
 			[]interfaces.TypedIdentifier{},

@@ -349,7 +349,7 @@ func (c *Compiler) writeFunctionTags() error {
 	return nil
 }
 
-func (c *Compiler) createIrFunction(fullName, source string, args []interfaces.TypedIdentifier, returnType types.ValueType) Function {
+func (c *Compiler) createIRFunction(fullName, source string, args []interfaces.TypedIdentifier, returnType types.ValueType) Function {
 	if fullName == "" {
 		c.error(interfaces.SourceLocation{}, "Function fn cannot be empty")
 		return Function{}
