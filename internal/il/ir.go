@@ -29,10 +29,10 @@ const (
 )
 
 type Instruction struct {
-	Type      InstructionType
-	Namespace string
-	Storage   string
-	Args      []string
+	Type        InstructionType
+	DPNamespace string
+	Storage     string
+	Args        []string
 }
 
 func (i Instruction) ToString() string {
@@ -46,27 +46,27 @@ func (i Instruction) ToMCCommand() string {
 	case Copy:
 		return fmt.Sprintf("data modify storage %s %s set from storage %s %s", i.Args[2], i.Args[3], i.Args[0], i.Args[1])
 	case Math:
-		return fmt.Sprintf("execute store result storage %s %s int 1 run scoreboard players operation %s %s %s %s %s", i.Storage, RX, RX, i.Namespace, i.Args[0], RA, i.Namespace)
+		return fmt.Sprintf("execute store result storage %s %s int 1 run scoreboard players operation %s %s %s %s %s", i.Storage, RX, RX, i.DPNamespace, i.Args[0], RA, i.DPNamespace)
 	case Load:
-		return fmt.Sprintf("execute store result score %s %s run data get storage %s %s", i.Args[1], i.Namespace, i.Storage, i.Args[0])
+		return fmt.Sprintf("execute store result score %s %s run data get storage %s %s", i.Args[1], i.DPNamespace, i.Storage, i.Args[0])
 	case Store:
-		return fmt.Sprintf("execute store result storage %s %s int 1 run scoreboard players get %s %s", i.Storage, i.Args[0], i.Args[1], i.Namespace)
+		return fmt.Sprintf("execute store result storage %s %s int 1 run scoreboard players get %s %s", i.Storage, i.Args[0], i.Args[1], i.DPNamespace)
 	case Score:
-		return fmt.Sprintf("scoreboard players set %s %s %s", i.Args[0], i.Namespace, i.Args[1])
+		return fmt.Sprintf("scoreboard players set %s %s %s", i.Args[0], i.DPNamespace, i.Args[1])
 	case Append:
 		log.Fatalln("Not implemented")
 	case Size:
 		return fmt.Sprintf("execute store result storage %s %s int 1 run data get storage %s %s", i.Storage, i.Args[1], i.Storage, i.Args[0])
 	case Cmp:
-		return fmt.Sprintf("execute if score %s %s %s %s %s run data modify storage %s %s set value 1", i.Args[0], i.Namespace, i.Args[1], i.Args[2], i.Namespace, i.Storage, i.Args[3])
+		return fmt.Sprintf("execute if score %s %s %s %s %s run data modify storage %s %s set value 1", i.Args[0], i.DPNamespace, i.Args[1], i.Args[2], i.DPNamespace, i.Storage, i.Args[3])
 	case If:
-		return fmt.Sprintf("execute if score %s %s matches 1.. run %s", i.Args[0], i.Namespace, parseInstruction(i.Args[1:], i.Namespace, i.Storage).ToMCCommand())
+		return fmt.Sprintf("execute if score %s %s matches 1.. run %s", i.Args[0], i.DPNamespace, parseInstruction(i.Args[1:], i.DPNamespace, i.Storage).ToMCCommand())
 	case Unless:
-		return fmt.Sprintf("execute unless score %s %s matches 1.. run %s", i.Args[0], i.Namespace, parseInstruction(i.Args[1:], i.Namespace, i.Storage).ToMCCommand())
+		return fmt.Sprintf("execute unless score %s %s matches 1.. run %s", i.Args[0], i.DPNamespace, parseInstruction(i.Args[1:], i.DPNamespace, i.Storage).ToMCCommand())
 	case Ret:
 		return "return 0"
 	case Call:
-		return fmt.Sprintf("function mcb:%s {function:'%s', function_namespace:'%s', args:'%s', namespace:'%s'}", path.Join(paths.Internal, "call"), i.Args[0], i.Args[1], i.Args[2], i.Namespace)
+		return fmt.Sprintf("function mcb:%s {function:'%s', function_namespace:'%s', args:'%s', namespace:'%s'}", path.Join(paths.Internal, "call"), i.Args[0], i.Args[1], i.Args[2], i.DPNamespace)
 	case Func:
 	default:
 	}
@@ -94,7 +94,7 @@ func (f Function) ToMCFunction() string {
 	return fmt.Sprintf("# Function: %s\n%s", f.Name, body)
 }
 
-func ParseIL(source, namespace, storage string) []Function {
+func ParseIL(source, dpNamespace, storage string) []Function {
 
 	var funcs []Function
 	var current *Function
@@ -113,7 +113,7 @@ func ParseIL(source, namespace, storage string) []Function {
 			}
 			current = &Function{Name: parts[1]}
 		} else if current != nil {
-			instr := parseInstruction(parts, namespace, storage)
+			instr := parseInstruction(parts, dpNamespace, storage)
 			current.Instructions = append(current.Instructions, instr)
 		}
 	}
@@ -125,12 +125,12 @@ func ParseIL(source, namespace, storage string) []Function {
 	return funcs
 }
 
-func parseInstruction(parts []string, namespace, storage string) Instruction {
+func parseInstruction(parts []string, dpNamespace, storage string) Instruction {
 	return Instruction{
-		Type:      InstructionType(parts[0]),
-		Args:      parts[1:],
-		Namespace: namespace,
-		Storage:   storage,
+		Type:        InstructionType(parts[0]),
+		Args:        parts[1:],
+		DPNamespace: dpNamespace,
+		Storage:     storage,
 	}
 }
 

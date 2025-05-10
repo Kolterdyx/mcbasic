@@ -82,7 +82,11 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 
 	//c := compiler.NewCompiler(config, projectRoot, headers, libs)
 	c := il.NewCompiler(config, headers, libs)
-	c.Compile(program)
+	err = c.Compile(program)
+	if err != nil {
+		log.Error(err)
+		return cli.Exit("There was an error compiling the program", 1)
+	}
 	log.Info("Compilation complete")
 	return nil
 }
