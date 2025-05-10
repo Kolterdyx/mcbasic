@@ -1,6 +1,7 @@
 package ir
 
 import (
+	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 )
@@ -20,6 +21,11 @@ func (c *Compiler) SetVar(name string, value nbt.Value) string {
 func (c *Compiler) SetArg(funcName, argName string, value nbt.Value) string {
 	_, fn := splitFunctionName(funcName, c.Namespace)
 	return c.Set(c.argPath(fn, argName), value)
+}
+
+func (c *Compiler) SetArgs(funcName string, value nbt.Compound) string {
+	_, fn := splitFunctionName(funcName, c.Namespace)
+	return c.Set(fmt.Sprintf("%s.%s", ArgPath, fn), value)
 }
 
 func (c *Compiler) XCopy(storageFrom, from, storageTo, to string) string {
