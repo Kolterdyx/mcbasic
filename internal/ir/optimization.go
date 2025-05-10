@@ -1,4 +1,4 @@
-package il
+package ir
 
 import (
 	"strings"

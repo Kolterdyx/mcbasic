@@ -1,4 +1,4 @@
-package il
+package ir
 
 import (
 	"fmt"
@@ -68,6 +68,7 @@ func (i Instruction) ToMCCommand() string {
 	case Call:
 		return fmt.Sprintf("function mcb:%s {function:'%s', function_namespace:'%s', args:'%s', namespace:'%s'}", path.Join(paths.Internal, "call"), i.Args[0], i.Args[1], i.Args[2], i.DPNamespace)
 	case Func:
+		// This is not a valid command, but a placeholder for the function definition
 	default:
 	}
 	return ""
@@ -94,7 +95,7 @@ func (f Function) ToMCFunction() string {
 	return fmt.Sprintf("# Function: %s\n%s", f.Name, body)
 }
 
-func ParseIL(source, dpNamespace, storage string) []Function {
+func ParseIRCode(source, dpNamespace, storage string) []Function {
 
 	var funcs []Function
 	var current *Function

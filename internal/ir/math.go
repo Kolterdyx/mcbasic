@@ -1,4 +1,4 @@
-package il
+package ir
 
 import log "github.com/sirupsen/logrus"
 
@@ -8,6 +8,14 @@ func (c *Compiler) intOperation(x, y, to, operator string) (cmd string) {
 	cmd += c.MathOp(operator)
 	cmd += c.Store(RX, c.varPath(to))
 	return
+}
+
+func (c *Compiler) callGM1(x, to string) string {
+	panic("not implemented")
+}
+
+func (c *Compiler) callGM2(x, y, to string) string {
+	panic("not implemented")
 }
 
 func (c *Compiler) IntAdd(x, y, to string) string {

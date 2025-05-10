@@ -1,4 +1,4 @@
-package il
+package ir
 
 import (
 	"github.com/Kolterdyx/mcbasic/internal/nbt"

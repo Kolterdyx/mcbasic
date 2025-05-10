@@ -5,8 +5,8 @@ import (
 	"embed"
 	"encoding/json"
 	"github.com/BurntSushi/toml"
-	"github.com/Kolterdyx/mcbasic/internal/il"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/ir"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
 	"github.com/Kolterdyx/mcbasic/internal/scanner"
 	log "github.com/sirupsen/logrus"
@@ -81,7 +81,7 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 	}
 
 	//c := compiler.NewCompiler(config, projectRoot, headers, libs)
-	c := il.NewCompiler(config, headers, libs)
+	c := ir.NewCompiler(config, headers, libs)
 	err = c.Compile(program)
 	if err != nil {
 		log.Error(err)

@@ -1,4 +1,4 @@
-package il
+package ir
 
 import (
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
@@ -87,7 +87,7 @@ func (c *Compiler) IntCompare(regRa, regRb string, operator tokens.TokenType, re
 }
 
 func (c *Compiler) DoubleCompare(regRa, regRb string, operator tokens.TokenType, res string) string {
-	panic("implement me")
+	panic("DoubleCompare has not been implemented yet")
 }
 
 func (c *Compiler) If(condVar, inst string) (cmd string) {

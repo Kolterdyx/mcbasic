@@ -1,4 +1,4 @@
-package il
+package ir
 
 import (
 	"embed"
@@ -107,7 +107,7 @@ func (c *Compiler) Compile(program parser.Program) error {
 	ir = c.optimizeIRCode(ir)
 	ir = c.addStructDeclarationFunction(program, ir)
 	c.compileIRtoDatapack(ir)
-	err := c.createFunctionTags()
+	err := c.writeFunctionTags()
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func (c *Compiler) createBasePack() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	c.createPackMeta()
+	c.writePackMcMeta()
 }
 
 func (c *Compiler) compileIRtoDatapack(ir []Function) {
@@ -140,8 +140,8 @@ func (c *Compiler) addStructDeclarationFunction(program parser.Program, ir []Fun
 	for _, structDef := range program.Structs {
 		structDefFuncSource += structDef.Accept(c)
 	}
-	structDefFuncSource = "func internal/struct_definitions\n" + structDefFuncSource + "\nret\n"
-	structIr := ParseIL(structDefFuncSource, c.Namespace, c.storage)
+	structDefFuncSource = c.Func("internal/struct_definitions") + structDefFuncSource + c.Ret()
+	structIr := ParseIRCode(structDefFuncSource, c.Namespace, c.storage)
 	if len(structIr) != 1 {
 		log.Fatalln("Struct definition function should have one function")
 	}
@@ -164,7 +164,7 @@ func (c *Compiler) compileToIR(program parser.Program) []Function {
 		c.compiledFunctions = make(map[string]string)
 		c.compiledFunctions[f.Name.Lexeme] = f.Accept(c)
 		for _, funcSource := range c.compiledFunctions {
-			ir = append(ir, ParseIL(funcSource, c.Namespace, c.storage)...)
+			ir = append(ir, ParseIRCode(funcSource, c.Namespace, c.storage)...)
 		}
 	}
 	return ir
@@ -299,7 +299,7 @@ func (c *Compiler) createDirectoryTree() error {
 	return nil
 }
 
-func (c *Compiler) createPackMeta() {
+func (c *Compiler) writePackMcMeta() {
 	packMcmeta := fmt.Sprintf(`{
 	"pack": {
 		"description": "%s",
@@ -318,11 +318,10 @@ func (c *Compiler) createPackMeta() {
 
 func (c *Compiler) writeMcFunction(fullName, source string) error {
 	ns, fn := splitFunctionName(fullName, c.Namespace)
-	log.Debugf("Writing function %s:%s\n", ns, fn)
 	return os.WriteFile(path.Join(c.getFuncPath(ns), fmt.Sprintf("%s.mcfunction", fn)), []byte(c.macroLineIdentifier(source)), 0644)
 }
 
-func (c *Compiler) createFunctionTags() error {
+func (c *Compiler) writeFunctionTags() error {
 	// load tag
 	loadTag := `{
 	"values": [
@@ -367,5 +366,5 @@ func (c *Compiler) createIrFunction(fullName, source string, args []interfaces.T
 	}
 	f.Args = append(f.Args, interfaces.TypedIdentifier{Name: "__call__", Type: types.IntType})
 	c.functionDefinitions[fullName] = f
-	return ParseIL(fmt.Sprintf("func %s:%s\n%s", ns, fn, source), c.Namespace, c.storage)[0]
+	return ParseIRCode(c.Func(fmt.Sprintf("%s:%s", ns, fn))+source, c.Namespace, c.storage)[0]
 }
