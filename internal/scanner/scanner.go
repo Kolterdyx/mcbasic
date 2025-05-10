@@ -21,7 +21,7 @@ type Scanner struct {
 }
 
 func (s *Scanner) report(line int, column int, message string) {
-	log.Errorf("[Position %d:%d] Error: %s\n", line+1, column+1, message)
+	log.Errorf("[Position %d:%d] Exception: %s\n", line+1, column+1, message)
 	s.HadError = true
 }
 

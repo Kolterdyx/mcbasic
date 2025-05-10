@@ -7,7 +7,7 @@ type IfStmt struct {
 
 	Condition  expressions.Expr
 	ThenBranch BlockStmt
-	ElseBranch BlockStmt
+	ElseBranch *BlockStmt
 }
 
 func (i IfStmt) Accept(visitor StmtVisitor) string {

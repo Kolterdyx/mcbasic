@@ -61,7 +61,7 @@ func (p *Parser) error(token tokens.Token, message string) error {
 }
 
 func (p *Parser) report(line int, pos int, s string, message string) error {
-	return fmt.Errorf("[Position %d:%d] Error%s: %s\n", line+1, pos+1, s, message)
+	return fmt.Errorf("[Position %d:%d] Exception%s: %s\n", line+1, pos+1, s, message)
 }
 
 func (p *Parser) consume(tokenType tokens.TokenType, message string) (tokens.Token, error) {
@@ -146,7 +146,7 @@ func (p *Parser) isStructType(varType types.ValueType) bool {
 }
 
 func (p *Parser) getTokenAsValueType(token tokens.Token) (types.ValueType, error) {
-	var varType types.ValueType = types.ErrorType
+	var varType types.ValueType = nil
 	var err error
 	switch token.Type {
 	case tokens.IntType:
@@ -211,8 +211,8 @@ func parseType(valueType string) (types.ValueType, error) {
 	return p.ParseType()
 }
 
-func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interfaces.FuncDef {
-	funcDefs := make(map[string]interfaces.FuncDef)
+func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interfaces.FunctionDefinition {
+	funcDefs := make(map[string]interfaces.FunctionDefinition)
 	for _, header := range headers {
 		log.Debugf("Loading header: %s. Functions: %v", header.Namespace, len(header.Definitions.Functions))
 		for _, function := range header.Definitions.Functions {
@@ -220,21 +220,21 @@ func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interface
 
 			returnType, err := parseType(function.ReturnType)
 			if err != nil {
-				log.Errorf("Error parsing function return type: %s", err)
+				log.Errorf("Exception parsing function return type: %s", err)
 				continue
 			}
-			f := interfaces.FuncDef{
+			f := interfaces.FunctionDefinition{
 				Name:       funcName,
-				Args:       make([]interfaces.FuncArg, 0),
+				Args:       make([]interfaces.TypedIdentifier, 0),
 				ReturnType: returnType,
 			}
 			for _, parameter := range function.Args {
 				parameterType, err := parseType(parameter.Type)
 				if err != nil {
-					log.Errorf("Error parsing function parameter type: %s", err)
+					log.Errorf("Exception parsing function parameter type: %s", err)
 					continue
 				}
-				f.Args = append(f.Args, interfaces.FuncArg{
+				f.Args = append(f.Args, interfaces.TypedIdentifier{
 					Name: parameter.Name,
 					Type: parameterType,
 				})

@@ -36,6 +36,6 @@ func getReturnIndexType(valueType types.ValueType) types.ValueType {
 		return valueType.(types.ListTypeStruct).ContentType
 	default:
 		log.Errorf("Can't index type: %v", valueType)
-		return types.ErrorType
+		return nil
 	}
 }

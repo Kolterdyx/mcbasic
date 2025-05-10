@@ -1,2 +1,2 @@
 $tellraw @a {text:'$(text)'}
-return 1
+return 0

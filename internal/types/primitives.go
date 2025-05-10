@@ -8,9 +8,6 @@ import (
 type PrimitiveType string
 
 const (
-	// PrimitiveErrorType  used for error handling
-	PrimitiveErrorType PrimitiveType = "error"
-
 	PrimitiveVoidType   PrimitiveType = "void"
 	PrimitiveIntType    PrimitiveType = "int"
 	PrimitiveStringType PrimitiveType = "str"
@@ -24,37 +21,11 @@ type PrimitiveTypeStruct struct {
 }
 
 func (p PrimitiveTypeStruct) Primitive() ValueType {
-	switch p.primitiveType {
-	case PrimitiveVoidType:
-		return VoidType
-	case PrimitiveIntType:
-		return IntType
-	case PrimitiveStringType:
-		return StringType
-	case PrimitiveDoubleType:
-		return DoubleType
-	case PrimitiveErrorType:
-		return ErrorType
-	}
-	log.Fatalf("Should be unreachable: %v", p.primitiveType)
-	return nil
+	return p
 }
 
 func (p PrimitiveTypeStruct) ToString() string {
-	switch p.primitiveType {
-	case PrimitiveVoidType:
-		return "void"
-	case PrimitiveIntType:
-		return "int"
-	case PrimitiveStringType:
-		return "str"
-	case PrimitiveDoubleType:
-		return "double"
-	case PrimitiveErrorType:
-		return "error"
-	}
-	log.Fatalf("Should be unreachable: %v", p.primitiveType)
-	return ""
+	return string(p.primitiveType)
 }
 
 func (p PrimitiveTypeStruct) ToNBT() nbt.Value {
@@ -65,8 +36,6 @@ func (p PrimitiveTypeStruct) ToNBT() nbt.Value {
 		return nbt.NewString("")
 	case PrimitiveDoubleType:
 		return nbt.NewDouble(0)
-	case PrimitiveErrorType:
-		fallthrough
 	case PrimitiveVoidType:
 		break
 	}
@@ -89,5 +58,4 @@ var (
 	IntType    = PrimitiveTypeStruct{primitiveType: PrimitiveIntType}
 	StringType = PrimitiveTypeStruct{primitiveType: PrimitiveStringType}
 	DoubleType = PrimitiveTypeStruct{primitiveType: PrimitiveDoubleType}
-	ErrorType  = PrimitiveTypeStruct{primitiveType: PrimitiveErrorType}
 )

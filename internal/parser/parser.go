@@ -14,8 +14,8 @@ type Parser struct {
 	currentScope string
 	current      int
 
-	variables map[string][]statements.VarDef
-	functions map[string]interfaces.FuncDef
+	variables map[string][]interfaces.TypedIdentifier
+	functions map[string]interfaces.FunctionDefinition
 	Errors    []error
 	structs   map[string]statements.StructDeclarationStmt
 }
@@ -23,12 +23,12 @@ type Parser struct {
 func (p *Parser) Parse() (Program, []error) {
 	functions := make(map[string]statements.FunctionDeclarationStmt)
 	structs := make(map[string]statements.StructDeclarationStmt)
-	p.functions = make(map[string]interfaces.FuncDef, 0)
+	p.functions = make(map[string]interfaces.FunctionDefinition)
 	for _, funcDef := range GetHeaderFuncDefs(p.Headers) {
 		p.functions[funcDef.Name] = funcDef
 	}
 	p.structs = make(map[string]statements.StructDeclarationStmt)
-	p.variables = make(map[string][]statements.VarDef)
+	p.variables = make(map[string][]interfaces.TypedIdentifier)
 	for !p.IsAtEnd() {
 		statement, err := p.statement()
 		if err != nil {
@@ -42,7 +42,7 @@ func (p *Parser) Parse() (Program, []error) {
 		if statement.StmtType() == statements.FunctionDeclarationStmtType {
 			funcStmt := statement.(statements.FunctionDeclarationStmt)
 			functions[funcStmt.Name.Lexeme] = funcStmt
-			p.functions[funcStmt.Name.Lexeme] = interfaces.FuncDef{Name: funcStmt.Name.Lexeme, ReturnType: funcStmt.ReturnType, Args: funcStmt.Parameters}
+			p.functions[funcStmt.Name.Lexeme] = interfaces.FunctionDefinition{Name: funcStmt.Name.Lexeme, ReturnType: funcStmt.ReturnType, Args: funcStmt.Parameters}
 		}
 		if statement.StmtType() == statements.StructDeclarationStmtType {
 			structStmt := statement.(statements.StructDeclarationStmt)

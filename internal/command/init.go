@@ -129,7 +129,7 @@ This will create a new project with the following configuration:
 
 Project name: %s
 Project path: %s
-Namespace: %s
+DPNamespace: %s
 Entrypoint file: %s
 
 Overwrite existing files: %t
