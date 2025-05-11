@@ -2,6 +2,7 @@ package ir
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
@@ -323,27 +324,35 @@ func (c *Compiler) writeMcFunction(fullName, source string) error {
 
 func (c *Compiler) writeFunctionTags() error {
 	// load tag
-	loadTag := `{
-	"values": [
-		"%s",
-		"gm:zzz/load"
-	]
-}`
-	tickTag := `{
-	"values": [
-		"%s"
-	]
-}`
-	err := os.MkdirAll(path.Join(c.DatapackRoot, paths.MinecraftTags, paths.Functions), 0755)
-	if err != nil {
+	loadTag := interfaces.McTag{
+		Values: []string{
+			"gm:zzz/load",
+			"mcb:internal/init",
+			fmt.Sprintf("%s:load", c.Namespace),
+		},
+	}
+	tickTag := interfaces.McTag{
+		Values: []string{
+			fmt.Sprintf("%s:tick", c.Namespace),
+		},
+	}
+
+	var tagBytes []byte
+	var err error
+
+	if err = os.MkdirAll(path.Join(c.DatapackRoot, paths.MinecraftTags, paths.Functions), 0755); err != nil {
 		return err
 	}
-	err = os.WriteFile(path.Join(c.DatapackRoot, paths.MinecraftTags, paths.Functions, "load.json"), []byte(fmt.Sprintf(loadTag, "mcb:internal/init")), 0644)
-	if err != nil {
+	if tagBytes, err = json.Marshal(loadTag); err != nil {
 		return err
 	}
-	err = os.WriteFile(path.Join(c.DatapackRoot, paths.MinecraftTags, paths.Functions, "tick.json"), []byte(fmt.Sprintf(tickTag, fmt.Sprintf("%s:tick", c.Namespace))), 0644)
-	if err != nil {
+	if err = os.WriteFile(path.Join(c.DatapackRoot, paths.MinecraftTags, paths.Functions, "load.json"), tagBytes, 0644); err != nil {
+		return err
+	}
+	if tagBytes, err = json.Marshal(tickTag); err != nil {
+		return err
+	}
+	if err = os.WriteFile(path.Join(c.DatapackRoot, paths.MinecraftTags, paths.Functions, "tick.json"), tagBytes, 0644); err != nil {
 		return err
 	}
 	return nil
