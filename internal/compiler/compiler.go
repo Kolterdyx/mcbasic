@@ -145,6 +145,7 @@ func (c *Compiler) addStructDeclarationFunction(program parser.Program, function
 	for _, structDef := range program.Structs {
 		structDefFuncSource.Extend(structDef.Accept(c))
 	}
+	structDefFuncSource.Ret()
 	return append(functions, ir.NewFunction("internal/struct_definitions", structDefFuncSource))
 }
 

@@ -30,3 +30,7 @@ func (c *Code) Exec(mcCommand string) interfaces.IRCode {
 	c.Call("mcb:exec")
 	return c
 }
+
+func (c *Code) Raw(mcCommand string) interfaces.IRCode {
+	return c.addInst(Raw, mcCommand)
+}

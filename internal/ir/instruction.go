@@ -27,6 +27,7 @@ const (
 	Func                              = "func"   // `func <name>\n\t<code>`
 	Call                              = "call"   // `call <name>
 	Branch                            = "branch" // `branch <name>`
+	Raw                               = "raw"    // `raw <command>`
 )
 
 type Instruction struct {
@@ -72,6 +73,8 @@ func (i Instruction) ToMCCommand() string {
 		return "return 0\n"
 	case Call, Branch:
 		return fmt.Sprintf("function mcb:%s {function:'%s', function_namespace:'%s', args:'%s', namespace:'%s'}\n", path.Join(paths.Internal, string(i.Type)), i.Args[0], i.Args[1], i.Args[2], i.DPNamespace)
+	case Raw:
+		return fmt.Sprintf("%s\n", i.Args[0])
 	case Func:
 		// This is not a valid command, but a placeholder for the function definition
 	default:

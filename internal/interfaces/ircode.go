@@ -28,6 +28,7 @@ type IRCode interface {
 	Call(funcName string) IRCode
 	Branch(branchName, funcName string) IRCode
 	Exec(mcCommand string) IRCode
+	Raw(mcCommand string) IRCode
 
 	IntAdd(x, y, to string) IRCode
 	IntSub(x, y, to string) IRCode
