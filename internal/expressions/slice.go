@@ -1,6 +1,7 @@
 package expressions
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	log "github.com/sirupsen/logrus"
@@ -19,8 +20,8 @@ func (s SliceExpr) Accept(v ExprVisitor) interfaces.IRCode {
 	return v.VisitSlice(s)
 }
 
-func (s SliceExpr) ExprType() ExprType {
-	return SliceExprType
+func (s SliceExpr) Type() ast.NodeType {
+	return ast.SliceExpression
 }
 
 func (s SliceExpr) ReturnType() types.ValueType {

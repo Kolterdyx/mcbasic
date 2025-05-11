@@ -1,6 +1,7 @@
 package expressions
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
@@ -17,8 +18,8 @@ func (l ListExpr) Accept(v ExprVisitor) interfaces.IRCode {
 	return v.VisitList(l)
 }
 
-func (l ListExpr) ExprType() ExprType {
-	return ListExprType
+func (l ListExpr) Type() ast.NodeType {
+	return ast.ListExpression
 }
 
 func (l ListExpr) ReturnType() types.ValueType {

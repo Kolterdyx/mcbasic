@@ -1,6 +1,7 @@
 package expressions
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
@@ -16,8 +17,8 @@ func (g GroupingExpr) Accept(v ExprVisitor) interfaces.IRCode {
 	return v.VisitGrouping(g)
 }
 
-func (g GroupingExpr) ExprType() ExprType {
-	return GroupingExprType
+func (g GroupingExpr) Type() ast.NodeType {
+	return ast.GroupingExpression
 }
 
 func (g GroupingExpr) ReturnType() types.ValueType {

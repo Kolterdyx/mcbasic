@@ -1,24 +1,9 @@
 package expressions
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/types"
-)
-
-type ExprType string
-
-const (
-	BinaryExprType       ExprType = "Binary"
-	GroupingExprType     ExprType = "Grouping"
-	LiteralExprType      ExprType = "Literal"
-	UnaryExprType        ExprType = "Unary"
-	FieldAccessExprType  ExprType = "FieldAccess"
-	VariableExprType     ExprType = "Variable"
-	FunctionCallExprType ExprType = "FunctionCall"
-	LogicalExprType      ExprType = "Logical"
-	SliceExprType        ExprType = "SliceString"
-	ListExprType         ExprType = "List"
-	StructExprType       ExprType = "Struct"
 )
 
 type ExprVisitor interface {
@@ -36,8 +21,8 @@ type ExprVisitor interface {
 }
 
 type Expr interface {
+	ast.Node
 	Accept(v ExprVisitor) interfaces.IRCode
-	ExprType() ExprType
 	ReturnType() types.ValueType
 	ToString() string
 	Validate() error

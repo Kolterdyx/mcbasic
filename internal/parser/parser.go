@@ -5,6 +5,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"slices"
 )
 
 type Parser struct {
@@ -18,6 +19,12 @@ type Parser struct {
 	functions map[string]interfaces.FunctionDefinition
 	Errors    []error
 	structs   map[string]statements.StructDeclarationStmt
+}
+
+var allowedTopLevelStatements = []statements.StmtType{
+	statements.FunctionDeclarationStmtType,
+	statements.StructDeclarationStmtType,
+	statements.ImportStmtType,
 }
 
 func (p *Parser) Parse() (Program, []error) {
@@ -35,16 +42,17 @@ func (p *Parser) Parse() (Program, []error) {
 			p.Errors = append(p.Errors, err)
 			continue
 		}
-		if statement.StmtType() != statements.FunctionDeclarationStmtType && statement.StmtType() != statements.StructDeclarationStmtType {
-			p.Errors = append(p.Errors, fmt.Errorf("Only function and struct declarations are allowed at the top level. Found: %s\n", statement.StmtType()))
+		if !slices.Contains(allowedTopLevelStatements, statement.StmtType()) {
+			p.Errors = append(p.Errors, fmt.Errorf("Found forbidden statement at top level: %s\n", statement.StmtType()))
 			continue
 		}
-		if statement.StmtType() == statements.FunctionDeclarationStmtType {
+		switch statement.StmtType() {
+		case statements.FunctionDeclarationStmtType:
 			funcStmt := statement.(statements.FunctionDeclarationStmt)
-			functions[funcStmt.Name.Lexeme] = funcStmt
-			p.functions[funcStmt.Name.Lexeme] = interfaces.FunctionDefinition{Name: funcStmt.Name.Lexeme, ReturnType: funcStmt.ReturnType, Args: funcStmt.Parameters}
-		}
-		if statement.StmtType() == statements.StructDeclarationStmtType {
+			functions[funcStmt.Name] = funcStmt
+			p.functions[funcStmt.Name] = interfaces.FunctionDefinition{Name: funcStmt.Name, ReturnType: funcStmt.ReturnType, Args: funcStmt.Parameters}
+
+		case statements.StructDeclarationStmtType:
 			structStmt := statement.(statements.StructDeclarationStmt)
 			structs[structStmt.Name.Lexeme] = structStmt
 		}

@@ -173,7 +173,7 @@ func (c *Compiler) setFunctionDefinitions(program parser.Program) {
 	c.functionDefinitions = parser.GetHeaderFuncDefs(c.headers)
 	for _, function := range program.Functions {
 		f := interfaces.FunctionDefinition{
-			Name:       function.Name.Lexeme,
+			Name:       function.Name,
 			Args:       make([]interfaces.TypedIdentifier, 0),
 			ReturnType: function.ReturnType,
 		}
@@ -187,7 +187,7 @@ func (c *Compiler) setFunctionDefinitions(program parser.Program) {
 			Name: "__call__",
 			Type: types.IntType,
 		})
-		c.functionDefinitions[function.Name.Lexeme] = f
+		c.functionDefinitions[function.Name] = f
 	}
 }
 

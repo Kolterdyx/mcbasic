@@ -103,7 +103,7 @@ func (p *Parser) peekCount(offset int) tokens.Token {
 	return p.Tokens[p.current+offset]
 }
 
-func (p *Parser) getType(name tokens.Token) types.ValueType {
+func (p *Parser) getDeclaredType(name tokens.Token) types.ValueType {
 	// Search the variable in the current scope
 	for _, varDef := range p.variables[p.currentScope] {
 		if varDef.Name == name.Lexeme {
@@ -167,7 +167,7 @@ func (p *Parser) getTokenAsValueType(token tokens.Token) (types.ValueType, error
 
 // getNestedType traverses the accessors to find the type at the end
 func (p *Parser) getNestedType(name tokens.Token, accessors []statements.Accessor) (types.ValueType, error) {
-	varType := p.getType(name)
+	varType := p.getDeclaredType(name)
 	if varType == nil {
 		return nil, p.error(name, "Undeclared identifier")
 	}

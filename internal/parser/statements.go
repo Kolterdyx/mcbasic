@@ -24,6 +24,8 @@ func (p *Parser) statement() (statements.Stmt, error) {
 		return p.returnStatement()
 	case p.match(tokens.Struct):
 		return p.structDeclaration()
+	case p.match(tokens.Import):
+		return p.importStatement()
 	case p.match(tokens.Identifier):
 		if p.check(tokens.Equal) || p.check(tokens.BracketOpen) || p.check(tokens.Dot) {
 			return p.variableAssignment()
@@ -34,6 +36,18 @@ func (p *Parser) statement() (statements.Stmt, error) {
 	default:
 		return p.expressionStatement()
 	}
+}
+
+func (p *Parser) importStatement() (statements.Stmt, error) {
+	path, err := p.consume(tokens.String, "Expected path string literal after 'import'.")
+	if err != nil {
+		return nil, err
+	}
+	_, err = p.consume(tokens.Semicolon, "Expected ';' after import path.")
+	if err != nil {
+		return nil, err
+	}
+	return statements.ImportStmt{Path: path.Lexeme}, nil
 }
 
 func (p *Parser) expressionStatement() (statements.Stmt, error) {
@@ -206,22 +220,9 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 			if err != nil {
 				return nil, err
 			}
-			if !p.match(tokens.IntType, tokens.StringType, tokens.DoubleType) {
-				err = p.error(p.peek(), "Expected parameter type.")
-				p.synchronize()
+			valueType, err := p.ParseType()
+			if err != nil {
 				return nil, err
-			}
-			type_ := p.previous()
-			var valueType types.ValueType
-			switch type_.Type {
-			case tokens.StringType:
-				valueType = types.StringType
-			case tokens.IntType:
-				valueType = types.IntType
-			case tokens.DoubleType:
-				valueType = types.DoubleType
-			default:
-				return nil, p.error(type_, "Expected parameter type.")
 			}
 			parameters = append(parameters, interfaces.TypedIdentifier{Name: argName.Lexeme, Type: valueType})
 			if !p.match(tokens.Comma) {
@@ -253,7 +254,7 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return statements.FunctionDeclarationStmt{Name: name, Parameters: parameters, ReturnType: returnType, Body: body}, nil
+	return statements.FunctionDeclarationStmt{Name: name.Lexeme, Parameters: parameters, ReturnType: returnType, Body: body}, nil
 }
 
 func (p *Parser) structDeclaration() (statements.Stmt, error) {

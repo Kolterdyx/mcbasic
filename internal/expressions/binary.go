@@ -2,6 +2,7 @@ package expressions
 
 import (
 	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
@@ -21,8 +22,8 @@ func (b BinaryExpr) Accept(v ExprVisitor) interfaces.IRCode {
 	return v.VisitBinary(b)
 }
 
-func (b BinaryExpr) ExprType() ExprType {
-	return BinaryExprType
+func (b BinaryExpr) Type() ast.NodeType {
+	return ast.BinaryExpression
 }
 
 func (b BinaryExpr) ReturnType() types.ValueType {

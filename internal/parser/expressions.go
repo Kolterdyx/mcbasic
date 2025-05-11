@@ -151,7 +151,6 @@ func (p *Parser) value() (expressions.Expr, error) {
 	return p.postfix(expr)
 }
 
-// baseValue parses an atomic expression with optional namespace and function call.
 func (p *Parser) baseValue() (expressions.Expr, error) {
 	var namespaceToken tokens.Token
 	var hasNamespace bool
@@ -178,7 +177,7 @@ func (p *Parser) baseValue() (expressions.Expr, error) {
 		}
 
 		// Lookup the declared type
-		identifierType := p.getType(identifier)
+		identifierType := p.getDeclaredType(identifier)
 		if identifierType == nil {
 			return nil, p.error(identifier, "Undeclared identifier")
 		}
@@ -206,7 +205,7 @@ func (p *Parser) baseValue() (expressions.Expr, error) {
 		return expressions.VariableExpr{
 			Name:           nameToken,
 			SourceLocation: p.location(),
-			Type:           identifierType,
+			ValueType:      identifierType,
 		}, nil
 	}
 
@@ -233,7 +232,7 @@ func (p *Parser) postfix(expr expressions.Expr) (expressions.Expr, error) {
 					Source:         expr,
 					Field:          p.previous(),
 					SourceLocation: p.location(),
-					Type:           types.IntType,
+					ValueType:      types.IntType,
 				}, nil
 			}
 		}
@@ -250,7 +249,7 @@ func (p *Parser) postfix(expr expressions.Expr) (expressions.Expr, error) {
 					Source:         expr,
 					Field:          p.previous(),
 					SourceLocation: p.location(),
-					Type:           types.IntType,
+					ValueType:      types.IntType,
 				}, nil
 			}
 		}
@@ -275,7 +274,7 @@ func (p *Parser) fieldPostfix(expr expressions.Expr, returnType types.StructType
 		Source:         expr,
 		Field:          fieldTok,
 		SourceLocation: p.location(),
-		Type:           fieldTokenType,
+		ValueType:      fieldTokenType,
 	}
 	return p.postfix(expr)
 }
@@ -357,7 +356,7 @@ func (p *Parser) functionCall(namespace tokens.Token, name tokens.Token, hasName
 		Lexeme:         lexeme,
 		Literal:        name.Literal,
 		SourceLocation: name.SourceLocation,
-	}, Arguments: args, SourceLocation: location, Type: funcDef.ReturnType}, nil
+	}, Arguments: args, SourceLocation: location, ValueType: funcDef.ReturnType}, nil
 }
 
 func (p *Parser) structLiteral(name tokens.Token, structType types.StructTypeStruct) (expressions.Expr, error) {

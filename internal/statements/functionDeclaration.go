@@ -2,14 +2,14 @@ package statements
 
 import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
-	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 type FunctionDeclarationStmt struct {
 	Stmt
 
-	Name          tokens.Token
+	Name          string
+	Path          string
 	Parameters    []interfaces.TypedIdentifier
 	ReturnType    types.ValueType
 	Body          BlockStmt
@@ -46,5 +46,5 @@ func (f FunctionDeclarationStmt) ToString() string {
 	if len(params) > 0 {
 		params = params[:len(params)-2]
 	}
-	return "function " + f.Name.Lexeme + "(" + params + ") -> " + f.ReturnType.ToString() + "\n" + body
+	return "function " + f.Name + "(" + params + ") -> " + f.ReturnType.ToString() + "\n" + body
 }
