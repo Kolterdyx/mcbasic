@@ -19,12 +19,6 @@ func (c *Code) Branch(branchName, funcName string) interfaces.IRCode {
 	return c.addInst(Branch, bfn, bns, fmt.Sprintf("%s.%s", ArgPath, ofn))
 }
 
-func (c *Code) IBranch(branchName, funcName string) interfaces.Instruction {
-	bns, bfn := utils.SplitFunctionName(branchName, c.Namespace)
-	_, ofn := utils.SplitFunctionName(funcName, c.Namespace)
-	return c.makeInst(Branch, bfn, bns, fmt.Sprintf("%s.%s", ArgPath, ofn))
-}
-
 func (c *Code) Exec(mcCommand string) interfaces.IRCode {
 	c.SetArg("mcb:exec", "command", nbt.NewString(strings.TrimSpace(mcCommand)))
 	c.Call("mcb:exec")

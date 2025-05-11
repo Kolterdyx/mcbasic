@@ -87,6 +87,8 @@ func optCollapseCopyChain(instrs []interfaces.Instruction, i int) (bool, int, []
 	srcStorage, srcPath := instrs[i].GetArgs()[0], instrs[i].GetArgs()[1]
 	curDstStorage, curDstPath := instrs[i].GetArgs()[2], instrs[i].GetArgs()[3]
 
+	intermediate := [][2]string{{curDstStorage, curDstPath}}
+
 	chainEnd := i + 1
 	for chainEnd < len(instrs) {
 		next := instrs[chainEnd]
@@ -97,10 +99,17 @@ func optCollapseCopyChain(instrs []interfaces.Instruction, i int) (bool, int, []
 			break
 		}
 		curDstStorage, curDstPath = next.GetArgs()[2], next.GetArgs()[3]
+		intermediate = append(intermediate, [2]string{curDstStorage, curDstPath})
 		chainEnd++
 	}
 
 	if chainEnd > i+1 {
+		// Ensure none of the intermediate destinations are used later
+		for _, loc := range intermediate[:len(intermediate)-1] {
+			if isValueUsedLater(instrs, chainEnd, loc[0], loc[1]) {
+				return false, 0, nil
+			}
+		}
 		return true, chainEnd - i, []interfaces.Instruction{Instruction{
 			Type: Copy,
 			Args: []string{srcStorage, srcPath, curDstStorage, curDstPath},
@@ -119,6 +128,13 @@ func optSetCopyToSet(instrs []interfaces.Instruction, i int) (bool, int, []inter
 		next.GetType() == Copy && len(next.GetArgs()) == 4 &&
 		sameLocation(curr.GetArgs()[0], curr.GetArgs()[1], next.GetArgs()[0], next.GetArgs()[1]) {
 
+		srcStorage, srcPath := curr.GetArgs()[0], curr.GetArgs()[1]
+
+		// Check if value is used later
+		if isValueUsedLater(instrs, i+2, srcStorage, srcPath) {
+			return false, 0, nil
+		}
+
 		return true, 2, []interfaces.Instruction{Instruction{
 			Type: Set,
 			Args: []string{next.GetArgs()[2], next.GetArgs()[3], curr.GetArgs()[2]},
@@ -132,4 +148,41 @@ func optDedupRet(instrs []interfaces.Instruction, i int) (bool, int, []interface
 		return true, 1, nil // skip duplicate Ret
 	}
 	return false, 0, nil
+}
+
+func isValueUsedLater(instrs []interfaces.Instruction, start int, storage, path string) bool {
+	for _, instr := range instrs[start:] {
+		args := instr.GetArgs()
+		switch instr.GetType() {
+		case Set:
+			// If this Set writes to the target, it overwrites it, so it's safe.
+			if len(args) >= 2 && sameLocation(args[0], args[1], storage, path) {
+				return false
+			}
+		case Copy:
+			if len(args) == 4 {
+				// If this Copy reads from the target, it's a use.
+				if sameLocation(args[0], args[1], storage, path) {
+					return true
+				}
+				// If it overwrites the target, it stops our concern.
+				if sameLocation(args[2], args[3], storage, path) {
+					return false
+				}
+			}
+		case Ret, Call: // Anything that might read a value
+			for _, arg := range args {
+				if arg == path {
+					return true
+				}
+			}
+		default:
+			for _, arg := range args {
+				if arg == path {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }

@@ -24,6 +24,8 @@ func (c *Compiler) VisitBinary(b expressions.BinaryExpr) interfaces.IRCode {
 	case tokens.EqualEqual, tokens.BangEqual, tokens.Greater, tokens.GreaterEqual, tokens.Less, tokens.LessEqual:
 		switch b.ReturnType() {
 		case types.IntType:
+			cmd.Load(regRa, regRa)
+			cmd.Load(regRb, regRb)
 			cmd.IntCompare(regRa, regRb, b.Operator.Type, RX)
 		case types.DoubleType:
 			cmd.DoubleCompare(regRa, regRb, b.Operator.Type, RX)
@@ -173,7 +175,7 @@ func (c *Compiler) VisitSlice(s expressions.SliceExpr) interfaces.IRCode {
 	cmd.Extend(s.StartIndex.Accept(c))
 	cmd.CopyVar(RX, regIndexStart)
 	if s.EndIndex == nil {
-		cmd.CopyVar(regIndexStart, regIndexEnd)
+		cmd.CopyVar(RX, regIndexEnd)
 	} else {
 		cmd.Extend(s.EndIndex.Accept(c))
 		cmd.CopyVar(RX, regIndexEnd)
@@ -185,12 +187,16 @@ func (c *Compiler) VisitSlice(s expressions.SliceExpr) interfaces.IRCode {
 	cmd.Size(targetReg, lenReg)
 	cmd.Load(lenReg, lenReg)
 	cmd.Score(RX, nbt.NewInt(-1))
+	cmd.Load(regIndexStart, regIndexStart)
 	cmd.IntCompare(regIndexStart, RX, tokens.LessEqual, RX)
 	cmd.Load(RX, RX)
 	cmd.If(RX, c.n().IntAdd(regIndexStart, lenReg, regIndexStart))
+	cmd.If(RX, c.n().Load(regIndexStart, regIndexStart))
+	cmd.Load(regIndexEnd, regIndexEnd)
 	cmd.IntCompare(regIndexEnd, RX, tokens.LessEqual, RX)
 	cmd.Load(RX, RX)
 	cmd.If(RX, c.n().IntAdd(regIndexEnd, lenReg, regIndexEnd))
+	cmd.If(RX, c.n().Load(regIndexEnd, regIndexEnd))
 	if s.EndIndex == nil {
 		cmd.IntCompare(regIndexStart, regIndexEnd, tokens.Greater, RX)
 		cmd.Load(RX, RX)
@@ -217,12 +223,12 @@ func (c *Compiler) VisitSlice(s expressions.SliceExpr) interfaces.IRCode {
 	case types.ListTypeStruct:
 		cmd.IntCompare(regIndexStart, lenReg, tokens.GreaterEqual, RX)
 		cmd.Load(RX, RX)
-		cmd.If(RX, c.n().Exception(fmt.Sprintf("Exception at %s: Invalid slice range. Index out of bounds", s.SourceLocation.ToString())))
+		cmd.If(RX, c.n().Exception(fmt.Sprintf("Exception at %s: Index out of bounds", s.SourceLocation.ToString())))
 		cmd.If(RX, c.n().Ret())
 		if s.EndIndex != nil {
 			c.error(s.SourceLocation, "List slices are not supported.")
 		}
-		cmd.MakeIndex(regIndexStart, lenReg)
+		cmd.MakeIndex(regIndexStart, regIndexStart)
 		cmd.PathGet(targetReg, regIndexStart, RX)
 	}
 	return cmd

@@ -11,24 +11,12 @@ func (c *Code) XSet(storage, path string, value nbt.Value) interfaces.IRCode {
 	return c.addInst(Set, storage, path, value.ToString())
 }
 
-func (c *Code) IXSet(storage, path string, value nbt.Value) interfaces.Instruction {
-	return c.makeInst(Set, storage, path, value.ToString())
-}
-
 func (c *Code) Set(path string, value nbt.Value) interfaces.IRCode {
 	return c.XSet(c.storage, path, value)
 }
 
-func (c *Code) ISet(path string, value nbt.Value) interfaces.Instruction {
-	return c.IXSet(c.storage, path, value)
-}
-
 func (c *Code) SetVar(name string, value nbt.Value) interfaces.IRCode {
 	return c.Set(c.varPath(name), value)
-}
-
-func (c *Code) ISetVar(name string, value nbt.Value) interfaces.Instruction {
-	return c.ISet(c.varPath(name), value)
 }
 
 func (c *Code) SetArg(funcName, argName string, value nbt.Value) interfaces.IRCode {
@@ -99,10 +87,6 @@ func (c *Code) Ret() interfaces.IRCode {
 	return c.addInst(Ret)
 }
 
-func (c *Code) IRet() interfaces.Instruction {
-	return c.makeInst(Ret)
-}
-
 func (c *Code) Size(source, res string) interfaces.IRCode {
 	return c.addInst(Size, c.varPath(source), c.varPath(res))
 }
@@ -121,15 +105,13 @@ func (c *Code) AppendCopy(listPath, valuePath string) interfaces.IRCode {
 
 func (c *Code) MakeIndex(valuePath, res string) interfaces.IRCode {
 	c.CopyArg(valuePath, "internal/path/make_index", "index")
-	c.CopyArg(res, "internal/path/make_index", "res")
+	c.SetArg("internal/path/make_index", "res", nbt.NewString(c.varPath(res)))
 	c.SetArg("internal/path/make_index", "storage", nbt.NewString(c.storage))
 	c.Call("mcb:internal/path/make_index")
 	return c
 }
 
 func (c *Code) IntCompare(regRa, regRb string, operator interfaces.TokenType, res string) interfaces.IRCode {
-	c.Load(regRa, regRa)
-	c.Load(regRb, regRb)
 	c.SetVar(res, nbt.NewInt(0))
 	c.addInst(Cmp, regRa, utils.CmpOperator(operator), regRb, c.varPath(res))
 	return c

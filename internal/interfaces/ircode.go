@@ -94,6 +94,12 @@ type IRCode interface {
 
 	StructGet(structPath, field, dataPath string) IRCode
 	StructSet(dataPath, field, structPath string) IRCode
+
+	XTrace(name, storage, path string) IRCode
+	Trace(name, path string) IRCode
+	TraceVar(name, varName string) IRCode
+	TraceArg(name, funcName, argName string) IRCode
+	TraceScore(name, score string) IRCode
 }
 
 type Function interface {

@@ -3,6 +3,7 @@ package ir
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/paths"
 	log "github.com/sirupsen/logrus"
 	"path"
@@ -29,6 +30,7 @@ const (
 	Call                                  = "call"       // `call <name>
 	Branch                                = "branch"     // `branch <name>`
 	Raw                                   = "raw"        // `raw <command>`
+	Trace                                 = "trace"      // `trace <storage> <path>`
 )
 
 type Instruction struct {
@@ -78,6 +80,35 @@ func (i Instruction) ToMCCommand() string {
 		return fmt.Sprintf("function mcb:%s {function:'%s', function_namespace:'%s', args:'%s', namespace:'%s'}\n", path.Join(paths.Internal, string(i.Type)), i.Args[0], i.Args[1], i.Args[2], i.DPNamespace)
 	case Raw:
 		return fmt.Sprintf("%s\n", i.Args[0])
+	case Trace:
+		switch i.Args[0] {
+		case TraceStorage:
+
+			return fmt.Sprintf(
+				"tellraw @a[tag=mcblog] ['Trace (%s %s): ', %s]\n",
+				i.Args[1],
+				i.Args[3],
+				nbt.NewCompound().
+					Set("type", nbt.NewAny("nbt")).
+					Set("source", nbt.NewAny("storage")).
+					Set("storage", nbt.NewString(i.Args[2])).
+					Set("nbt", nbt.NewString(i.Args[3])).
+					ToString(),
+			)
+		case TraceScore:
+			return fmt.Sprintf(
+				"tellraw @a[tag=mcblog] ['Trace (%s %s): ', %s]\n",
+				i.Args[1],
+				i.Args[2],
+				nbt.NewCompound().
+					Set("type", nbt.NewAny("score")).
+					Set("score", nbt.NewCompound().
+						Set("name", nbt.NewString(i.Args[2])).
+						Set("objective", nbt.NewString(i.DPNamespace)),
+					).
+					ToString(),
+			)
+		}
 	case Func:
 		// This is not a valid command, but a placeholder for the function definition
 	default:
