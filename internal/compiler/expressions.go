@@ -120,7 +120,7 @@ func (c *Compiler) VisitVariable(v expressions.VariableExpr) interfaces.IRCode {
 
 func (c *Compiler) VisitFieldAccess(v expressions.FieldAccessExpr) interfaces.IRCode {
 	cmd := c.n()
-	v.Source.Accept(c)
+	cmd.Extend(v.Source.Accept(c))
 	cmd.CopyVar(RX, RA)
 	cmd.StructGet(RA, v.Field.Lexeme, RX)
 	return cmd
@@ -129,7 +129,7 @@ func (c *Compiler) VisitFieldAccess(v expressions.FieldAccessExpr) interfaces.IR
 func (c *Compiler) VisitFunctionCall(f expressions.FunctionCallExpr) interfaces.IRCode {
 	cmd := c.n()
 	for j, arg := range f.Arguments {
-		arg.Accept(c)
+		cmd.Extend(arg.Accept(c))
 		argName := c.functionDefinitions[f.Name.Lexeme].Args[j].Name
 		cmd.CopyArg(RX, f.Name.Lexeme, argName)
 	}
@@ -233,7 +233,7 @@ func (c *Compiler) VisitList(s expressions.ListExpr) interfaces.IRCode {
 	regList := c.makeReg(RX)
 	cmd.SetVar(regList, nbt.NewList())
 	for _, elem := range s.Elements {
-		elem.Accept(c)
+		cmd.Extend(elem.Accept(c))
 		cmd.Append(regList, RX)
 	}
 	cmd.CopyVar(RX, regList)
@@ -246,7 +246,7 @@ func (c *Compiler) VisitStruct(s expressions.StructExpr) interfaces.IRCode {
 	cmd.SetVar(regStruct, s.StructType.ToNBT())
 	fieldNames := s.StructType.GetFieldNames()
 	for j, args := range s.Args {
-		args.Accept(c)
+		cmd.Extend(args.Accept(c))
 		cmd.StructSet(c.varPath(RX), fieldNames[j], regStruct)
 	}
 	cmd.CopyVar(regStruct, RX)
