@@ -1,119 +1,122 @@
 package ir
 
-import log "github.com/sirupsen/logrus"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	log "github.com/sirupsen/logrus"
+)
 
-func (c *Compiler) intOperation(x, y, to, operator string) (cmd string) {
-	cmd += c.Load(x, RA)
-	cmd += c.Load(y, RX)
-	cmd += c.MathOp(operator)
-	cmd += c.Store(RX, c.varPath(to))
-	return
+func (c *Code) intOperation(x, y, to, operator string) interfaces.IRCode {
+	c.Load(x, RA)
+	c.Load(y, RX)
+	c.MathOp(operator)
+	c.Store(RX, c.varPath(to))
+	return c
 }
 
-func (c *Compiler) callGM1(x, to string) string {
+func (c *Code) callGM1(x, to string) interfaces.IRCode {
 	panic("not implemented")
 }
 
-func (c *Compiler) callGM2(x, y, to string) string {
+func (c *Code) callGM2(x, y, to string) interfaces.IRCode {
 	panic("not implemented")
 }
 
-func (c *Compiler) IntAdd(x, y, to string) string {
+func (c *Code) IntAdd(x, y, to string) interfaces.IRCode {
 	return c.intOperation(x, y, to, "+=")
 }
 
-func (c *Compiler) IntSub(x, y, to string) string {
+func (c *Code) IntSub(x, y, to string) interfaces.IRCode {
 	return c.intOperation(x, y, to, "-=")
 }
 
-func (c *Compiler) IntMul(x, y, to string) string {
+func (c *Code) IntMul(x, y, to string) interfaces.IRCode {
 	return c.intOperation(x, y, to, "*=")
 }
 
-func (c *Compiler) IntDiv(x, y, to string) string {
+func (c *Code) IntDiv(x, y, to string) interfaces.IRCode {
 	return c.intOperation(x, y, to, "/=")
 }
 
-func (c *Compiler) IntMod(x, y, to string) string {
+func (c *Code) IntMod(x, y, to string) interfaces.IRCode {
 	return c.intOperation(x, y, to, "%=")
 }
 
-func (c *Compiler) DoubleAdd(x, y, to string) string {
+func (c *Code) DoubleAdd(x, y, to string) interfaces.IRCode {
 	log.Warnln("DoubleAdd has not been implemented yet")
-	return ""
+	return c
 }
 
-func (c *Compiler) DoubleSub(x, y, to string) string {
+func (c *Code) DoubleSub(x, y, to string) interfaces.IRCode {
 	log.Warnln("DoubleSub has not been implemented yet")
-	return ""
+	return c
 }
 
-func (c *Compiler) DoubleMul(x, y, to string) string {
+func (c *Code) DoubleMul(x, y, to string) interfaces.IRCode {
 	log.Warnln("DoubleMul has not been implemented yet")
-	return ""
+	return c
 }
 
-func (c *Compiler) DoubleDiv(x, y, to string) string {
+func (c *Code) DoubleDiv(x, y, to string) interfaces.IRCode {
 	log.Warnln("DoubleDiv has not been implemented yet")
-	return ""
+	return c
 }
 
-func (c *Compiler) DoubleMod(x, y, to string) string {
+func (c *Code) DoubleMod(x, y, to string) interfaces.IRCode {
 	log.Warnln("DoubleMod has not been implemented yet")
-	return ""
+	return c
 }
 
-func (c *Compiler) DoubleSqrt(x, to string) string {
+func (c *Code) DoubleSqrt(x, to string) interfaces.IRCode {
 	log.Warnln("DoubleSqrt has not been implemented yet")
-	return ""
+	return c
 }
 
-func (c *Compiler) DoubleCos(x, to string) string {
+func (c *Code) DoubleCos(x, to string) interfaces.IRCode {
 	log.Warnln("DoubleCos has not been implemented yet")
-	return ""
+	return c
 }
 
-func (c *Compiler) DoubleSin(x, to string) string {
+func (c *Code) DoubleSin(x, to string) interfaces.IRCode {
 	log.Warnln("DoubleSin has not been implemented yet")
-	return ""
+	return c
 }
 
-func (c *Compiler) DoubleTan(x, to string) string {
+func (c *Code) DoubleTan(x, to string) interfaces.IRCode {
 	log.Warnln("DoubleTan has not been implemented yet")
-	return ""
+	return c
 }
 
-func (c *Compiler) DoubleAcos(x, to string) string {
+func (c *Code) DoubleAcos(x, to string) interfaces.IRCode {
 	log.Warnln("DoubleAcos has not been implemented yet")
-	return ""
+	return c
 }
 
-func (c *Compiler) DoubleAsin(x, to string) string {
+func (c *Code) DoubleAsin(x, to string) interfaces.IRCode {
 	log.Warnln("DoubleAsin has not been implemented yet")
-	return ""
+	return c
 }
 
-func (c *Compiler) DoubleAtan(x, to string) string {
+func (c *Code) DoubleAtan(x, to string) interfaces.IRCode {
 	log.Warnln("DoubleAtan has not been implemented yet")
-	return ""
+	return c
 }
 
-func (c *Compiler) DoubleAtan2(x, y, to string) string {
+func (c *Code) DoubleAtan2(x, y, to string) interfaces.IRCode {
 	log.Warnln("DoubleAtan2 has not been implemented yet")
-	return ""
+	return c
 }
 
-func (c *Compiler) DoubleFloor(x, to string) string {
+func (c *Code) DoubleFloor(x, to string) interfaces.IRCode {
 	log.Warnln("DoubleFloor has not been implemented yet")
-	return ""
+	return c
 }
 
-func (c *Compiler) DoubleCeil(x, to string) string {
+func (c *Code) DoubleCeil(x, to string) interfaces.IRCode {
 	log.Warnln("DoubleCeil has not been implemented yet")
-	return ""
+	return c
 }
 
-func (c *Compiler) DoubleRound(x, to string) string {
+func (c *Code) DoubleRound(x, to string) interfaces.IRCode {
 	log.Warnln("DoubleRound has not been implemented yet")
-	return ""
+	return c
 }

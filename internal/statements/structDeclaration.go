@@ -1,6 +1,7 @@
 package statements
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
@@ -12,7 +13,7 @@ type StructDeclarationStmt struct {
 	StructType types.StructTypeStruct
 }
 
-func (s StructDeclarationStmt) Accept(visitor StmtVisitor) string {
+func (s StructDeclarationStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 	return visitor.VisitStructDeclaration(s)
 }
 

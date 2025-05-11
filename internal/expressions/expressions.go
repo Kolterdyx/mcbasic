@@ -1,6 +1,7 @@
 package expressions
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
@@ -21,21 +22,21 @@ const (
 )
 
 type ExprVisitor interface {
-	VisitBinary(b BinaryExpr) (cmd string)
-	VisitGrouping(g GroupingExpr) (cmd string)
-	VisitLiteral(l LiteralExpr) (cmd string)
-	VisitUnary(u UnaryExpr) (cmd string)
-	VisitVariable(v VariableExpr) (cmd string)
-	VisitFieldAccess(v FieldAccessExpr) (cmd string)
-	VisitFunctionCall(f FunctionCallExpr) (cmd string)
-	VisitLogical(l LogicalExpr) (cmd string)
-	VisitSlice(s SliceExpr) (cmd string)
-	VisitList(s ListExpr) (cmd string)
-	VisitStruct(s StructExpr) (cmd string)
+	VisitBinary(b BinaryExpr) interfaces.IRCode
+	VisitGrouping(g GroupingExpr) interfaces.IRCode
+	VisitLiteral(l LiteralExpr) interfaces.IRCode
+	VisitUnary(u UnaryExpr) interfaces.IRCode
+	VisitVariable(v VariableExpr) interfaces.IRCode
+	VisitFieldAccess(v FieldAccessExpr) interfaces.IRCode
+	VisitFunctionCall(f FunctionCallExpr) interfaces.IRCode
+	VisitLogical(l LogicalExpr) interfaces.IRCode
+	VisitSlice(s SliceExpr) interfaces.IRCode
+	VisitList(s ListExpr) interfaces.IRCode
+	VisitStruct(s StructExpr) interfaces.IRCode
 }
 
 type Expr interface {
-	Accept(v ExprVisitor) (cmd string)
+	Accept(v ExprVisitor) interfaces.IRCode
 	ExprType() ExprType
 	ReturnType() types.ValueType
 }

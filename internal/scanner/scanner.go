@@ -157,11 +157,11 @@ func (s *Scanner) advance() byte {
 	return s.source[s.current-1]
 }
 
-func (s *Scanner) addToken(tokenType tokens.TokenType) {
+func (s *Scanner) addToken(tokenType interfaces.TokenType) {
 	s.addTokenWithLiteral(tokenType, "")
 }
 
-func (s *Scanner) addTokenWithLiteral(tokenType tokens.TokenType, literal string) {
+func (s *Scanner) addTokenWithLiteral(tokenType interfaces.TokenType, literal string) {
 	text := s.source[s.start:s.current]
 	s.tokens = append(s.tokens, tokens.Token{
 		Type:    tokenType,

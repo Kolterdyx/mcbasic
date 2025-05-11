@@ -2,6 +2,7 @@ package statements
 
 import (
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
@@ -19,7 +20,7 @@ type VariableDeclarationStmt struct {
 	Initializer expressions.Expr
 }
 
-func (v VariableDeclarationStmt) Accept(visitor StmtVisitor) string {
+func (v VariableDeclarationStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 	return visitor.VisitVariableDeclaration(v)
 }
 

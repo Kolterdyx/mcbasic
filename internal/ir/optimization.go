@@ -1,13 +1,14 @@
 package ir
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"strings"
 )
 
-type OptFunc func(instrs []Instruction, i int) (matched bool, consumed int, replacement []Instruction)
+type OptFunc func(instrs []interfaces.Instruction, i int) (matched bool, consumed int, replacement []interfaces.Instruction)
 
-func OptimizeFunctionBody(f Function) Function {
-	optimized := make([]Instruction, 0)
+func OptimizeFunctionBody(f interfaces.Function) interfaces.Function {
+	optimized := make([]interfaces.Instruction, 0)
 
 	opts := []OptFunc{
 		optSkipMacroSet,
@@ -17,11 +18,12 @@ func OptimizeFunctionBody(f Function) Function {
 	}
 
 	i := 0
-	for i < len(f.Instructions) {
+	for i < f.GetCode().Len() {
 		applied := false
 
 		for _, opt := range opts {
-			if matched, consumed, repl := opt(f.Instructions, i); matched {
+			instructions := f.GetCode().GetInstructions()
+			if matched, consumed, repl := opt(instructions, i); matched {
 				optimized = append(optimized, repl...)
 				i += consumed
 				applied = true
@@ -30,12 +32,12 @@ func OptimizeFunctionBody(f Function) Function {
 		}
 
 		if !applied {
-			optimized = append(optimized, f.Instructions[i])
+			optimized = append(optimized, f.GetCode().GetInstructions()[i])
 			i++
 		}
 	}
 
-	f.Instructions = optimized
+	f.GetCode().SetInstructions(optimized)
 	return f
 }
 
@@ -43,12 +45,12 @@ func isMacroPath(path string) bool {
 	return strings.Contains(path, "$(")
 }
 
-func isMacroSetPattern(setInst Instruction) bool {
-	if setInst.Type != Set || len(setInst.Args) != 3 {
+func isMacroSetPattern(setInst interfaces.Instruction) bool {
+	if setInst.GetType() != Set || len(setInst.GetArgs()) != 3 {
 		return false
 	}
-	path := setInst.Args[1]
-	val := setInst.Args[2]
+	path := setInst.GetArgs()[1]
+	val := setInst.GetArgs()[2]
 
 	if strings.HasPrefix(path, "vars.") && strings.HasPrefix(val, "$(") && strings.HasSuffix(val, ")") {
 		varName := strings.TrimPrefix(path, "vars.")
@@ -62,37 +64,37 @@ func sameLocation(storageA, pathA, storageB, pathB string) bool {
 	return storageA == storageB && pathA == pathB
 }
 
-func optSkipMacroSet(instrs []Instruction, i int) (bool, int, []Instruction) {
+func optSkipMacroSet(instrs []interfaces.Instruction, i int) (bool, int, []interfaces.Instruction) {
 	curr := instrs[i]
-	if curr.Type == Set && isMacroSetPattern(curr) {
-		return true, 1, []Instruction{curr}
+	if curr.GetType() == Set && isMacroSetPattern(curr) {
+		return true, 1, []interfaces.Instruction{curr}
 	}
 	return false, 0, nil
 }
 
-func optCollapseCopyChain(instrs []Instruction, i int) (bool, int, []Instruction) {
-	if instrs[i].Type != Copy || len(instrs[i].Args) != 4 {
+func optCollapseCopyChain(instrs []interfaces.Instruction, i int) (bool, int, []interfaces.Instruction) {
+	if instrs[i].GetType() != Copy || len(instrs[i].GetArgs()) != 4 {
 		return false, 0, nil
 	}
 
-	srcStorage, srcPath := instrs[i].Args[0], instrs[i].Args[1]
-	curDstStorage, curDstPath := instrs[i].Args[2], instrs[i].Args[3]
+	srcStorage, srcPath := instrs[i].GetArgs()[0], instrs[i].GetArgs()[1]
+	curDstStorage, curDstPath := instrs[i].GetArgs()[2], instrs[i].GetArgs()[3]
 
 	chainEnd := i + 1
 	for chainEnd < len(instrs) {
 		next := instrs[chainEnd]
-		if next.Type != Copy || len(next.Args) != 4 {
+		if next.GetType() != Copy || len(next.GetArgs()) != 4 {
 			break
 		}
-		if !sameLocation(curDstStorage, curDstPath, next.Args[0], next.Args[1]) {
+		if !sameLocation(curDstStorage, curDstPath, next.GetArgs()[0], next.GetArgs()[1]) {
 			break
 		}
-		curDstStorage, curDstPath = next.Args[2], next.Args[3]
+		curDstStorage, curDstPath = next.GetArgs()[2], next.GetArgs()[3]
 		chainEnd++
 	}
 
 	if chainEnd > i+1 {
-		return true, chainEnd - i, []Instruction{{
+		return true, chainEnd - i, []interfaces.Instruction{Instruction{
 			Type: Copy,
 			Args: []string{srcStorage, srcPath, curDstStorage, curDstPath},
 		}}
@@ -100,26 +102,26 @@ func optCollapseCopyChain(instrs []Instruction, i int) (bool, int, []Instruction
 	return false, 0, nil
 }
 
-func optSetCopyToSet(instrs []Instruction, i int) (bool, int, []Instruction) {
+func optSetCopyToSet(instrs []interfaces.Instruction, i int) (bool, int, []interfaces.Instruction) {
 	if i+1 >= len(instrs) {
 		return false, 0, nil
 	}
 
 	curr, next := instrs[i], instrs[i+1]
-	if curr.Type == Set && len(curr.Args) == 3 &&
-		next.Type == Copy && len(next.Args) == 4 &&
-		sameLocation(curr.Args[0], curr.Args[1], next.Args[0], next.Args[1]) {
+	if curr.GetType() == Set && len(curr.GetArgs()) == 3 &&
+		next.GetType() == Copy && len(next.GetArgs()) == 4 &&
+		sameLocation(curr.GetArgs()[0], curr.GetArgs()[1], next.GetArgs()[0], next.GetArgs()[1]) {
 
-		return true, 2, []Instruction{{
+		return true, 2, []interfaces.Instruction{Instruction{
 			Type: Set,
-			Args: []string{next.Args[2], next.Args[3], curr.Args[2]},
+			Args: []string{next.GetArgs()[2], next.GetArgs()[3], curr.GetArgs()[2]},
 		}}
 	}
 	return false, 0, nil
 }
 
-func optDedupRet(instrs []Instruction, i int) (bool, int, []Instruction) {
-	if instrs[i].Type == Ret && i > 0 && instrs[i-1].Type == Ret {
+func optDedupRet(instrs []interfaces.Instruction, i int) (bool, int, []interfaces.Instruction) {
+	if instrs[i].GetType() == Ret && i > 0 && instrs[i-1].GetType() == Ret {
 		return true, 1, nil // skip duplicate Ret
 	}
 	return false, 0, nil

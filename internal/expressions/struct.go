@@ -13,7 +13,7 @@ type StructExpr struct {
 	StructType types.StructTypeStruct
 }
 
-func (s StructExpr) Accept(v ExprVisitor) string {
+func (s StructExpr) Accept(v ExprVisitor) interfaces.IRCode {
 	return v.VisitStruct(s)
 }
 

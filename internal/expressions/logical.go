@@ -15,7 +15,7 @@ type LogicalExpr struct {
 	Expr
 }
 
-func (l LogicalExpr) Accept(v ExprVisitor) string {
+func (l LogicalExpr) Accept(v ExprVisitor) interfaces.IRCode {
 	return v.VisitLogical(l)
 }
 

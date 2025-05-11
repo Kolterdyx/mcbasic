@@ -12,7 +12,7 @@ type GroupingExpr struct {
 	Expression Expr
 }
 
-func (g GroupingExpr) Accept(v ExprVisitor) string {
+func (g GroupingExpr) Accept(v ExprVisitor) interfaces.IRCode {
 	return v.VisitGrouping(g)
 }
 

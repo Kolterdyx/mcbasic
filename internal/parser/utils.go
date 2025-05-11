@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func (p *Parser) match(tokenTypes ...tokens.TokenType) bool {
+func (p *Parser) match(tokenTypes ...interfaces.TokenType) bool {
 	if p.IsAtEnd() {
 		return false
 	}
@@ -30,7 +30,7 @@ func (p *Parser) IsAtEnd() bool {
 	return p.current >= len(p.Tokens)
 }
 
-func (p *Parser) check(tokenType tokens.TokenType) bool {
+func (p *Parser) check(tokenType interfaces.TokenType) bool {
 	if p.IsAtEnd() {
 		return false
 	}
@@ -64,7 +64,7 @@ func (p *Parser) report(line int, pos int, s string, message string) error {
 	return fmt.Errorf("[Position %d:%d] Exception%s: %s\n", line+1, pos+1, s, message)
 }
 
-func (p *Parser) consume(tokenType tokens.TokenType, message string) (tokens.Token, error) {
+func (p *Parser) consume(tokenType interfaces.TokenType, message string) (tokens.Token, error) {
 	if p.check(tokenType) {
 		return p.advance(), nil
 	}
@@ -72,7 +72,7 @@ func (p *Parser) consume(tokenType tokens.TokenType, message string) (tokens.Tok
 	return tokens.Token{}, p.error(p.peek(), message)
 }
 
-func (p *Parser) consumeAny(message string, tokenTypes ...tokens.TokenType) (tokens.Token, error) {
+func (p *Parser) consumeAny(message string, tokenTypes ...interfaces.TokenType) (tokens.Token, error) {
 	if p.match(tokenTypes...) {
 		return p.previous(), nil
 	}

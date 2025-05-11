@@ -15,7 +15,7 @@ type FunctionCallExpr struct {
 	Type      types.ValueType
 }
 
-func (f FunctionCallExpr) Accept(visitor ExprVisitor) string {
+func (f FunctionCallExpr) Accept(visitor ExprVisitor) interfaces.IRCode {
 	return visitor.VisitFunctionCall(f)
 }
 

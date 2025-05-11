@@ -15,7 +15,7 @@ type FieldAccessExpr struct {
 	Type   types.ValueType
 }
 
-func (v FieldAccessExpr) Accept(visitor ExprVisitor) string {
+func (v FieldAccessExpr) Accept(visitor ExprVisitor) interfaces.IRCode {
 	return visitor.VisitFieldAccess(v)
 }
 

@@ -2,17 +2,13 @@ package ir
 
 import (
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal/statements"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 )
 
-func (c *Compiler) StructDefine(structStmt statements.StructDeclarationStmt) string {
-	return c.Set(c.structPath(structStmt.Name.Lexeme), structStmt.StructType.ToNBT())
-}
-
-func (c *Compiler) StructGet(structPath, field, dataPath string) string {
+func (c *Code) StructGet(structPath, field, dataPath string) interfaces.IRCode {
 	return c.CopyVar(fmt.Sprintf("%s.%s", structPath, field), dataPath)
 }
 
-func (c *Compiler) StructSet(dataPath, field, structPath string) string {
+func (c *Code) StructSet(dataPath, field, structPath string) interfaces.IRCode {
 	return c.CopyVar(dataPath, fmt.Sprintf("%s.%s", structPath, field))
 }

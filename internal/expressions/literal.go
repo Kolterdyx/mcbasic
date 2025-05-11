@@ -13,7 +13,7 @@ type LiteralExpr struct {
 	ValueType types.ValueType
 }
 
-func (l LiteralExpr) Accept(v ExprVisitor) string {
+func (l LiteralExpr) Accept(v ExprVisitor) interfaces.IRCode {
 	return v.VisitLiteral(l)
 }
 

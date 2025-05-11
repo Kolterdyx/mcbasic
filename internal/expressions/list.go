@@ -13,7 +13,7 @@ type ListExpr struct {
 	ValueType types.ValueType
 }
 
-func (l ListExpr) Accept(v ExprVisitor) string {
+func (l ListExpr) Accept(v ExprVisitor) interfaces.IRCode {
 	return v.VisitList(l)
 }
 

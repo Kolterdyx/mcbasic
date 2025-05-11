@@ -1,6 +1,9 @@
 package statements
 
-import "github.com/Kolterdyx/mcbasic/internal/expressions"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/expressions"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+)
 
 type ReturnStmt struct {
 	Stmt
@@ -8,7 +11,7 @@ type ReturnStmt struct {
 	Expression expressions.Expr
 }
 
-func (s ReturnStmt) Accept(v StmtVisitor) string {
+func (s ReturnStmt) Accept(v StmtVisitor) interfaces.IRCode {
 	return v.VisitReturn(s)
 }
 

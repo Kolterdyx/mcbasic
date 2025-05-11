@@ -1,6 +1,9 @@
 package statements
 
-import "github.com/Kolterdyx/mcbasic/internal/expressions"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/expressions"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+)
 
 type IfStmt struct {
 	Stmt
@@ -10,7 +13,7 @@ type IfStmt struct {
 	ElseBranch *BlockStmt
 }
 
-func (i IfStmt) Accept(visitor StmtVisitor) string {
+func (i IfStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 	return visitor.VisitIf(i)
 }
 

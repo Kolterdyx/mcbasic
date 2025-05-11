@@ -14,7 +14,7 @@ type VariableExpr struct {
 	Type types.ValueType
 }
 
-func (v VariableExpr) Accept(visitor ExprVisitor) string {
+func (v VariableExpr) Accept(visitor ExprVisitor) interfaces.IRCode {
 	return visitor.VisitVariable(v)
 }
 

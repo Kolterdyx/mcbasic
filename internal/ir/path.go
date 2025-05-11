@@ -1,43 +1,44 @@
 package ir
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
 )
 
-func (c *Compiler) PathGet(obj, path, to string) (cmd string) {
-	cmd += c.SetArgs(
+func (c *Code) PathGet(obj, path, to string) interfaces.IRCode {
+	c.SetArgs(
 		"internal/path/get",
 		nbt.NewCompound().
 			Set("res", nbt.NewString(c.varPath(to))).
 			Set("storage", nbt.NewString(c.storage)).
 			Set("obj", nbt.NewString(c.varPath(obj))),
 	)
-	cmd += c.CopyArg(path, "internal/path/get", "path")
-	cmd += c.Call("mcb:internal/path/get")
-	return
+	c.CopyArg(path, "internal/path/get", "path")
+	c.Call("mcb:internal/path/get")
+	return c
 }
 
-func (c *Compiler) PathSet(obj, path, valuePath string) (cmd string) {
-	cmd += c.SetArgs(
+func (c *Code) PathSet(obj, path, valuePath string) interfaces.IRCode {
+	c.SetArgs(
 		"internal/path/set",
 		nbt.NewCompound().
 			Set("value_path", nbt.NewString(c.varPath(valuePath))).
 			Set("storage", nbt.NewString(c.storage)).
 			Set("obj", nbt.NewString(c.varPath(obj))),
 	)
-	cmd += c.CopyArg(path, "internal/path/set", "path")
-	cmd += c.Call("mcb:internal/path/set")
-	return
+	c.CopyArg(path, "internal/path/set", "path")
+	c.Call("mcb:internal/path/set")
+	return c
 }
 
-func (c *Compiler) PathDelete(obj, path string) (cmd string) {
-	cmd += c.SetArgs(
+func (c *Code) PathDelete(obj, path string) interfaces.IRCode {
+	c.SetArgs(
 		"internal/path/delete",
 		nbt.NewCompound().
 			Set("storage", nbt.NewString(c.storage)).
 			Set("obj", nbt.NewString(c.varPath(obj))),
 	)
-	cmd += c.CopyArg(path, "internal/path/delete", "path")
-	cmd += c.Call("mcb:internal/path/delete")
-	return
+	c.CopyArg(path, "internal/path/delete", "path")
+	c.Call("mcb:internal/path/delete")
+	return c
 }

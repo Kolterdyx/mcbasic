@@ -15,7 +15,7 @@ type SliceExpr struct {
 	Expr
 }
 
-func (s SliceExpr) Accept(v ExprVisitor) string {
+func (s SliceExpr) Accept(v ExprVisitor) interfaces.IRCode {
 	return v.VisitSlice(s)
 }
 

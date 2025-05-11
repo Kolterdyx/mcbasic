@@ -1,0 +1,178 @@
+package compiler
+
+import (
+	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/ir"
+	"github.com/Kolterdyx/mcbasic/internal/nbt"
+	"github.com/Kolterdyx/mcbasic/internal/types"
+)
+
+func (c *Compiler) compileBuiltins() []interfaces.Function {
+	code := c.math()
+	code = append(code, c.baseFunctions()...)
+	return code
+}
+
+func (c *Compiler) math() []interfaces.Function {
+	return []interfaces.Function{
+		c.registerIRFunction(
+			"math:sqrt",
+			ir.NewCode(c.Namespace, c.storage).
+				DoubleSqrt("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+
+		// Trigonometric functions
+		c.registerIRFunction(
+			"math:cos",
+			ir.NewCode(c.Namespace, c.storage).
+				DoubleCos("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+		c.registerIRFunction(
+			"math:sin",
+			ir.NewCode(c.Namespace, c.storage).
+				DoubleSin("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+		c.registerIRFunction(
+			"math:tan",
+			ir.NewCode(c.Namespace, c.storage).
+				DoubleTan("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+		c.registerIRFunction(
+			"math:acos",
+			ir.NewCode(c.Namespace, c.storage).
+				Copy(
+					fmt.Sprintf("%s.acos.x", ArgPath),
+					fmt.Sprintf("%s.x", VarPath),
+				).
+				DoubleAcos("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+		c.registerIRFunction(
+			"math:asin",
+			ir.NewCode(c.Namespace, c.storage).
+				Copy(
+					fmt.Sprintf("%s.asin.x", ArgPath),
+					fmt.Sprintf("%s.x", VarPath),
+				).
+				DoubleAsin("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+		c.registerIRFunction(
+			"math:atan",
+			ir.NewCode(c.Namespace, c.storage).
+				Copy(
+					fmt.Sprintf("%s.atan.x", ArgPath),
+					fmt.Sprintf("%s.x", VarPath),
+				).
+				DoubleAtan("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+
+		// Rounding functions
+		c.registerIRFunction(
+			"math:floor",
+			ir.NewCode(c.Namespace, c.storage).
+				DoubleFloor("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+		c.registerIRFunction(
+			"math:ceil",
+			ir.NewCode(c.Namespace, c.storage).
+				DoubleCeil("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+		c.registerIRFunction(
+			"math:round",
+			ir.NewCode(c.Namespace, c.storage).
+				DoubleRound("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+	}
+}
+
+func (c *Compiler) baseFunctions() []interfaces.Function {
+
+	funcs := make([]interfaces.Function, 0)
+
+	initSource := ir.NewCode(c.Namespace, c.storage)
+	if c.Config.CleanBeforeInit {
+		initSource.Call("mcb:internal/clean")
+	}
+	initSource.Exec(fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace))
+	if c.Config.Debug {
+		initSource.Exec(fmt.Sprintf("scoreboard objectives setdisplay sidebar %s\n", c.Namespace))
+	}
+	initSource.SetVar(CALL, nbt.NewInt(0))
+	initSource.Load(CALL, CALL)
+	initSource.SetArg("mcb:log", "text", nbt.NewString("MCB pack loaded"))
+	initSource.Call("mcb:log")
+	initSource.Call("internal/struct_definitions")
+	initSource.Call("main")
+	initSource.Ret()
+	funcs = append(
+		funcs,
+		c.registerIRFunction(
+			"mcb:internal/init",
+			initSource,
+			[]interfaces.TypedIdentifier{},
+			types.VoidType,
+		),
+		c.registerIRFunction(
+			"mcb:internal/clean",
+			ir.NewCode(c.Namespace, c.storage).
+				Exec(fmt.Sprintf("scoreboard objectives remove sidebar %s\n", c.Namespace)).
+				Remove(VarPath).
+				Remove(StructPath).
+				Remove(ArgPath).
+				Ret(),
+			[]interfaces.TypedIdentifier{},
+			types.VoidType,
+		),
+	)
+	return funcs
+}

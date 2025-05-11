@@ -1,4 +1,4 @@
-package ir
+package compiler
 
 import (
 	"embed"
@@ -6,16 +6,20 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/ir"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
 	"github.com/Kolterdyx/mcbasic/internal/paths"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/types"
+	"github.com/Kolterdyx/mcbasic/internal/utils"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/fs"
+	"maps"
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 )
 
 /*
@@ -64,7 +68,7 @@ type Compiler struct {
 	registerCounter int
 	storage         string
 
-	compiledFunctions map[string]string
+	compiledFunctions map[string]interfaces.Function
 	branchCounter     int
 
 	functionDefinitions map[string]interfaces.FunctionDefinition
@@ -98,16 +102,16 @@ func NewCompiler(
 
 func (c *Compiler) Compile(program parser.Program) error {
 	c.Structs = program.Structs
-	c.compiledFunctions = make(map[string]string)
+	c.compiledFunctions = make(map[string]interfaces.Function)
 	c.scopes = make(map[string][]interfaces.TypedIdentifier)
 
 	c.createBasePack()
 	c.setFunctionDefinitions(program)
-	ir := c.compileToIR(program)
-	ir = append(ir, c.compileBuiltins()...)
-	ir = c.optimizeIRCode(ir)
-	ir = c.addStructDeclarationFunction(program, ir)
-	c.compileIRtoDatapack(ir)
+	functions := c.compileToIR(program)
+	functions = append(functions, c.compileBuiltins()...)
+	functions = c.optimizeIRCode(functions)
+	functions = c.addStructDeclarationFunction(program, functions)
+	c.compileIRtoDatapack(functions)
 	err := c.writeFunctionTags()
 	if err != nil {
 		return err
@@ -127,48 +131,41 @@ func (c *Compiler) createBasePack() {
 	c.writePackMcMeta()
 }
 
-func (c *Compiler) compileIRtoDatapack(ir []Function) {
+func (c *Compiler) compileIRtoDatapack(ir []interfaces.Function) {
 	for _, f := range ir {
-		err := c.writeMcFunction(f.Name, f.ToMCFunction())
+		err := c.writeMcFunction(f.GetName(), f.ToMCFunction())
 		if err != nil {
 			log.Fatalln(err)
 		}
 	}
 }
 
-func (c *Compiler) addStructDeclarationFunction(program parser.Program, ir []Function) []Function {
-	structDefFuncSource := ""
+func (c *Compiler) addStructDeclarationFunction(program parser.Program, functions []interfaces.Function) []interfaces.Function {
+	structDefFuncSource := ir.NewCode(c.Namespace, c.storage)
 	for _, structDef := range program.Structs {
-		structDefFuncSource += structDef.Accept(c)
+		structDefFuncSource.Extend(structDef.Accept(c))
 	}
-	structDefFuncSource = c.Func("internal/struct_definitions") + structDefFuncSource + c.Ret()
-	structIr := ParseIRCode(structDefFuncSource, c.Namespace, c.storage)
-	if len(structIr) != 1 {
-		log.Fatalln("Struct definition function should have one function")
-	}
-	return append(ir, structIr[0])
+	return append(functions, ir.NewFunction("internal/struct_definitions", structDefFuncSource))
 }
 
-func (c *Compiler) optimizeIRCode(ir []Function) []Function {
+func (c *Compiler) optimizeIRCode(functions []interfaces.Function) []interfaces.Function {
 	optimizationPasses := 3
-	for i, f := range ir {
+	for i, f := range functions {
 		for j := 0; j < optimizationPasses; j++ {
-			ir[i] = OptimizeFunctionBody(f)
+			functions[i] = ir.OptimizeFunctionBody(f)
 		}
 	}
-	return ir
+	return functions
 }
 
-func (c *Compiler) compileToIR(program parser.Program) []Function {
-	ir := make([]Function, 0)
+func (c *Compiler) compileToIR(program parser.Program) []interfaces.Function {
+	functions := make([]interfaces.Function, 0)
 	for _, f := range program.Functions {
-		c.compiledFunctions = make(map[string]string)
-		c.compiledFunctions[f.Name.Lexeme] = f.Accept(c)
-		for _, funcSource := range c.compiledFunctions {
-			ir = append(ir, ParseIRCode(funcSource, c.Namespace, c.storage)...)
-		}
+		c.compiledFunctions = make(map[string]interfaces.Function)
+		f.Accept(c)
+		functions = append(functions, slices.Collect(maps.Values(c.compiledFunctions))...)
 	}
-	return ir
+	return functions
 }
 
 func (c *Compiler) setFunctionDefinitions(program parser.Program) {
@@ -318,7 +315,7 @@ func (c *Compiler) writePackMcMeta() {
 }
 
 func (c *Compiler) writeMcFunction(fullName, source string) error {
-	ns, fn := splitFunctionName(fullName, c.Namespace)
+	ns, fn := utils.SplitFunctionName(fullName, c.Namespace)
 	return os.WriteFile(path.Join(c.getFuncPath(ns), fmt.Sprintf("%s.mcfunction", fn)), []byte(c.macroLineIdentifier(source)), 0644)
 }
 
@@ -358,13 +355,9 @@ func (c *Compiler) writeFunctionTags() error {
 	return nil
 }
 
-func (c *Compiler) createIRFunction(fullName, source string, args []interfaces.TypedIdentifier, returnType types.ValueType) Function {
-	if fullName == "" {
-		c.error(interfaces.SourceLocation{}, "Function fn cannot be empty")
-		return Function{}
-	}
-	ns, fn := splitFunctionName(fullName, c.Namespace)
+func (c *Compiler) registerIRFunction(fullName string, source interfaces.IRCode, args []interfaces.TypedIdentifier, returnType types.ValueType) interfaces.Function {
 
+	ns, fn := utils.SplitFunctionName(fullName, c.Namespace)
 	f := interfaces.FunctionDefinition{
 		Name:       fn,
 		Args:       make([]interfaces.TypedIdentifier, 0),
@@ -374,6 +367,10 @@ func (c *Compiler) createIRFunction(fullName, source string, args []interfaces.T
 		f.Args = append(f.Args, interfaces.TypedIdentifier{Name: parameter.Name, Type: parameter.Type})
 	}
 	f.Args = append(f.Args, interfaces.TypedIdentifier{Name: "__call__", Type: types.IntType})
-	c.functionDefinitions[fullName] = f
-	return ParseIRCode(c.Func(fmt.Sprintf("%s:%s", ns, fn))+source, c.Namespace, c.storage)[0]
+	c.functionDefinitions[c.currentScope] = f
+	return ir.NewFunction(fmt.Sprintf("%s:%s", ns, fn), source)
+}
+
+func (c *Compiler) n() interfaces.IRCode {
+	return ir.NewCode(c.Namespace, c.storage)
 }
