@@ -56,7 +56,7 @@ func (i Instruction) ToMCCommand() string {
 	case Load:
 		return fmt.Sprintf("execute store result score %s %s run data get storage %s %s\n", i.Args[1], i.DPNamespace, i.Storage, i.Args[0])
 	case Store:
-		return fmt.Sprintf("execute store result storage %s %s int 1 run scoreboard players get %s %s\n", i.Storage, i.Args[0], i.Args[1], i.DPNamespace)
+		return fmt.Sprintf("execute store result storage %s %s int 1 run scoreboard players get %s %s\n", i.Storage, i.Args[1], i.Args[0], i.DPNamespace)
 	case Score:
 		return fmt.Sprintf("scoreboard players set %s %s %s\n", i.Args[0], i.DPNamespace, i.Args[1])
 	case Append:

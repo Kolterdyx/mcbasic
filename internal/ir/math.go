@@ -6,8 +6,8 @@ import (
 )
 
 func (c *Code) intOperation(x, y, to, operator string) interfaces.IRCode {
-	c.Load(x, RA)
-	c.Load(y, RX)
+	c.Load(x, RX)
+	c.Load(y, RA)
 	c.MathOp(operator)
 	c.Store(RX, c.varPath(to))
 	return c
