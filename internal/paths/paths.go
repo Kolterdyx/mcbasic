@@ -4,7 +4,7 @@ import "path"
 
 const (
 	Functions = "function"
-	Internal  = "internal"
+	Internal  = "zzz"
 	Branches  = "branches"
 	Data      = "data"
 	Tags      = "tags"

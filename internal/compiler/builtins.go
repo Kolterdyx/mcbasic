@@ -5,7 +5,9 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/ir"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
+	"github.com/Kolterdyx/mcbasic/internal/paths"
 	"github.com/Kolterdyx/mcbasic/internal/types"
+	"path"
 )
 
 func (c *Compiler) compileBuiltins() []interfaces.Function {
@@ -141,7 +143,7 @@ func (c *Compiler) baseFunctions() []interfaces.Function {
 
 	initSource := ir.NewCode(c.Namespace, c.storage)
 	if c.Config.CleanBeforeInit {
-		initSource.Call("mcb:internal/clean")
+		initSource.Call(fmt.Sprintf("mcb:%s", path.Join(paths.Internal, "clean")))
 	}
 	initSource.Raw(fmt.Sprintf("scoreboard objectives add %s dummy", c.Namespace))
 	if c.Config.Debug {
@@ -151,19 +153,19 @@ func (c *Compiler) baseFunctions() []interfaces.Function {
 	initSource.XLoad(CALL, CALL)
 	initSource.SetArg("mcb:log", "text", nbt.NewString("MCB pack loaded"))
 	initSource.Call("mcb:log")
-	initSource.Call("internal/struct_definitions")
+	initSource.Call(path.Join(paths.Internal, "struct_definitions"))
 	initSource.Call("load")
 	initSource.Ret()
 	funcs = append(
 		funcs,
 		c.registerIRFunction(
-			"mcb:internal/init",
+			fmt.Sprintf("mcb:%s", path.Join(paths.Internal, "init")),
 			initSource,
 			[]interfaces.TypedIdentifier{},
 			types.VoidType,
 		),
 		c.registerIRFunction(
-			"mcb:internal/clean",
+			fmt.Sprintf("mcb:%s", path.Join(paths.Internal, "clean")),
 			ir.NewCode(c.Namespace, c.storage).
 				Raw(fmt.Sprintf("scoreboard objectives remove %s", c.Namespace)).
 				Remove(VarPath).

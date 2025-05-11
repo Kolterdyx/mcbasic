@@ -104,10 +104,10 @@ func (c *Code) AppendCopy(listPath, valuePath string) interfaces.IRCode {
 }
 
 func (c *Code) MakeIndex(valuePath, res string) interfaces.IRCode {
-	c.CopyArg(valuePath, "internal/path/make_index", "index")
-	c.SetArg("internal/path/make_index", "res", nbt.NewString(c.varPath(res)))
-	c.SetArg("internal/path/make_index", "storage", nbt.NewString(c.storage))
-	c.Call("mcb:internal/path/make_index")
+	c.CopyArg(valuePath, "zzz/path/make_index", "index")
+	c.SetArg("zzz/path/make_index", "res", nbt.NewString(c.varPath(res)))
+	c.SetArg("zzz/path/make_index", "storage", nbt.NewString(c.storage))
+	c.Call("mcb:zzz/path/make_index")
 	return c
 }
 

@@ -146,7 +146,7 @@ func (c *Compiler) addStructDeclarationFunction(program parser.Program, function
 		structDefFuncSource.Extend(structDef.Accept(c))
 	}
 	structDefFuncSource.Ret()
-	return append(functions, ir.NewFunction("internal/struct_definitions", structDefFuncSource))
+	return append(functions, ir.NewFunction(path.Join(paths.Internal, "struct_definitions"), structDefFuncSource))
 }
 
 func (c *Compiler) optimizeIRCode(functions []interfaces.Function) []interfaces.Function {
@@ -325,7 +325,7 @@ func (c *Compiler) writeFunctionTags() error {
 	loadTag := interfaces.McTag{
 		Values: []string{
 			"gm:zzz/load",
-			"mcb:internal/init",
+			fmt.Sprintf("mcb:%s", path.Join(paths.Internal, "init")),
 		},
 	}
 	tickTag := interfaces.McTag{
