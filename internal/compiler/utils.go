@@ -38,7 +38,7 @@ func (c *Compiler) macroLineIdentifier(source string) string {
 		return ""
 	}
 	for i, line := range lines {
-		if strings.Contains(line, "$(") && !(line[0:1] == "$") {
+		if strings.Contains(line, "$(") && !strings.HasPrefix(line, "$") {
 			lines[i] = "$" + line
 		}
 	}
