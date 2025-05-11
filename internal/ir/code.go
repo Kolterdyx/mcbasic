@@ -39,7 +39,7 @@ func (c *Code) makeInst(instType interfaces.InstructionType, args ...string) int
 func (c *Code) ToString() string {
 	body := ""
 	for _, instr := range c.Instructions {
-		body += instr.ToString()
+		body += instr.ToString() + "\n"
 	}
 	return body
 }

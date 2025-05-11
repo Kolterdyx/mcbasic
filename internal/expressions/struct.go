@@ -24,3 +24,19 @@ func (s StructExpr) ExprType() ExprType {
 func (s StructExpr) ReturnType() types.ValueType {
 	return s.StructType
 }
+
+func (s StructExpr) ToString() string {
+	if len(s.Args) == 0 {
+		return "{}"
+	}
+
+	result := "{"
+	for i, arg := range s.Args {
+		if i > 0 {
+			result += ", "
+		}
+		result += arg.ToString()
+	}
+	result += "}"
+	return result
+}

@@ -20,3 +20,16 @@ func (i IfStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 func (i IfStmt) StmtType() StmtType {
 	return IfStmtType
 }
+
+func (i IfStmt) ToString() string {
+	body := ""
+	for _, stmt := range i.ThenBranch.Statements {
+		body += stmt.ToString() + "\n"
+	}
+	if i.ElseBranch != nil {
+		for _, stmt := range i.ElseBranch.Statements {
+			body += stmt.ToString() + "\n"
+		}
+	}
+	return "if " + i.Condition.ToString() + " {\n" + body + "}"
+}

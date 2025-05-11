@@ -18,3 +18,10 @@ func (s ReturnStmt) Accept(v StmtVisitor) interfaces.IRCode {
 func (s ReturnStmt) StmtType() StmtType {
 	return ReturnStmtType
 }
+
+func (s ReturnStmt) ToString() string {
+	if s.Expression != nil {
+		return "return " + s.Expression.ToString() + ";"
+	}
+	return "return;"
+}

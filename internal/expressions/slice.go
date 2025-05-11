@@ -39,3 +39,19 @@ func getReturnIndexType(valueType types.ValueType) types.ValueType {
 		return nil
 	}
 }
+
+func (s SliceExpr) ToString() string {
+	if s.StartIndex == nil && s.EndIndex == nil {
+		return s.TargetExpr.ToString()
+	}
+
+	result := s.TargetExpr.ToString() + "["
+	if s.StartIndex != nil {
+		result += s.StartIndex.ToString()
+	}
+	if s.EndIndex != nil {
+		result += ":" + s.EndIndex.ToString()
+	}
+	result += "]"
+	return result
+}

@@ -7,7 +7,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
-	"strconv"
 )
 
 func (c *Compiler) VisitBinary(b expressions.BinaryExpr) interfaces.IRCode {
@@ -85,26 +84,7 @@ func (c *Compiler) VisitGrouping(g expressions.GroupingExpr) interfaces.IRCode {
 }
 
 func (c *Compiler) VisitLiteral(l expressions.LiteralExpr) interfaces.IRCode {
-	cmd := c.n()
-	switch l.ReturnType() {
-	case types.StringType:
-		return cmd.SetVar(RX, nbt.NewString(l.Value))
-	case types.IntType:
-		integer, err := strconv.ParseInt(l.Value, 10, 64)
-		if err != nil {
-			c.error(l.SourceLocation, "Invalid integer literal")
-		}
-		return cmd.SetVar(RX, nbt.NewInt(integer))
-	case types.DoubleType:
-		double, err := strconv.ParseFloat(l.Value, 64)
-		if err != nil {
-			c.error(l.SourceLocation, "Invalid double literal")
-		}
-		return cmd.SetVar(RX, nbt.NewDouble(double))
-	default:
-		c.error(l.SourceLocation, "Invalid type in literal expression")
-	}
-	return cmd
+	return c.n().SetVar(RX, l.Value)
 }
 
 func (c *Compiler) VisitUnary(u expressions.UnaryExpr) interfaces.IRCode {
@@ -113,7 +93,7 @@ func (c *Compiler) VisitUnary(u expressions.UnaryExpr) interfaces.IRCode {
 	case types.IntType:
 		switch u.Operator.Type {
 		case tokens.Minus:
-			zero := expressions.LiteralExpr{Value: "0", SourceLocation: u.SourceLocation, ValueType: types.IntType}
+			zero := expressions.LiteralExpr{Value: nbt.NewInt(0), SourceLocation: u.SourceLocation, ValueType: types.IntType}
 			tmp := expressions.BinaryExpr{
 				Left: zero,
 				Operator: tokens.Token{

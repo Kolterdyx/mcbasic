@@ -18,3 +18,7 @@ func (e ExpressionStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 func (e ExpressionStmt) StmtType() StmtType {
 	return ExpressionStmtType
 }
+
+func (e ExpressionStmt) ToString() string {
+	return e.Expression.ToString() + ";"
+}

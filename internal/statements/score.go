@@ -1,6 +1,9 @@
 package statements
 
-import "github.com/Kolterdyx/mcbasic/internal/interfaces"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"strconv"
+)
 
 type ScoreStmt struct {
 	Stmt
@@ -14,4 +17,8 @@ func (s ScoreStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 
 func (s ScoreStmt) StmtType() StmtType {
 	return ScoreStmtType
+}
+
+func (s ScoreStmt) ToString() string {
+	return "score " + s.Target + " = " + strconv.FormatInt(s.Score, 10) + ";"
 }

@@ -33,4 +33,5 @@ type StmtVisitor interface {
 type Stmt interface {
 	Accept(StmtVisitor) interfaces.IRCode
 	StmtType() StmtType
+	ToString() string
 }

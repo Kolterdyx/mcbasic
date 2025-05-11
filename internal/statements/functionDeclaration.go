@@ -32,3 +32,19 @@ func (f FunctionDeclarationStmt) HasArg(arg string) bool {
 	}
 	return false
 }
+
+func (f FunctionDeclarationStmt) ToString() string {
+	body := ""
+	for _, stmt := range f.Body.Statements {
+		body += stmt.ToString() + "\n"
+	}
+	params := ""
+	for _, p := range f.Parameters {
+		params += p.Name + " " + p.Type.ToString() + ", "
+
+	}
+	if len(params) > 0 {
+		params = params[:len(params)-2]
+	}
+	return "function " + f.Name.Lexeme + "(" + params + ") -> " + f.ReturnType.ToString() + "\n" + body
+}

@@ -20,3 +20,15 @@ func (s StructDeclarationStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 func (s StructDeclarationStmt) StmtType() StmtType {
 	return StructDeclarationStmtType
 }
+
+func (s StructDeclarationStmt) ToString() string {
+	body := ""
+	for _, fieldName := range s.StructType.GetFieldNames() {
+		field, _ := s.StructType.GetField(fieldName)
+		body += fieldName + " " + field.ToString() + ";\n"
+	}
+	if len(body) > 0 {
+		body = body[:len(body)-2]
+	}
+	return "struct " + s.Name.Lexeme + " {\n" + body + "\n}"
+}

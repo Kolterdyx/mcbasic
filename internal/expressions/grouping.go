@@ -23,3 +23,7 @@ func (g GroupingExpr) ExprType() ExprType {
 func (g GroupingExpr) ReturnType() types.ValueType {
 	return g.Expression.ReturnType()
 }
+
+func (g GroupingExpr) ToString() string {
+	return "(" + g.Expression.ToString() + ")"
+}

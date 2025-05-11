@@ -26,3 +26,7 @@ func (v FieldAccessExpr) ExprType() ExprType {
 func (v FieldAccessExpr) ReturnType() types.ValueType {
 	return v.Type
 }
+
+func (v FieldAccessExpr) ToString() string {
+	return v.Source.ToString() + "." + v.Field.Lexeme
+}

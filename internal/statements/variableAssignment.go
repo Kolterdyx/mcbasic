@@ -44,3 +44,12 @@ func (v VariableAssignmentStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 func (v VariableAssignmentStmt) StmtType() StmtType {
 	return VariableAssignmentStmtType
 }
+
+func (v VariableAssignmentStmt) ToString() string {
+	body := v.Name.Lexeme
+	for _, accessor := range v.Accessors {
+		body += accessor.ToString()
+	}
+	body += " = " + v.Value.ToString() + ";"
+	return body
+}

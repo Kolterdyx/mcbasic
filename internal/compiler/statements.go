@@ -151,6 +151,7 @@ func (c *Compiler) VisitIf(stmt statements.IfStmt) interfaces.IRCode {
 
 	cmd.SetVar(RETF, nbt.NewInt(0))
 	c.compiledFunctions[thenBranchName] = c.makeBranchFunction(thenBranchName, stmt.ThenBranch)
+	fmt.Println(stmt.ThenBranch.ToString())
 
 	hasElseBranch := stmt.ElseBranch != nil
 	if hasElseBranch {

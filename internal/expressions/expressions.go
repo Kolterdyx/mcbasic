@@ -39,4 +39,5 @@ type Expr interface {
 	Accept(v ExprVisitor) interfaces.IRCode
 	ExprType() ExprType
 	ReturnType() types.ValueType
+	ToString() string
 }

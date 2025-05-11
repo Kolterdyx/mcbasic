@@ -44,3 +44,7 @@ func (b BinaryExpr) ReturnType() types.ValueType {
 	}
 	return b.Left.ReturnType()
 }
+
+func (b BinaryExpr) ToString() string {
+	return "(" + b.Left.ToString() + " " + b.Operator.Lexeme + " " + b.Right.ToString() + ")"
+}

@@ -26,3 +26,7 @@ func (l LogicalExpr) ExprType() ExprType {
 func (l LogicalExpr) ReturnType() types.ValueType {
 	return types.IntType
 }
+
+func (l LogicalExpr) ToString() string {
+	return "(" + l.Left.ToString() + " " + l.Operator.Lexeme + " " + l.Right.ToString() + ")"
+}

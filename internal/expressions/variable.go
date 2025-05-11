@@ -25,3 +25,7 @@ func (v VariableExpr) ExprType() ExprType {
 func (v VariableExpr) ReturnType() types.ValueType {
 	return v.Type
 }
+
+func (v VariableExpr) ToString() string {
+	return v.Name.Lexeme
+}

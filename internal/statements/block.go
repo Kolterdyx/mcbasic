@@ -15,3 +15,11 @@ func (b BlockStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 func (b BlockStmt) StmtType() StmtType {
 	return BlockStmtType
 }
+
+func (b BlockStmt) ToString() string {
+	body := ""
+	for _, stmt := range b.Statements {
+		body += stmt.ToString() + "\n"
+	}
+	return body
+}

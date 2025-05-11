@@ -65,9 +65,9 @@ func (i Instruction) ToMCCommand() string {
 	case Cmp:
 		return fmt.Sprintf("execute if score %s %s %s %s %s run data modify storage %s %s set value 1\n", i.Args[0], i.DPNamespace, i.Args[1], i.Args[2], i.DPNamespace, i.Storage, i.Args[3])
 	case If:
-		return fmt.Sprintf("execute if score %s %s matches 1.. run %s\n", i.Args[0], i.DPNamespace, parseInstruction(i.Args[1:], i.DPNamespace, i.Storage).ToMCCommand())
+		return fmt.Sprintf("execute if score %s %s matches 1.. run %s", i.Args[0], i.DPNamespace, parseInstruction(i.Args[1], i.DPNamespace, i.Storage).ToMCCommand())
 	case Unless:
-		return fmt.Sprintf("execute unless score %s %s matches 1.. run %s\n", i.Args[0], i.DPNamespace, parseInstruction(i.Args[1:], i.DPNamespace, i.Storage).ToMCCommand())
+		return fmt.Sprintf("execute unless score %s %s matches 1.. run %s", i.Args[0], i.DPNamespace, parseInstruction(i.Args[1], i.DPNamespace, i.Storage).ToMCCommand())
 	case Ret:
 		return "return 0\n"
 	case Call, Branch:
@@ -76,6 +76,7 @@ func (i Instruction) ToMCCommand() string {
 		// This is not a valid command, but a placeholder for the function definition
 	default:
 	}
+	log.Debugf("Not implemented: %s", i.ToString())
 	return ""
 }
 

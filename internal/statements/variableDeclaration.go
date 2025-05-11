@@ -27,3 +27,10 @@ func (v VariableDeclarationStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 func (v VariableDeclarationStmt) StmtType() StmtType {
 	return VariableDeclarationStmtType
 }
+
+func (v VariableDeclarationStmt) ToString() string {
+	if v.Initializer != nil {
+		return v.Type.ToString() + " " + v.Name.Lexeme + " = " + v.Initializer.ToString() + ";"
+	}
+	return v.Type.ToString() + " " + v.Name.Lexeme + ";"
+}

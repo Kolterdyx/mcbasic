@@ -50,11 +50,51 @@ func (f *Function) GetCode() interfaces.IRCode {
 	return f.Code
 }
 
-func parseInstruction(parts []string, dpNamespace, storage string) Instruction {
+func parseInstruction(rawInstruction string, dpNamespace, storage string) Instruction {
+	parts := split(rawInstruction)
 	return Instruction{
 		Type:        interfaces.InstructionType(parts[0]),
 		Args:        parts[1:],
 		DPNamespace: dpNamespace,
 		Storage:     storage,
 	}
+}
+
+func split(line string) []string {
+	// Split the line by spaces, but keep quoted strings together and snbt data together
+	parts := make([]string, 0)
+	quote := false
+	quoteChar := ' '
+	brace := 0
+	bracket := 0
+	start := 0
+	for i, r := range line {
+		if r == '"' || r == '\'' {
+			if quote && r == quoteChar {
+				// End of quoted string
+				quote = false
+			} else if !quote && line[i-1] != '\\' {
+				// Start of quoted string
+				quote = true
+				quoteChar = r
+			}
+		} else if r == '{' {
+			brace++
+		} else if r == '}' {
+			brace--
+		} else if r == '[' {
+			bracket++
+		} else if r == ']' {
+			bracket--
+		} else if r == ' ' && !quote && brace == 0 && bracket == 0 {
+			if start < i {
+				parts = append(parts, line[start:i])
+			}
+			start = i + 1
+		}
+	}
+	if start < len(line) {
+		parts = append(parts, line[start:])
+	}
+	return parts
 }

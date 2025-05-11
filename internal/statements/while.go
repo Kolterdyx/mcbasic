@@ -19,3 +19,11 @@ func (w WhileStmt) Accept(v StmtVisitor) interfaces.IRCode {
 func (w WhileStmt) StmtType() StmtType {
 	return WhileStmtType
 }
+
+func (w WhileStmt) ToString() string {
+	body := ""
+	for _, stmt := range w.Body.Statements {
+		body += stmt.ToString() + "\n"
+	}
+	return "while " + w.Condition.ToString() + " {\n" + body + "}"
+}

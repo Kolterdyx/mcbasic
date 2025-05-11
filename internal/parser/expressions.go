@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
+	"strconv"
 )
 
 func (p *Parser) expression() (expressions.Expr, error) {
@@ -408,22 +410,30 @@ func (p *Parser) slice(expr expressions.Expr) (expressions.Expr, error) {
 
 func (p *Parser) primary() (expressions.Expr, error) {
 	if p.match(tokens.False) {
-		return expressions.LiteralExpr{Value: "0", ValueType: types.IntType, SourceLocation: p.location()}, nil
+		return expressions.LiteralExpr{Value: nbt.NewInt(0), ValueType: types.IntType, SourceLocation: p.location()}, nil
 	}
 	if p.match(tokens.True) {
-		return expressions.LiteralExpr{Value: "1", ValueType: types.IntType, SourceLocation: p.location()}, nil
+		return expressions.LiteralExpr{Value: nbt.NewInt(1), ValueType: types.IntType, SourceLocation: p.location()}, nil
 	}
 	if p.match(tokens.Int) {
-		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: types.IntType, SourceLocation: p.location()}, nil
+		i, err := strconv.ParseInt(p.previous().Literal, 10, 64)
+		if err != nil {
+			return nil, p.error(p.previous(), "Invalid integer literal.")
+		}
+		return expressions.LiteralExpr{Value: nbt.NewInt(i), ValueType: types.IntType, SourceLocation: p.location()}, nil
 	}
 	if p.match(tokens.Double) {
-		return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: types.DoubleType, SourceLocation: p.location()}, nil
+		d, err := strconv.ParseFloat(p.previous().Literal, 64)
+		if err != nil {
+			return nil, p.error(p.previous(), "Invalid integer literal.")
+		}
+		return expressions.LiteralExpr{Value: nbt.NewDouble(d), ValueType: types.DoubleType, SourceLocation: p.location()}, nil
 	}
 	if p.match(tokens.String) {
 		if p.match(tokens.BracketOpen) {
-			return p.slice(expressions.LiteralExpr{Value: p.peekCount(-2).Literal, ValueType: types.StringType, SourceLocation: p.location()})
+			return p.slice(expressions.LiteralExpr{Value: nbt.NewString(p.peekCount(-2).Literal), ValueType: types.StringType, SourceLocation: p.location()})
 		} else {
-			return expressions.LiteralExpr{Value: p.previous().Literal, ValueType: types.StringType, SourceLocation: p.location()}, nil
+			return expressions.LiteralExpr{Value: nbt.NewString(p.previous().Literal), ValueType: types.StringType, SourceLocation: p.location()}, nil
 		}
 	}
 	if p.match(tokens.ParenOpen) {
