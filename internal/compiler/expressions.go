@@ -5,8 +5,11 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
+	"github.com/Kolterdyx/mcbasic/internal/paths"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
+	"github.com/Kolterdyx/mcbasic/internal/utils"
+	"path"
 )
 
 func (c *Compiler) VisitBinary(b expressions.BinaryExpr) interfaces.IRCode {
@@ -130,12 +133,18 @@ func (c *Compiler) VisitFieldAccess(v expressions.FieldAccessExpr) interfaces.IR
 
 func (c *Compiler) VisitFunctionCall(f expressions.FunctionCallExpr) interfaces.IRCode {
 	cmd := c.n()
+	ns, fn := utils.SplitFunctionName(f.Name.Lexeme, c.Namespace)
 	for j, arg := range f.Arguments {
 		cmd.Extend(arg.Accept(c))
 		argName := c.functionDefinitions[f.Name.Lexeme].Args[j].Name
-		cmd.CopyArg(RX, f.Name.Lexeme, argName)
+		cmd.CopyArg(RX, fn, argName)
 	}
-	cmd.Call(f.Name.Lexeme)
+	if ns == c.Namespace {
+		funcName := fmt.Sprintf("%s:%s", ns, path.Join(paths.FunctionBranches, fn))
+		cmd.CallWithArgs(funcName, fmt.Sprintf("%s.%s", ArgPath, fn)) // Call wrapped function
+	} else {
+		cmd.Call(fmt.Sprintf("%s:%s", ns, fn))
+	}
 	if f.ReturnType() != types.VoidType {
 		cmd.CopyVar(RET, RX)
 	}

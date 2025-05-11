@@ -27,6 +27,7 @@ type IRCode interface {
 	GetStorage() string
 
 	Call(funcName string) IRCode
+	CallWithArgs(funcName, argPath string) IRCode
 	Branch(branchName, funcName string) IRCode
 	Exec(mcCommand string) IRCode
 	Raw(mcCommand string) IRCode

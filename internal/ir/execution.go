@@ -13,6 +13,11 @@ func (c *Code) Call(funcName string) interfaces.IRCode {
 	return c.addInst(Call, fn, ns, fmt.Sprintf("%s.%s", ArgPath, fn))
 }
 
+func (c *Code) CallWithArgs(funcName, argPath string) interfaces.IRCode {
+	ns, fn := utils.SplitFunctionName(funcName, c.Namespace)
+	return c.addInst(Call, fn, ns, argPath)
+}
+
 func (c *Code) Branch(branchName, funcName string) interfaces.IRCode {
 	bns, bfn := utils.SplitFunctionName(branchName, c.Namespace)
 	_, ofn := utils.SplitFunctionName(funcName, c.Namespace)
