@@ -2,178 +2,177 @@ package compiler
 
 import (
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal/compiler/ops"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/ir"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
-func (c *Compiler) createBuiltinFunctions() {
-	c.math()
-	c.baseFunctions()
+func (c *Compiler) compileBuiltins() []interfaces.Function {
+	code := c.math()
+	code = append(code, c.baseFunctions()...)
+	return code
 }
 
-func (c *Compiler) math() {
-	// Others
-	c.createFunction(
-		"math:sqrt",
-		c.opHandler.DoubleSqrt("x", ops.RET)+
-			c.opHandler.Return(),
-		[]interfaces.FuncArg{
-			{Name: "x", Type: types.DoubleType},
-		},
-		types.DoubleType,
-	)
+func (c *Compiler) math() []interfaces.Function {
+	return []interfaces.Function{
+		c.registerIRFunction(
+			"math:sqrt",
+			ir.NewCode(c.Namespace, c.storage).
+				DoubleSqrt("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
 
-	// Trigonometric functions
-	c.createFunction(
-		"math:cos",
-		c.opHandler.DoubleCos("x", ops.RET)+
-			c.opHandler.Return(),
-		[]interfaces.FuncArg{
-			{Name: "x", Type: types.DoubleType},
-		},
-		types.DoubleType,
-	)
-	c.createFunction(
-		"math:sin",
-		c.opHandler.DoubleSin("x", ops.RET)+
-			c.opHandler.Return(),
-		[]interfaces.FuncArg{
-			{Name: "x", Type: types.DoubleType},
-		},
-		types.DoubleType,
-	)
-	c.createFunction(
-		"math:tan",
-		c.opHandler.DoubleTan("x", ops.RET)+
-			c.opHandler.Return(),
-		[]interfaces.FuncArg{
-			{Name: "x", Type: types.DoubleType},
-		},
-		types.DoubleType,
-	)
-	c.createFunction(
-		"math:acos",
-		c.opHandler.MoveRaw(
-			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf("%s.acos.x", ops.ArgPath),
-			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf(ops.Cs("%s.x"), ops.VarPath),
-		)+
-			c.opHandler.DoubleAcos("x", ops.RET)+
-			c.opHandler.Return(),
-		[]interfaces.FuncArg{
-			{Name: "x", Type: types.DoubleType},
-		},
-		types.DoubleType,
-	)
-	c.createFunction(
-		"math:asin",
-		c.opHandler.MoveRaw(
-			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf("%s.asin.x", ops.ArgPath),
-			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf(ops.Cs("%s.x"), ops.VarPath),
-		)+
-			c.opHandler.DoubleAsin("x", ops.RET)+
-			c.opHandler.Return(),
-		[]interfaces.FuncArg{
-			{Name: "x", Type: types.DoubleType},
-		},
-		types.DoubleType,
-	)
-	c.createFunction(
-		"math:atan",
-		c.opHandler.MoveRaw(
-			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf("%s.atan.x", ops.ArgPath),
-			fmt.Sprintf("%s:data", c.Namespace), fmt.Sprintf(ops.Cs("%s.x"), ops.VarPath),
-		)+
-			c.opHandler.DoubleAtan("x", ops.RET)+
-			c.opHandler.Return(),
-		[]interfaces.FuncArg{
-			{Name: "x", Type: types.DoubleType},
-		},
-		types.DoubleType,
-	)
+		// Trigonometric functions
+		c.registerIRFunction(
+			"math:cos",
+			ir.NewCode(c.Namespace, c.storage).
+				DoubleCos("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+		c.registerIRFunction(
+			"math:sin",
+			ir.NewCode(c.Namespace, c.storage).
+				DoubleSin("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+		c.registerIRFunction(
+			"math:tan",
+			ir.NewCode(c.Namespace, c.storage).
+				DoubleTan("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+		c.registerIRFunction(
+			"math:acos",
+			ir.NewCode(c.Namespace, c.storage).
+				Copy(
+					fmt.Sprintf("%s.acos.x", ArgPath),
+					fmt.Sprintf("%s.x", VarPath),
+				).
+				DoubleAcos("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+		c.registerIRFunction(
+			"math:asin",
+			ir.NewCode(c.Namespace, c.storage).
+				Copy(
+					fmt.Sprintf("%s.asin.x", ArgPath),
+					fmt.Sprintf("%s.x", VarPath),
+				).
+				DoubleAsin("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+		c.registerIRFunction(
+			"math:atan",
+			ir.NewCode(c.Namespace, c.storage).
+				Copy(
+					fmt.Sprintf("%s.atan.x", ArgPath),
+					fmt.Sprintf("%s.x", VarPath),
+				).
+				DoubleAtan("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
 
-	// Rounding functions
-	c.createFunction(
-		"math:floor",
-		c.opHandler.DoubleFloor("x", ops.RET)+
-			c.opHandler.Return(),
-		[]interfaces.FuncArg{
-			{Name: "x", Type: types.DoubleType},
-		},
-		types.DoubleType,
-	)
-	c.createFunction(
-		"math:ceil",
-		c.opHandler.DoubleCeil("x", ops.RET)+
-			c.opHandler.Return(),
-		[]interfaces.FuncArg{
-			{Name: "x", Type: types.DoubleType},
-		},
-		types.DoubleType,
-	)
-	c.createFunction(
-		"math:round",
-		c.opHandler.DoubleRound("x", ops.RET)+
-			c.opHandler.Return(),
-		[]interfaces.FuncArg{
-			{Name: "x", Type: types.DoubleType},
-		},
-		types.DoubleType,
-	)
+		// Rounding functions
+		c.registerIRFunction(
+			"math:floor",
+			ir.NewCode(c.Namespace, c.storage).
+				DoubleFloor("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+		c.registerIRFunction(
+			"math:ceil",
+			ir.NewCode(c.Namespace, c.storage).
+				DoubleCeil("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+		c.registerIRFunction(
+			"math:round",
+			ir.NewCode(c.Namespace, c.storage).
+				DoubleRound("x", RET).
+				Ret(),
+			[]interfaces.TypedIdentifier{
+				{Name: "x", Type: types.DoubleType},
+			},
+			types.DoubleType,
+		),
+	}
 }
 
-func (c *Compiler) baseFunctions() {
+func (c *Compiler) baseFunctions() []interfaces.Function {
 
-	cleanCall := ""
+	funcs := make([]interfaces.Function, 0)
+
+	initSource := ir.NewCode(c.Namespace, c.storage)
 	if c.Config.CleanBeforeInit {
-		cleanCall = c.opHandler.Call("mcb:internal/clean", "")
+		initSource.Call("mcb:internal/clean")
 	}
-
-	initSource := ""
-	initSource += cleanCall
-	initSource += fmt.Sprintf("scoreboard objectives add %s dummy\n", c.Namespace)
+	initSource.Raw(fmt.Sprintf("scoreboard objectives add %s dummy", c.Namespace))
 	if c.Config.Debug {
-		initSource += fmt.Sprintf("scoreboard objectives setdisplay sidebar %s\n", c.Namespace)
+		initSource.Raw(fmt.Sprintf("scoreboard objectives setdisplay sidebar %s", c.Namespace))
 	}
-	initSource += c.opHandler.MakeConst(nbt.NewInt(0), ops.CALL)
-	initSource += c.opHandler.MoveScore(ops.CALL, ops.CALL)
-	initSource += c.opHandler.LoadArgConst("log", "text", nbt.NewString("MCB pack loaded"))
-	initSource += c.opHandler.Call("mcb:log", "")
-	initSource += c.opHandler.Call("internal/struct_definitions", "")
-	initSource += c.opHandler.Call("main", "")
-	initSource += c.opHandler.Return()
-	c.createFunction(
-		"mcb:internal/init",
-		initSource,
-		[]interfaces.FuncArg{},
-		types.VoidType,
+	initSource.Set(fmt.Sprintf("%s.%s", VarPath, CALL), nbt.NewInt(0))
+	initSource.XLoad(CALL, CALL)
+	initSource.SetArg("mcb:log", "text", nbt.NewString("MCB pack loaded"))
+	initSource.Call("mcb:log")
+	initSource.Call("internal/struct_definitions")
+	initSource.Call("load")
+	initSource.Ret()
+	funcs = append(
+		funcs,
+		c.registerIRFunction(
+			"mcb:internal/init",
+			initSource,
+			[]interfaces.TypedIdentifier{},
+			types.VoidType,
+		),
+		c.registerIRFunction(
+			"mcb:internal/clean",
+			ir.NewCode(c.Namespace, c.storage).
+				Raw(fmt.Sprintf("scoreboard objectives remove %s", c.Namespace)).
+				Remove(VarPath).
+				Remove(StructPath).
+				Remove(ArgPath).
+				Ret(),
+			[]interfaces.TypedIdentifier{},
+			types.VoidType,
+		),
 	)
-	c.createFunction(
-		"mcb:internal/clean",
-		fmt.Sprintf("scoreboard objectives remove %s\n", c.Namespace)+
-			fmt.Sprintf("data remove storage %s:data vars\n", c.Namespace)+
-			fmt.Sprintf("data remove storage %s:data structs\n", c.Namespace)+
-			fmt.Sprintf("data remove storage %s:data args\n", c.Namespace)+
-			c.opHandler.Return(),
-		[]interfaces.FuncArg{},
-		types.VoidType,
-	)
-	tickSource := ""
-	tickSource += c.opHandler.MakeConst(nbt.NewInt(0), ops.CALL)
-	tickSource += c.opHandler.MoveScore(ops.CALL, ops.CALL)
-	c.createFunction(
-		"internal/tick",
-		c.opHandler.Call("tick", "")+
-			c.opHandler.ExecCond(fmt.Sprintf("score %s %s matches %d..", ops.CALL, c.Namespace, ops.MaxCallCounter), true, tickSource)+
-			c.opHandler.Return(),
-		[]interfaces.FuncArg{},
-		types.VoidType,
-	)
-	c.createFunction(
-		"tick",
-		c.opHandler.Return(),
-		[]interfaces.FuncArg{},
-		types.VoidType,
-	)
+	return funcs
 }

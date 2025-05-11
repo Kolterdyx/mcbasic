@@ -7,6 +7,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
+	log "github.com/sirupsen/logrus"
 )
 
 func (p *Parser) statement() (statements.Stmt, error) {
@@ -76,6 +77,7 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 			varType = initializer.ReturnType()
 		}
 		if initializer.ReturnType() != varType {
+			log.Warnf("%+v", initializer.ReturnType())
 			return nil, p.error(p.previous(), fmt.Sprintf("Cannot assign %s to %s.", initializer.ReturnType().ToString(), varType.ToString()))
 		}
 	}
@@ -83,7 +85,7 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{
+	p.variables[p.currentScope] = append(p.variables[p.currentScope], interfaces.TypedIdentifier{
 		Name: name.Lexeme,
 		Type: varType,
 	})
@@ -194,7 +196,7 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	parameters := make([]interfaces.FuncArg, 0)
+	parameters := make([]interfaces.TypedIdentifier, 0)
 	if !p.check(tokens.ParenClose) {
 		for {
 			if len(parameters) >= 255 {
@@ -221,7 +223,7 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 			default:
 				return nil, p.error(type_, "Expected parameter type.")
 			}
-			parameters = append(parameters, interfaces.FuncArg{Name: argName.Lexeme, Type: valueType})
+			parameters = append(parameters, interfaces.TypedIdentifier{Name: argName.Lexeme, Type: valueType})
 			if !p.match(tokens.Comma) {
 				break
 			}
@@ -242,11 +244,11 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 		return nil, err
 	}
 	// Add all parameters to the current scope
-	for _, arg := range parameters {
-		p.variables[p.currentScope] = append(p.variables[p.currentScope], statements.VarDef{Name: arg.Name, Type: arg.Type})
-	}
-	p.functions[name.Lexeme] = interfaces.FuncDef{Name: name.Lexeme, Args: parameters, ReturnType: returnType}
 	p.currentScope = name.Lexeme
+	p.functions[p.currentScope] = interfaces.FunctionDefinition{Name: name.Lexeme, Args: parameters, ReturnType: returnType}
+	for _, arg := range parameters {
+		p.variables[p.currentScope] = append(p.variables[p.currentScope], interfaces.TypedIdentifier{Name: arg.Name, Type: arg.Type})
+	}
 	body, err := p.block()
 	if err != nil {
 		return nil, err
@@ -270,6 +272,9 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 			return nil, err
 		}
 		fieldType, err := p.ParseType()
+		if err != nil {
+			return nil, err
+		}
 		switch fieldType.(type) {
 		case types.PrimitiveTypeStruct:
 			switch fieldType {
@@ -366,8 +371,9 @@ func (p *Parser) ifStatement() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	var elseBranch statements.BlockStmt
+	var elseBranch *statements.BlockStmt = nil
 	if p.match(tokens.Else) {
+		elseBranch = &statements.BlockStmt{Statements: make([]statements.Stmt, 0)}
 		if p.match(tokens.If) {
 			branch, err := p.ifStatement()
 			if err != nil {
@@ -375,10 +381,12 @@ func (p *Parser) ifStatement() (statements.Stmt, error) {
 			}
 			elseBranch.Statements = append(elseBranch.Statements, branch)
 		} else {
-			elseBranch, err = p.block()
+			elseB, err := p.block()
 			if err != nil {
 				return nil, err
 			}
+			elseBranch = &elseB
+
 		}
 	}
 	return statements.IfStmt{Condition: condition, ThenBranch: thenBranch, ElseBranch: elseBranch}, nil

@@ -14,7 +14,7 @@ type VariableExpr struct {
 	Type types.ValueType
 }
 
-func (v VariableExpr) Accept(visitor ExprVisitor) string {
+func (v VariableExpr) Accept(visitor ExprVisitor) interfaces.IRCode {
 	return visitor.VisitVariable(v)
 }
 
@@ -24,4 +24,8 @@ func (v VariableExpr) ExprType() ExprType {
 
 func (v VariableExpr) ReturnType() types.ValueType {
 	return v.Type
+}
+
+func (v VariableExpr) ToString() string {
+	return v.Name.Lexeme
 }

@@ -15,7 +15,7 @@ type SliceExpr struct {
 	Expr
 }
 
-func (s SliceExpr) Accept(v ExprVisitor) string {
+func (s SliceExpr) Accept(v ExprVisitor) interfaces.IRCode {
 	return v.VisitSlice(s)
 }
 
@@ -36,6 +36,22 @@ func getReturnIndexType(valueType types.ValueType) types.ValueType {
 		return valueType.(types.ListTypeStruct).ContentType
 	default:
 		log.Errorf("Can't index type: %v", valueType)
-		return types.ErrorType
+		return nil
 	}
+}
+
+func (s SliceExpr) ToString() string {
+	if s.StartIndex == nil && s.EndIndex == nil {
+		return s.TargetExpr.ToString()
+	}
+
+	result := s.TargetExpr.ToString() + "["
+	if s.StartIndex != nil {
+		result += s.StartIndex.ToString()
+	}
+	if s.EndIndex != nil {
+		result += ":" + s.EndIndex.ToString()
+	}
+	result += "]"
+	return result
 }

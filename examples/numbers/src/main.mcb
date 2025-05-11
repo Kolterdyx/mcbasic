@@ -1,6 +1,7 @@
 
-func main() {
-	let x int = 10;
+func load() {
+	let a int = 10;
+	let x double = 2.7;
 	let y double = 3.14;
 
 	# Math!

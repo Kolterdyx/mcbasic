@@ -2,11 +2,9 @@ package tokens
 
 import "github.com/Kolterdyx/mcbasic/internal/interfaces"
 
-type TokenType int
-
 type Token struct {
 	interfaces.SourceLocation
-	Type    TokenType
+	Type    interfaces.TokenType
 	Lexeme  string
 	Literal string
 }
@@ -16,7 +14,7 @@ func (t Token) String() string {
 }
 
 const (
-	Undefined TokenType = iota
+	Undefined interfaces.TokenType = iota
 	Identifier
 	Int
 	Double
@@ -66,102 +64,103 @@ const (
 	Struct
 )
 
-func (t TokenType) String() string {
-	switch t {
-	case Undefined:
-		return "Undefined"
-	case Identifier:
-		return "Identifier"
-	case Int:
-		return "Int"
-	case Double:
-		return "Double"
-	case String:
-		return "String"
-	case Plus:
-		return "Plus"
-	case Minus:
-		return "Minus"
-	case Star:
-		return "Star"
-	case Slash:
-		return "Slash"
-	case Percent:
-		return "Percent"
-	case Less:
-		return "Less"
-	case LessEqual:
-		return "LessEqual"
-	case Greater:
-		return "Greater"
-	case GreaterEqual:
-		return "GreaterEqual"
-	case Equal:
-		return "Eq"
-	case EqualEqual:
-		return "EqualEqual"
-	case Bang:
-		return "Bang"
-	case BangEqual:
-		return "BangEqual"
-	case And:
-		return "And"
-	case Or:
-		return "Or"
-	case If:
-		return "If"
-	case Else:
-		return "Else"
-	case While:
-		return "While"
-	case Return:
-		return "Return"
-	case ParenOpen:
-		return "ParenOpen"
-	case ParenClose:
-		return "ParenClose"
-	case BraceOpen:
-		return "BraceOpen"
-	case BraceClose:
-		return "BraceClose"
-	case BracketOpen:
-		return "BracketOpen"
-	case BracketClose:
-		return "BracketClose"
-	case Dot:
-		return "Dot"
-	case Comma:
-		return "Comma"
-	case Semicolon:
-		return "Semicolon"
-	case Colon:
-		return "Colon"
-	case Eof:
-		return "Eof"
-	case Let:
-		return "Let"
-	case Func:
-		return "Func"
-	case True:
-		return "True"
-	case False:
-		return "False"
-	case IntType:
-		return "IntType"
-	case DoubleType:
-		return "DoubleType"
-	case StringType:
-		return "StringType"
-	case VoidType:
-		return "VoidType"
-	case Struct:
-		return "Struct"
-	default:
-		return "Unknown"
-	}
-}
+//
+//func (t TokenType) String() string {
+//	switch t {
+//	case Undefined:
+//		return "Undefined"
+//	case Identifier:
+//		return "Identifier"
+//	case Int:
+//		return "Int"
+//	case Double:
+//		return "Double"
+//	case String:
+//		return "String"
+//	case Plus:
+//		return "Plus"
+//	case Minus:
+//		return "Minus"
+//	case Star:
+//		return "Star"
+//	case Slash:
+//		return "Slash"
+//	case Percent:
+//		return "Percent"
+//	case Less:
+//		return "Less"
+//	case LessEqual:
+//		return "LessEqual"
+//	case Greater:
+//		return "Greater"
+//	case GreaterEqual:
+//		return "GreaterEqual"
+//	case Equal:
+//		return "Eq"
+//	case EqualEqual:
+//		return "EqualEqual"
+//	case Bang:
+//		return "Bang"
+//	case BangEqual:
+//		return "BangEqual"
+//	case And:
+//		return "And"
+//	case Or:
+//		return "Or"
+//	case If:
+//		return "If"
+//	case Else:
+//		return "Else"
+//	case While:
+//		return "While"
+//	case Return:
+//		return "Return"
+//	case ParenOpen:
+//		return "ParenOpen"
+//	case ParenClose:
+//		return "ParenClose"
+//	case BraceOpen:
+//		return "BraceOpen"
+//	case BraceClose:
+//		return "BraceClose"
+//	case BracketOpen:
+//		return "BracketOpen"
+//	case BracketClose:
+//		return "BracketClose"
+//	case Dot:
+//		return "Dot"
+//	case Comma:
+//		return "Comma"
+//	case Semicolon:
+//		return "Semicolon"
+//	case Colon:
+//		return "Colon"
+//	case Eof:
+//		return "Eof"
+//	case Let:
+//		return "Let"
+//	case Func:
+//		return "Func"
+//	case True:
+//		return "True"
+//	case False:
+//		return "False"
+//	case IntType:
+//		return "IntType"
+//	case DoubleType:
+//		return "DoubleType"
+//	case StringType:
+//		return "StringType"
+//	case VoidType:
+//		return "VoidType"
+//	case Struct:
+//		return "Struct"
+//	default:
+//		return "Unknown"
+//	}
+//}
 
-var Keywords = map[string]TokenType{
+var Keywords = map[string]interfaces.TokenType{
 	"let":    Let,
 	"func":   Func,
 	"if":     If,
@@ -179,7 +178,7 @@ var Keywords = map[string]TokenType{
 	"struct": Struct,
 }
 
-var ValueTypes = []TokenType{
+var ValueTypes = []interfaces.TokenType{
 	IntType,
 	DoubleType,
 	StringType,

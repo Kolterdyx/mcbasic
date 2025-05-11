@@ -13,7 +13,7 @@ type ListExpr struct {
 	ValueType types.ValueType
 }
 
-func (l ListExpr) Accept(v ExprVisitor) string {
+func (l ListExpr) Accept(v ExprVisitor) interfaces.IRCode {
 	return v.VisitList(l)
 }
 
@@ -23,4 +23,20 @@ func (l ListExpr) ExprType() ExprType {
 
 func (l ListExpr) ReturnType() types.ValueType {
 	return l.ValueType
+}
+
+func (l ListExpr) ToString() string {
+	if len(l.Elements) == 0 {
+		return "[]"
+	}
+
+	result := "["
+	for i, element := range l.Elements {
+		if i > 0 {
+			result += ", "
+		}
+		result += element.ToString()
+	}
+	result += "]"
+	return result
 }

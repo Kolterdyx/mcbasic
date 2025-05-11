@@ -2,85 +2,124 @@ package compiler
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal/compiler/ops"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
-	"github.com/Kolterdyx/mcbasic/internal/nbt"
+	"github.com/Kolterdyx/mcbasic/internal/ir"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
+	"github.com/Kolterdyx/mcbasic/internal/paths"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
-	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
+	"github.com/Kolterdyx/mcbasic/internal/utils"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/fs"
+	"maps"
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
+	"slices"
 )
 
-type TypedIdentifier struct {
-	Name string
-	Type types.ValueType
-}
+/*
+
+IlCompiler is used to convert the AST into a simplified version of the target command, so that
+it can be optimized and then converted to the final command.
+
+*/
+
+const (
+	RX = "$RX"
+	RA = "$RA"
+	RB = "$RB"
+
+	RET  = "$RET"  // Function return value
+	RETF = "$RETF" // Early return flag
+	CALL = "$CALL"
+
+	VarPath    = "vars"
+	ArgPath    = "args"
+	StructPath = "structs"
+
+	MaxCallCounter = 65536
+)
 
 type Compiler struct {
-	Config       interfaces.ProjectConfig
-	ProjectRoot  string
-	Namespace    string
-	DatapackRoot string
-	Headers      []interfaces.DatapackHeader
-
-	mcbFuncPath string
-	funcPath    string
-	tagsPath    string
-
-	currentFunction statements.FunctionDeclarationStmt
-	currentScope    string
-
-	functions map[string]interfaces.FuncDef
-
-	scope map[string][]TypedIdentifier
-
-	opHandler ops.Op
-
 	expressions.ExprVisitor
 	statements.StmtVisitor
 
-	regCounters map[string]int
+	Namespace    string
+	Scope        string
+	DatapackRoot string
+	Config       interfaces.ProjectConfig
+	Structs      map[string]statements.StructDeclarationStmt
 
-	LoadFuncName string
-	TickFuncName string
-	libs         embed.FS
+	RX   string
+	RA   string
+	RB   string
+	RET  string
+	CALL string
+
+	VarPath    string
+	ArgPath    string
+	StructPath string
+
+	registerCounter int
+	storage         string
+
+	compiledFunctions map[string]interfaces.Function
+	branchCounter     int
+
+	functionDefinitions map[string]interfaces.FunctionDefinition
+	scopes              map[string][]interfaces.TypedIdentifier
+	currentScope        string
+
+	libs    embed.FS
+	headers []interfaces.DatapackHeader
+
+	funcPath string
 }
 
 func NewCompiler(
 	config interfaces.ProjectConfig,
-	projectRoot string,
 	headers []interfaces.DatapackHeader,
 	libs embed.FS,
 ) *Compiler {
 	c := &Compiler{
-		ProjectRoot:  projectRoot,
-		Headers:      headers,
+		storage:      fmt.Sprintf("%s:data", config.Project.Namespace),
 		Config:       config,
-		LoadFuncName: path.Join(config.Project.Namespace, "init"),
-		TickFuncName: path.Join(config.Project.Namespace, "tick"),
+		DatapackRoot: config.OutputDir,
+		Namespace:    config.Project.Namespace,
+		headers:      headers,
 		libs:         libs,
 	}
-	c.Namespace = config.Project.Namespace
-	c.opHandler = ops.Op{
-		Namespace: c.Namespace,
-	}
-	c.functions = make(map[string]interfaces.FuncDef)
-	c.scope = make(map[string][]TypedIdentifier)
-	c.regCounters = make(map[string]int)
 
+	c.Namespace = c.Config.Project.Namespace
+	c.DatapackRoot, _ = filepath.Abs(path.Join(c.Config.OutputDir, c.Config.Project.Name))
 	return c
 }
 
-func (c *Compiler) Compile(program parser.Program) {
+func (c *Compiler) Compile(program parser.Program) error {
+	c.Structs = program.Structs
+	c.compiledFunctions = make(map[string]interfaces.Function)
+	c.scopes = make(map[string][]interfaces.TypedIdentifier)
+
+	c.createBasePack()
+	c.setFunctionDefinitions(program)
+	functions := c.compileToIR(program)
+	functions = append(functions, c.compileBuiltins()...)
+	functions = c.addStructDeclarationFunction(program, functions)
+	functions = c.optimizeIRCode(functions)
+	c.compileIRtoDatapack(functions)
+	err := c.writeFunctionTags()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Compiler) createBasePack() {
 	err := c.createDirectoryTree()
 	if err != nil {
 		log.Fatalln(err)
@@ -89,228 +128,67 @@ func (c *Compiler) Compile(program parser.Program) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	c.createPackMeta()
+	c.writePackMcMeta()
+}
 
-	c.functions = parser.GetHeaderFuncDefs(c.Headers)
-	c.opHandler.Structs = program.Structs
+func (c *Compiler) compileIRtoDatapack(ir []interfaces.Function) {
+	for _, f := range ir {
+		err := c.writeMcFunction(f.GetName(), f.ToMCFunction())
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+}
 
+func (c *Compiler) addStructDeclarationFunction(program parser.Program, functions []interfaces.Function) []interfaces.Function {
+	structDefFuncSource := ir.NewCode(c.Namespace, c.storage)
+	for _, structDef := range program.Structs {
+		structDefFuncSource.Extend(structDef.Accept(c))
+	}
+	structDefFuncSource.Ret()
+	return append(functions, ir.NewFunction("internal/struct_definitions", structDefFuncSource))
+}
+
+func (c *Compiler) optimizeIRCode(functions []interfaces.Function) []interfaces.Function {
+	optimizationPasses := 3
+	for i, f := range functions {
+		for j := 0; j < optimizationPasses; j++ {
+			functions[i] = ir.OptimizeFunctionBody(f)
+		}
+	}
+	return functions
+}
+
+func (c *Compiler) compileToIR(program parser.Program) []interfaces.Function {
+	functions := make([]interfaces.Function, 0)
+	for _, f := range program.Functions {
+		c.compiledFunctions = make(map[string]interfaces.Function)
+		f.Accept(c)
+		functions = append(functions, slices.Collect(maps.Values(c.compiledFunctions))...)
+	}
+	return functions
+}
+
+func (c *Compiler) setFunctionDefinitions(program parser.Program) {
+	c.functionDefinitions = parser.GetHeaderFuncDefs(c.headers)
 	for _, function := range program.Functions {
-		f := interfaces.FuncDef{
+		f := interfaces.FunctionDefinition{
 			Name:       function.Name.Lexeme,
-			Args:       make([]interfaces.FuncArg, 0),
+			Args:       make([]interfaces.TypedIdentifier, 0),
 			ReturnType: function.ReturnType,
 		}
 		for _, parameter := range function.Parameters {
-			f.Args = append(f.Args, interfaces.FuncArg{
+			f.Args = append(f.Args, interfaces.TypedIdentifier{
 				Name: parameter.Name,
 				Type: parameter.Type,
 			})
 		}
-		f.Args = append(f.Args, interfaces.FuncArg{
+		f.Args = append(f.Args, interfaces.TypedIdentifier{
 			Name: "__call__",
 			Type: types.IntType,
 		})
-		c.functions[function.Name.Lexeme] = f
+		c.functionDefinitions[function.Name.Lexeme] = f
 	}
-	structDefFunctionSource := ""
-	for _, structDef := range program.Structs {
-		structDefCmd := structDef.Accept(c)
-		structDefFunctionSource += structDefCmd
-	}
-	structDefFunctionSource += c.opHandler.Return()
-	c.createFunction("internal/struct_definitions", structDefFunctionSource, nil, types.VoidType)
-
-	// Built-in functions are protected by the compiler, so they can't be overwritten
-	c.createFunctionTags()
-	c.createBuiltinFunctions()
-
-	// Traverse the AST to generate the functions
-	for _, f := range program.Functions {
-		f.Accept(c)
-	}
-}
-
-func (c *Compiler) createDirectoryTree() error {
-	c.Namespace = c.Config.Project.Namespace
-	c.DatapackRoot, _ = filepath.Abs(path.Join(c.Config.OutputDir, c.Config.Project.Name))
-	log.Infof("Compiling to %s\n", c.DatapackRoot)
-	c.funcPath = c.getFuncPath(c.Namespace)
-	c.mcbFuncPath = c.getFuncPath("mcb")
-	c.tagsPath = path.Join(c.DatapackRoot, "/data/minecraft/tags")
-	mathPath := path.Join(c.DatapackRoot, "/data/math/function")
-
-	errs := []error{
-		os.MkdirAll(path.Join(c.funcPath, "/internal"), 0755),
-		os.MkdirAll(path.Join(c.mcbFuncPath, "/internal"), 0755),
-		os.MkdirAll(c.tagsPath, 0755),
-		os.MkdirAll(mathPath, 0755),
-	}
-	for _, err := range errs {
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *Compiler) createPackMeta() {
-	packMcmeta := fmt.Sprintf(`{
-	"pack": {
-		"description": "%s",
-		"pack_format": 71
-	},
-	"meta": {
-		"name": "%s",
-		"version": "%s"
-	}
-}`, c.Config.Project.Description, c.Config.Project.Name, c.Config.Project.Version)
-	err := os.WriteFile(c.DatapackRoot+"/pack.mcmeta", []byte(packMcmeta), 0644)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
-
-func (c *Compiler) createFunction(fullName string, source string, args []interfaces.FuncArg, returnType types.ValueType) {
-	if fullName == c.LoadFuncName || fullName == c.TickFuncName {
-		return
-	}
-
-	// If the function name is in the format of "namespace:function", get the namespace from the name
-	if fullName == "" {
-		c.error(interfaces.SourceLocation{}, "Function name cannot be empty")
-		return
-	}
-	namespace := c.Namespace
-	name := fullName
-	if strings.Contains(fullName, ":") {
-		parts := strings.Split(fullName, ":")
-		if len(parts) != 2 {
-			c.error(interfaces.SourceLocation{}, "Invalid function name format")
-			return
-		}
-		name = parts[1]
-		namespace = parts[0]
-	}
-	filename := name + ".mcfunction"
-
-	f := interfaces.FuncDef{
-		Name:       name,
-		Args:       make([]interfaces.FuncArg, 0),
-		ReturnType: returnType,
-	}
-	for _, parameter := range args {
-		f.Args = append(f.Args, interfaces.FuncArg{Name: parameter.Name, Type: parameter.Type})
-	}
-	f.Args = append(f.Args, interfaces.FuncArg{Name: "__call__", Type: types.IntType})
-	c.functions[fullName] = f
-
-	err := os.WriteFile(c.getFuncPath(namespace)+"/"+filename, []byte(c.opHandler.MacroReplace(source)), 0644)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
-
-func (c *Compiler) createFunctionTags() {
-	// load tag
-	loadTag := `{
-	"values": [
-		"%s",
-		"gm:zzz/load"
-	]
-}`
-	tickTag := `{
-	"values": [
-		"%s"
-	]
-}`
-	err := os.MkdirAll(c.tagsPath+"/function", 0755)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	err = os.WriteFile(c.tagsPath+"/function/load.json", []byte(fmt.Sprintf(loadTag, "mcb:internal/init")), 0644)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	err = os.WriteFile(c.tagsPath+"/function/tick.json", []byte(fmt.Sprintf(tickTag, c.Namespace+":internal/tick")), 0644)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
-
-func (c *Compiler) error(location interfaces.SourceLocation, message string) {
-	log.Errorf("[Position %d:%d] Error: %s\n", location.Row+1, location.Col+1, message)
-}
-
-func (c *Compiler) newRegister(regName string) string {
-	c.regCounters[regName]++
-	return regName + fmt.Sprintf("_%d", c.regCounters[regName])
-}
-
-// Searches the current scope for functions and variables, returns the type of the variable or function
-func (c *Compiler) getReturnType(name string) types.ValueType {
-	for _, identifier := range c.scope[c.currentScope] {
-		if identifier.Name == name {
-			return identifier.Type
-		}
-	}
-	return types.VoidType
-}
-
-func (c *Compiler) Compare(expr expressions.BinaryExpr, ra string, rb string, rx string) string {
-	cmd := ""
-	cmd += "### Comparison operation ###\n"
-	switch expr.Operator.Type {
-	case tokens.EqualEqual:
-		if expr.Left.ReturnType() != expr.Right.ReturnType() {
-			// Return false
-			cmd += c.opHandler.MakeConst(nbt.NewInt(0), rx)
-		} else {
-			if expr.Left.ReturnType() == types.IntType {
-				cmd += c.opHandler.EqNumbers(ra, rb, rx)
-			} else if expr.Left.ReturnType() == types.StringType {
-				cmd += c.opHandler.EqStrings(ra, rb, rx)
-			}
-		}
-	case tokens.BangEqual:
-		if expr.Left.ReturnType() != expr.Right.ReturnType() {
-			// Return true
-			cmd += c.opHandler.MakeConst(nbt.NewInt(1), rx)
-		} else {
-			if expr.Left.ReturnType() == types.IntType {
-				cmd += c.opHandler.NeqNumbers(ra, rb, rx)
-			} else if expr.Left.ReturnType() == types.StringType {
-				cmd += c.opHandler.NeqStrings(ra, rb, rx)
-			}
-
-		}
-	case tokens.Greater:
-		if expr.Left.ReturnType() != types.IntType {
-			c.error(expr.SourceLocation, fmt.Sprintf("Invalid type in binary operation: %s", expr.Left.ReturnType().ToString()))
-		}
-		cmd += c.opHandler.GtNumbers(ra, rb, rx)
-	case tokens.GreaterEqual:
-		if expr.Left.ReturnType() != types.IntType {
-			c.error(expr.SourceLocation, fmt.Sprintf("Invalid type in binary operation: %s", expr.Left.ReturnType().ToString()))
-		}
-		cmd += c.opHandler.GteNumbers(ra, rb, rx)
-	case tokens.Less:
-		if expr.Left.ReturnType() != types.IntType {
-			c.error(expr.SourceLocation, fmt.Sprintf("Invalid type in binary operation: %s", expr.Left.ReturnType().ToString()))
-		}
-		cmd += c.opHandler.LtNumbers(ra, rb, rx)
-	case tokens.LessEqual:
-		if expr.Left.ReturnType() != types.IntType {
-			c.error(expr.SourceLocation, fmt.Sprintf("Invalid type in binary operation: %s", expr.Left.ReturnType().ToString()))
-		}
-		cmd += c.opHandler.LteNumbers(ra, rb, rx)
-	default:
-		c.error(expr.SourceLocation, "Unknown comparison operator")
-	}
-	return cmd
-}
-
-func (c *Compiler) getFuncPath(namespace string) string {
-	return path.Join(c.DatapackRoot, "data", namespace, "function")
 }
 
 func (c *Compiler) copyEmbeddedLibs() error {
@@ -331,7 +209,6 @@ func (c *Compiler) copyEmbeddedLibs() error {
 	return err
 }
 
-// copyDirRecursive recursively copies a directory and its contents from source to destination
 func (c *Compiler) copyDirRecursive(srcDir, baseDir, destDir string) error {
 	// Read the files inside the srcDir
 	files, err := c.libs.ReadDir(filepath.Join(baseDir, srcDir))
@@ -340,7 +217,7 @@ func (c *Compiler) copyDirRecursive(srcDir, baseDir, destDir string) error {
 	}
 
 	// Create the corresponding target directory
-	destPath := filepath.Join(destDir, srcDir)
+	destPath := path.Join(destDir, srcDir)
 	err = os.MkdirAll(destPath, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("error creating directory %s: %w", destPath, err)
@@ -366,7 +243,6 @@ func (c *Compiler) copyDirRecursive(srcDir, baseDir, destDir string) error {
 	return nil
 }
 
-// copyFile copies a single file from the source to the destination
 func (c *Compiler) copyFile(srcFile, baseDir, destDir string) error {
 	// Open the source file
 	srcPath := filepath.Join(baseDir, srcFile)
@@ -401,4 +277,100 @@ func (c *Compiler) copyFile(srcFile, baseDir, destDir string) error {
 	}
 
 	return nil
+}
+
+func (c *Compiler) createDirectoryTree() error {
+	log.Infof("Compiling to %s\n", c.DatapackRoot)
+	c.funcPath = c.getFuncPath(c.Namespace)
+
+	errs := []error{
+		os.MkdirAll(path.Join(c.funcPath, paths.Internal), 0755),
+		os.MkdirAll(path.Join(c.funcPath, paths.FunctionBranches), 0755),
+		os.MkdirAll(path.Join(c.DatapackRoot, paths.McbFunctions, paths.Internal), 0755),
+		os.MkdirAll(path.Join(c.DatapackRoot, paths.MinecraftTags), 0755),
+		os.MkdirAll(path.Join(c.DatapackRoot, paths.MathFunctions), 0755),
+	}
+	for _, err := range errs {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *Compiler) writePackMcMeta() {
+	packMcmeta := fmt.Sprintf(`{
+	"pack": {
+		"description": "%s",
+		"pack_format": 71
+	},
+	"meta": {
+		"name": "%s",
+		"version": "%s"
+	}
+}`, c.Config.Project.Description, c.Config.Project.Name, c.Config.Project.Version)
+	err := os.WriteFile(c.DatapackRoot+"/pack.mcmeta", []byte(packMcmeta), 0644)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func (c *Compiler) writeMcFunction(fullName, source string) error {
+	ns, fn := utils.SplitFunctionName(fullName, c.Namespace)
+	return os.WriteFile(path.Join(c.getFuncPath(ns), fmt.Sprintf("%s.mcfunction", fn)), []byte(c.macroLineIdentifier(source)), 0644)
+}
+
+func (c *Compiler) writeFunctionTags() error {
+	// load tag
+	loadTag := interfaces.McTag{
+		Values: []string{
+			"gm:zzz/load",
+			"mcb:internal/init",
+		},
+	}
+	tickTag := interfaces.McTag{
+		Values: []string{
+			fmt.Sprintf("%s:tick", c.Namespace),
+		},
+	}
+
+	var tagBytes []byte
+	var err error
+
+	if err = os.MkdirAll(path.Join(c.DatapackRoot, paths.MinecraftTags, paths.Functions), 0755); err != nil {
+		return err
+	}
+	if tagBytes, err = json.Marshal(loadTag); err != nil {
+		return err
+	}
+	if err = os.WriteFile(path.Join(c.DatapackRoot, paths.MinecraftTags, paths.Functions, "load.json"), tagBytes, 0644); err != nil {
+		return err
+	}
+	if tagBytes, err = json.Marshal(tickTag); err != nil {
+		return err
+	}
+	if err = os.WriteFile(path.Join(c.DatapackRoot, paths.MinecraftTags, paths.Functions, "tick.json"), tagBytes, 0644); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Compiler) registerIRFunction(fullName string, source interfaces.IRCode, args []interfaces.TypedIdentifier, returnType types.ValueType) interfaces.Function {
+
+	ns, fn := utils.SplitFunctionName(fullName, c.Namespace)
+	f := interfaces.FunctionDefinition{
+		Name:       fn,
+		Args:       make([]interfaces.TypedIdentifier, 0),
+		ReturnType: returnType,
+	}
+	for _, parameter := range args {
+		f.Args = append(f.Args, interfaces.TypedIdentifier{Name: parameter.Name, Type: parameter.Type})
+	}
+	f.Args = append(f.Args, interfaces.TypedIdentifier{Name: "__call__", Type: types.IntType})
+	c.functionDefinitions[c.currentScope] = f
+	return ir.NewFunction(fmt.Sprintf("%s:%s", ns, fn), source)
+}
+
+func (c *Compiler) n() interfaces.IRCode {
+	return ir.NewCode(c.Namespace, c.storage)
 }

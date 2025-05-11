@@ -1,6 +1,9 @@
 package statements
 
-import "github.com/Kolterdyx/mcbasic/internal/expressions"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/expressions"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+)
 
 type ExpressionStmt struct {
 	Stmt
@@ -8,10 +11,14 @@ type ExpressionStmt struct {
 	Expression expressions.Expr
 }
 
-func (e ExpressionStmt) Accept(visitor StmtVisitor) string {
+func (e ExpressionStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 	return visitor.VisitExpression(e)
 }
 
 func (e ExpressionStmt) StmtType() StmtType {
 	return ExpressionStmtType
+}
+
+func (e ExpressionStmt) ToString() string {
+	return e.Expression.ToString() + ";"
 }

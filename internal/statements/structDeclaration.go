@@ -1,6 +1,7 @@
 package statements
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
@@ -12,10 +13,22 @@ type StructDeclarationStmt struct {
 	StructType types.StructTypeStruct
 }
 
-func (s StructDeclarationStmt) Accept(visitor StmtVisitor) string {
+func (s StructDeclarationStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 	return visitor.VisitStructDeclaration(s)
 }
 
 func (s StructDeclarationStmt) StmtType() StmtType {
 	return StructDeclarationStmtType
+}
+
+func (s StructDeclarationStmt) ToString() string {
+	body := ""
+	for _, fieldName := range s.StructType.GetFieldNames() {
+		field, _ := s.StructType.GetField(fieldName)
+		body += fieldName + " " + field.ToString() + ";\n"
+	}
+	if len(body) > 0 {
+		body = body[:len(body)-2]
+	}
+	return "struct " + s.Name.Lexeme + " {\n" + body + "\n}"
 }

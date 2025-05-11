@@ -1,6 +1,9 @@
 package statements
 
-import "github.com/Kolterdyx/mcbasic/internal/expressions"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/expressions"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+)
 
 type WhileStmt struct {
 	Stmt
@@ -9,10 +12,18 @@ type WhileStmt struct {
 	Body      BlockStmt
 }
 
-func (w WhileStmt) Accept(v StmtVisitor) string {
+func (w WhileStmt) Accept(v StmtVisitor) interfaces.IRCode {
 	return v.VisitWhile(w)
 }
 
 func (w WhileStmt) StmtType() StmtType {
 	return WhileStmtType
+}
+
+func (w WhileStmt) ToString() string {
+	body := ""
+	for _, stmt := range w.Body.Statements {
+		body += stmt.ToString() + "\n"
+	}
+	return "while " + w.Condition.ToString() + " {\n" + body + "}"
 }

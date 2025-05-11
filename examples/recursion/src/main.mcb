@@ -25,7 +25,7 @@ func print_fizzbuzz(n int, max int) {
 	}
 }
 
-func main() {
+func load() {
     print_fizzbuzz(1, 30);
     mcb:print("10th fib: " + fib(10));
 }

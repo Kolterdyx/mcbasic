@@ -14,7 +14,7 @@ type UnaryExpr struct {
 	Expression Expr
 }
 
-func (u UnaryExpr) Accept(v ExprVisitor) string {
+func (u UnaryExpr) Accept(v ExprVisitor) interfaces.IRCode {
 	return v.VisitUnary(u)
 }
 
@@ -24,4 +24,8 @@ func (u UnaryExpr) ExprType() ExprType {
 
 func (u UnaryExpr) ReturnType() types.ValueType {
 	return types.IntType
+}
+
+func (u UnaryExpr) ToString() string {
+	return "(" + u.Operator.Lexeme + " " + u.Expression.ToString() + ")"
 }

@@ -1,5 +1,7 @@
 package statements
 
+import "github.com/Kolterdyx/mcbasic/internal/interfaces"
+
 type StmtType string
 
 const (
@@ -12,21 +14,26 @@ const (
 	WhileStmtType               StmtType = "While"
 	IfStmtType                  StmtType = "If"
 	ReturnStmtType              StmtType = "Return"
+	ScoreStmtType               StmtType = "Score"
+	SetReturnFlagStmtType       StmtType = "SetReturnFlag"
 )
 
 type StmtVisitor interface {
-	VisitExpression(ExpressionStmt) string
-	VisitVariableDeclaration(VariableDeclarationStmt) string
-	VisitFunctionDeclaration(FunctionDeclarationStmt) string
-	VisitVariableAssignment(VariableAssignmentStmt) string
-	VisitStructDeclaration(StructDeclarationStmt) string
-	VisitBlock(BlockStmt) string
-	VisitWhile(WhileStmt) string
-	VisitIf(IfStmt) string
-	VisitReturn(ReturnStmt) string
+	VisitExpression(ExpressionStmt) interfaces.IRCode
+	VisitVariableDeclaration(VariableDeclarationStmt) interfaces.IRCode
+	VisitFunctionDeclaration(FunctionDeclarationStmt) interfaces.IRCode
+	VisitVariableAssignment(VariableAssignmentStmt) interfaces.IRCode
+	VisitStructDeclaration(StructDeclarationStmt) interfaces.IRCode
+	VisitBlock(BlockStmt) interfaces.IRCode
+	VisitWhile(WhileStmt) interfaces.IRCode
+	VisitIf(IfStmt) interfaces.IRCode
+	VisitReturn(ReturnStmt) interfaces.IRCode
+	VisitScore(ScoreStmt) interfaces.IRCode
+	VisitSetReturnFlag(SetReturnFlagStmt) interfaces.IRCode
 }
 
 type Stmt interface {
-	Accept(StmtVisitor) string
+	Accept(StmtVisitor) interfaces.IRCode
 	StmtType() StmtType
+	ToString() string
 }

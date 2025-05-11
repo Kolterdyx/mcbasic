@@ -15,7 +15,7 @@ type FunctionCallExpr struct {
 	Type      types.ValueType
 }
 
-func (f FunctionCallExpr) Accept(visitor ExprVisitor) string {
+func (f FunctionCallExpr) Accept(visitor ExprVisitor) interfaces.IRCode {
 	return visitor.VisitFunctionCall(f)
 }
 
@@ -25,4 +25,15 @@ func (f FunctionCallExpr) ExprType() ExprType {
 
 func (f FunctionCallExpr) ReturnType() types.ValueType {
 	return f.Type
+}
+
+func (f FunctionCallExpr) ToString() string {
+	args := ""
+	for i, arg := range f.Arguments {
+		if i > 0 {
+			args += ", "
+		}
+		args += arg.ToString()
+	}
+	return f.Name.Lexeme + "(" + args + ")"
 }
