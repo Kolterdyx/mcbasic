@@ -1,6 +1,7 @@
 package statements
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"strconv"
 )
@@ -15,8 +16,8 @@ func (s ScoreStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 	return visitor.VisitScore(s)
 }
 
-func (s ScoreStmt) StmtType() StmtType {
-	return ScoreStmtType
+func (s ScoreStmt) Type() ast.NodeType {
+	return ast.ScoreStatement
 }
 
 func (s ScoreStmt) ToString() string {

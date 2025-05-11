@@ -1,6 +1,7 @@
 package statements
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
@@ -20,8 +21,8 @@ func (f FunctionDeclarationStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 	return visitor.VisitFunctionDeclaration(f)
 }
 
-func (f FunctionDeclarationStmt) StmtType() StmtType {
-	return FunctionDeclarationStmtType
+func (f FunctionDeclarationStmt) Type() ast.NodeType {
+	return ast.FunctionDeclarationStatement
 }
 
 func (f FunctionDeclarationStmt) HasArg(arg string) bool {

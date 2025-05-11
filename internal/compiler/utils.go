@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/ir"
 	"github.com/Kolterdyx/mcbasic/internal/paths"
@@ -55,7 +56,7 @@ func (c *Compiler) makeBranchFunction(branchName string, body statements.BlockSt
 	newBody := statements.BlockStmt{}
 
 	for _, stmt := range body.Statements {
-		if stmt.StmtType() == statements.ReturnStmtType {
+		if stmt.Type() == ast.ReturnStatement {
 			// Insert a statement to set the RETF flag
 			newBody.Statements = append(newBody.Statements, statements.SetReturnFlagStmt{})
 		}

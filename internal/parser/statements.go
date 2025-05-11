@@ -105,7 +105,7 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 	})
 	return statements.VariableDeclarationStmt{
 		Name:        name,
-		Type:        varType,
+		ValueType:   varType,
 		Initializer: initializer,
 	}, nil
 }

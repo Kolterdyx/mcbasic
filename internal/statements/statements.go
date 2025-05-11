@@ -1,22 +1,8 @@
 package statements
 
-import "github.com/Kolterdyx/mcbasic/internal/interfaces"
-
-type StmtType string
-
-const (
-	ExpressionStmtType          StmtType = "Expression"
-	VariableDeclarationStmtType StmtType = "VariableDeclaration"
-	FunctionDeclarationStmtType StmtType = "FunctionDeclaration"
-	StructDeclarationStmtType   StmtType = "StructDeclaration"
-	VariableAssignmentStmtType  StmtType = "VariableAssignment"
-	BlockStmtType               StmtType = "Block"
-	WhileStmtType               StmtType = "While"
-	IfStmtType                  StmtType = "If"
-	ReturnStmtType              StmtType = "Return"
-	ScoreStmtType               StmtType = "Score"
-	SetReturnFlagStmtType       StmtType = "SetReturnFlag"
-	ImportStmtType              StmtType = "Import"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/ast"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 )
 
 type StmtVisitor interface {
@@ -35,7 +21,7 @@ type StmtVisitor interface {
 }
 
 type Stmt interface {
+	ast.Node
 	Accept(StmtVisitor) interfaces.IRCode
-	StmtType() StmtType
 	ToString() string
 }

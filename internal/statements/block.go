@@ -1,6 +1,9 @@
 package statements
 
-import "github.com/Kolterdyx/mcbasic/internal/interfaces"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/ast"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+)
 
 type BlockStmt struct {
 	Stmt
@@ -12,8 +15,8 @@ func (b BlockStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 	return visitor.VisitBlock(b)
 }
 
-func (b BlockStmt) StmtType() StmtType {
-	return BlockStmtType
+func (b BlockStmt) Type() ast.NodeType {
+	return ast.BlockStatement
 }
 
 func (b BlockStmt) ToString() string {

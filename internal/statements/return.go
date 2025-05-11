@@ -1,6 +1,7 @@
 package statements
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 )
@@ -15,8 +16,8 @@ func (s ReturnStmt) Accept(v StmtVisitor) interfaces.IRCode {
 	return v.VisitReturn(s)
 }
 
-func (s ReturnStmt) StmtType() StmtType {
-	return ReturnStmtType
+func (s ReturnStmt) Type() ast.NodeType {
+	return ast.ReturnStatement
 }
 
 func (s ReturnStmt) ToString() string {

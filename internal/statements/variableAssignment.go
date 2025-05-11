@@ -1,6 +1,7 @@
 package statements
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
@@ -41,8 +42,8 @@ func (v VariableAssignmentStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 	return visitor.VisitVariableAssignment(v)
 }
 
-func (v VariableAssignmentStmt) StmtType() StmtType {
-	return VariableAssignmentStmtType
+func (v VariableAssignmentStmt) Type() ast.NodeType {
+	return ast.VariableAssignmentStatement
 }
 
 func (v VariableAssignmentStmt) ToString() string {

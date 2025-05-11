@@ -22,7 +22,7 @@ func (c *Compiler) VisitVariableDeclaration(stmt statements.VariableDeclarationS
 		cmd.Extend(stmt.Initializer.Accept(c))
 		cmd.CopyVar(RX, stmt.Name.Lexeme)
 	} else {
-		cmd = cmd.SetVar(stmt.Name.Lexeme, stmt.Type.ToNBT())
+		cmd = cmd.SetVar(stmt.Name.Lexeme, stmt.ValueType.ToNBT())
 	}
 	return cmd
 }

@@ -1,6 +1,7 @@
 package statements
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
@@ -17,8 +18,8 @@ func (s StructDeclarationStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
 	return visitor.VisitStructDeclaration(s)
 }
 
-func (s StructDeclarationStmt) StmtType() StmtType {
-	return StructDeclarationStmtType
+func (s StructDeclarationStmt) Type() ast.NodeType {
+	return ast.StructDeclarationStatement
 }
 
 func (s StructDeclarationStmt) ToString() string {

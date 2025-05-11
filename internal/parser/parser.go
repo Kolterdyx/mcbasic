@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
@@ -21,10 +22,10 @@ type Parser struct {
 	structs   map[string]statements.StructDeclarationStmt
 }
 
-var allowedTopLevelStatements = []statements.StmtType{
-	statements.FunctionDeclarationStmtType,
-	statements.StructDeclarationStmtType,
-	statements.ImportStmtType,
+var allowedTopLevelStatements = []ast.NodeType{
+	ast.FunctionDeclarationStatement,
+	ast.StructDeclarationStatement,
+	ast.ImportStatement,
 }
 
 func (p *Parser) Parse() (Program, []error) {
@@ -42,17 +43,17 @@ func (p *Parser) Parse() (Program, []error) {
 			p.Errors = append(p.Errors, err)
 			continue
 		}
-		if !slices.Contains(allowedTopLevelStatements, statement.StmtType()) {
-			p.Errors = append(p.Errors, fmt.Errorf("Found forbidden statement at top level: %s\n", statement.StmtType()))
+		if !slices.Contains(allowedTopLevelStatements, statement.Type()) {
+			p.Errors = append(p.Errors, fmt.Errorf("Found forbidden statement at top level: %s\n", statement.Type()))
 			continue
 		}
-		switch statement.StmtType() {
-		case statements.FunctionDeclarationStmtType:
+		switch statement.Type() {
+		case ast.FunctionDeclarationStatement:
 			funcStmt := statement.(statements.FunctionDeclarationStmt)
 			functions[funcStmt.Name] = funcStmt
 			p.functions[funcStmt.Name] = interfaces.FunctionDefinition{Name: funcStmt.Name, ReturnType: funcStmt.ReturnType, Args: funcStmt.Parameters}
 
-		case statements.StructDeclarationStmtType:
+		case ast.StructDeclarationStatement:
 			structStmt := statement.(statements.StructDeclarationStmt)
 			structs[structStmt.Name.Lexeme] = structStmt
 		}

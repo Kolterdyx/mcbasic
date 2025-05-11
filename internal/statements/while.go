@@ -1,6 +1,7 @@
 package statements
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 )
@@ -16,8 +17,8 @@ func (w WhileStmt) Accept(v StmtVisitor) interfaces.IRCode {
 	return v.VisitWhile(w)
 }
 
-func (w WhileStmt) StmtType() StmtType {
-	return WhileStmtType
+func (w WhileStmt) Type() ast.NodeType {
+	return ast.WhileStatement
 }
 
 func (w WhileStmt) ToString() string {
