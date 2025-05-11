@@ -88,12 +88,14 @@ how to generate the pack.mcmeta file.
 Then, create a new file called `main.mcb` with the following content:
 
 ```go # Go is used for syntax highlighting, but the language is not Go
-func main() {
+func load() {
     mcb:print("Hello, world!");
 }
 ```
 
-This is the entry point of your program. The `main` function is called when the datapack is loaded.
+This is the entry point of your program. The `load` function is called when the datapack is loaded.
+
+You can also create a function called `tick` that will be called every tick.
 
 ### Compiling
 
@@ -120,7 +122,7 @@ if you are joining a world, the message may appear before you join the world. Yo
 ## Hello world example
 
 ```go # Go is used for syntax highlighting, but the language is not Go
-func main() {
+func load() {
     mcb:print("Hello, world!");
 }
 ```
