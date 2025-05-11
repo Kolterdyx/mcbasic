@@ -30,5 +30,6 @@ func load() {
 		),
 	]);
 
+	mcb:print(polygon);
 	mcb:print(polygon.edges[1].start.x);
 }
