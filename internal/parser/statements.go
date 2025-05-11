@@ -7,6 +7,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
+	log "github.com/sirupsen/logrus"
 )
 
 func (p *Parser) statement() (statements.Stmt, error) {
@@ -76,6 +77,7 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 			varType = initializer.ReturnType()
 		}
 		if initializer.ReturnType() != varType {
+			log.Warnf("%+v", initializer.ReturnType())
 			return nil, p.error(p.previous(), fmt.Sprintf("Cannot assign %s to %s.", initializer.ReturnType().ToString(), varType.ToString()))
 		}
 	}

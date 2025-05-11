@@ -14,7 +14,7 @@ struct Polygon {
 	edges Line[];
 }
 
-func main() {
+func load() {
 	let point Point = Point(1.0, 1.0, 1.0);
 
 	let line Line = Line(

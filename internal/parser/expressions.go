@@ -99,6 +99,10 @@ func (p *Parser) term() (expressions.Expr, error) {
 			return nil, err
 		}
 		expr = expressions.BinaryExpr{Left: expr, Operator: operator, Right: right, SourceLocation: p.location()}
+		err = expr.Validate()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return expr, nil
@@ -117,6 +121,10 @@ func (p *Parser) factor() (expressions.Expr, error) {
 			return nil, err
 		}
 		expr = expressions.BinaryExpr{Left: expr, Operator: operator, Right: right, SourceLocation: p.location()}
+		err = expr.Validate()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return expr, nil

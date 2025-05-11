@@ -40,4 +40,5 @@ type Expr interface {
 	ExprType() ExprType
 	ReturnType() types.ValueType
 	ToString() string
+	Validate() error
 }

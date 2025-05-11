@@ -1,5 +1,5 @@
 
-func main() {
+func load() {
 	let list1 int[] = [1, 2, 3];
 	let list2 int[] = [4, 5, 6];
 	let list3 int[][] = [list1, list2, [7, 8, 9]];
