@@ -5,6 +5,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/utils"
+	"strings"
 )
 
 func (c *Code) Call(funcName string) interfaces.IRCode {
@@ -25,7 +26,7 @@ func (c *Code) IBranch(branchName, funcName string) interfaces.Instruction {
 }
 
 func (c *Code) Exec(mcCommand string) interfaces.IRCode {
-	c.SetArg("mcb:exec", "command", nbt.NewString(mcCommand))
+	c.SetArg("mcb:exec", "command", nbt.NewString(strings.TrimSpace(mcCommand)))
 	c.Call("mcb:exec")
 	return c
 }

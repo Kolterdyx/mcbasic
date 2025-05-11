@@ -65,6 +65,7 @@ type IRCode interface {
 	Remove(path string) IRCode
 	RemoveVar(name string) IRCode
 	RemoveArg(funcName, argName string) IRCode
+	XLoad(path, score string) IRCode
 	Load(path, score string) IRCode
 	Store(score, path string) IRCode
 	Score(target string, score *nbt.Int) IRCode

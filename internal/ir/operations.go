@@ -5,7 +5,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/utils"
-	log "github.com/sirupsen/logrus"
 )
 
 func (c *Code) XSet(storage, path string, value nbt.Value) interfaces.IRCode {
@@ -76,8 +75,12 @@ func (c *Code) RemoveArg(funcName, argName string) interfaces.IRCode {
 	return c.Remove(c.argPath(fn, argName))
 }
 
+func (c *Code) XLoad(path, score string) interfaces.IRCode {
+	return c.addInst(Load, path, score)
+}
+
 func (c *Code) Load(path, score string) interfaces.IRCode {
-	return c.addInst(Load, c.varPath(path), score)
+	return c.XLoad(c.varPath(path), score)
 }
 
 func (c *Code) Store(score, path string) interfaces.IRCode {
@@ -133,7 +136,6 @@ func (c *Code) DoubleCompare(regRa, regRb string, operator interfaces.TokenType,
 
 func (c *Code) If(condVar string, code interfaces.IRCode) interfaces.IRCode {
 	for _, inst := range code.GetInstructions() {
-		log.Debugf("Adding instruction to if: %s", inst.ToString())
 		c.addInst(If, condVar, inst.ToString())
 	}
 	return c

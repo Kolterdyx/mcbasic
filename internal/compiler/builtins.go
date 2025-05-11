@@ -147,12 +147,12 @@ func (c *Compiler) baseFunctions() []interfaces.Function {
 	if c.Config.Debug {
 		initSource.Exec(fmt.Sprintf("scoreboard objectives setdisplay sidebar %s\n", c.Namespace))
 	}
-	initSource.SetVar(CALL, nbt.NewInt(0))
-	initSource.Load(CALL, CALL)
+	initSource.Set(fmt.Sprintf("%s.%s", VarPath, CALL), nbt.NewInt(0))
+	initSource.XLoad(CALL, CALL)
 	initSource.SetArg("mcb:log", "text", nbt.NewString("MCB pack loaded"))
 	initSource.Call("mcb:log")
 	initSource.Call("internal/struct_definitions")
-	initSource.Call("main")
+	initSource.Call("load")
 	initSource.Ret()
 	funcs = append(
 		funcs,
@@ -165,7 +165,7 @@ func (c *Compiler) baseFunctions() []interfaces.Function {
 		c.registerIRFunction(
 			"mcb:internal/clean",
 			ir.NewCode(c.Namespace, c.storage).
-				Exec(fmt.Sprintf("scoreboard objectives remove sidebar %s\n", c.Namespace)).
+				Exec(fmt.Sprintf("scoreboard objectives remove %s\n", c.Namespace)).
 				Remove(VarPath).
 				Remove(StructPath).
 				Remove(ArgPath).

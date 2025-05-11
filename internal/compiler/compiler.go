@@ -325,7 +325,6 @@ func (c *Compiler) writeFunctionTags() error {
 		Values: []string{
 			"gm:zzz/load",
 			"mcb:internal/init",
-			fmt.Sprintf("%s:load", c.Namespace),
 		},
 	}
 	tickTag := interfaces.McTag{
