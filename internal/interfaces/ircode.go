@@ -19,6 +19,7 @@ type IRCode interface {
 	ToMCCode() string
 	Len() int
 	Extend(IRCode) IRCode
+	AddInstruction(Instruction) IRCode
 
 	GetInstructions() []Instruction
 	SetInstructions([]Instruction)

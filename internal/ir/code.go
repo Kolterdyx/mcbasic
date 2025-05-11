@@ -18,13 +18,13 @@ func NewCode(namespace, storage string) interfaces.IRCode {
 	}
 }
 
-func (c *Code) addInstruction(inst interfaces.Instruction) {
+func (c *Code) AddInstruction(inst interfaces.Instruction) interfaces.IRCode {
 	c.Instructions = append(c.Instructions, inst)
+	return c
 }
 
 func (c *Code) addInst(instType interfaces.InstructionType, args ...string) interfaces.IRCode {
-	c.addInstruction(c.makeInst(instType, args...))
-	return c
+	return c.AddInstruction(c.makeInst(instType, args...))
 }
 
 func (c *Code) makeInst(instType interfaces.InstructionType, args ...string) interfaces.Instruction {

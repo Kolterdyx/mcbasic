@@ -109,8 +109,8 @@ func (c *Compiler) Compile(program parser.Program) error {
 	c.setFunctionDefinitions(program)
 	functions := c.compileToIR(program)
 	functions = append(functions, c.compileBuiltins()...)
-	functions = c.optimizeIRCode(functions)
 	functions = c.addStructDeclarationFunction(program, functions)
+	functions = c.optimizeIRCode(functions)
 	c.compileIRtoDatapack(functions)
 	err := c.writeFunctionTags()
 	if err != nil {

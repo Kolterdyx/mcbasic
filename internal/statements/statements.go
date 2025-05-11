@@ -15,6 +15,7 @@ const (
 	IfStmtType                  StmtType = "If"
 	ReturnStmtType              StmtType = "Return"
 	ScoreStmtType               StmtType = "Score"
+	SetReturnFlagStmtType       StmtType = "SetReturnFlag"
 )
 
 type StmtVisitor interface {
@@ -28,6 +29,7 @@ type StmtVisitor interface {
 	VisitIf(IfStmt) interfaces.IRCode
 	VisitReturn(ReturnStmt) interfaces.IRCode
 	VisitScore(ScoreStmt) interfaces.IRCode
+	VisitSetReturnFlag(SetReturnFlagStmt) interfaces.IRCode
 }
 
 type Stmt interface {

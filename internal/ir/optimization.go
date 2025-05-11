@@ -11,6 +11,7 @@ func OptimizeFunctionBody(f interfaces.Function) interfaces.Function {
 	optimized := make([]interfaces.Instruction, 0)
 
 	opts := []OptFunc{
+		optOmitAfterRet,
 		optSkipMacroSet,
 		optCollapseCopyChain,
 		optSetCopyToSet,
@@ -41,10 +42,6 @@ func OptimizeFunctionBody(f interfaces.Function) interfaces.Function {
 	return f
 }
 
-func isMacroPath(path string) bool {
-	return strings.Contains(path, "$(")
-}
-
 func isMacroSetPattern(setInst interfaces.Instruction) bool {
 	if setInst.GetType() != Set || len(setInst.GetArgs()) != 3 {
 		return false
@@ -62,6 +59,16 @@ func isMacroSetPattern(setInst interfaces.Instruction) bool {
 
 func sameLocation(storageA, pathA, storageB, pathB string) bool {
 	return storageA == storageB && pathA == pathB
+}
+
+func optOmitAfterRet(instrs []interfaces.Instruction, i int) (bool, int, []interfaces.Instruction) {
+	if i == 0 || instrs[i].GetType() != Ret {
+		return false, 0, nil
+	}
+	if instrs[i-1].GetType() == Ret && i < len(instrs) {
+		return true, len(instrs) - i, nil // skip all instructions after Ret
+	}
+	return false, 0, nil
 }
 
 func optSkipMacroSet(instrs []interfaces.Instruction, i int) (bool, int, []interfaces.Instruction) {

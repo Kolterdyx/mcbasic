@@ -149,7 +149,7 @@ func (c *Compiler) VisitIf(stmt statements.IfStmt) interfaces.IRCode {
 	thenBranchName := path.Join(paths.FunctionBranches, fmt.Sprintf("%s_%d_if", c.currentScope, c.branchCounter))
 	elseBranchName := path.Join(paths.FunctionBranches, fmt.Sprintf("%s_%d_else", c.currentScope, c.branchCounter))
 
-	cmd.SetVar(RETF, nbt.NewInt(0))
+	cmd.Score(RETF, nbt.NewInt(0))
 	c.compiledFunctions[thenBranchName] = c.makeBranchFunction(thenBranchName, stmt.ThenBranch)
 
 	hasElseBranch := stmt.ElseBranch != nil
@@ -159,6 +159,7 @@ func (c *Compiler) VisitIf(stmt statements.IfStmt) interfaces.IRCode {
 	cmd.Extend(stmt.Condition.Accept(c))
 	condVar := c.makeReg(RX)
 	cmd.CopyVar(RX, condVar)
+	cmd.Load(condVar, condVar)
 	cmd.If(condVar, c.n().Branch(thenBranchName, c.currentScope))
 	cmd.If(RETF, c.n().Ret())
 	if hasElseBranch {
@@ -180,4 +181,8 @@ func (c *Compiler) VisitReturn(stmt statements.ReturnStmt) interfaces.IRCode {
 
 func (c *Compiler) VisitScore(stmt statements.ScoreStmt) interfaces.IRCode {
 	return c.n().Score(stmt.Target, nbt.NewInt(stmt.Score))
+}
+
+func (c *Compiler) VisitSetReturnFlag(stmt statements.SetReturnFlagStmt) interfaces.IRCode {
+	return c.n().Score(RETF, nbt.NewInt(1))
 }
