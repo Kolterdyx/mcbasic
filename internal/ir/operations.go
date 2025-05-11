@@ -126,6 +126,7 @@ func (c *Code) MakeIndex(valuePath, res string) interfaces.IRCode {
 func (c *Code) IntCompare(regRa, regRb string, operator interfaces.TokenType, res string) interfaces.IRCode {
 	c.Load(regRa, regRa)
 	c.Load(regRb, regRb)
+	c.SetVar(res, nbt.NewInt(0))
 	c.addInst(Cmp, regRa, utils.CmpOperator(operator), regRb, c.varPath(res))
 	return c
 }

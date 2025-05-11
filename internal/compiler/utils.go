@@ -80,6 +80,9 @@ func (c *Compiler) error(location interfaces.SourceLocation, message string) {
 }
 
 func (c *Compiler) varPath(path string) string {
+	if path == RET {
+		return fmt.Sprintf("%s.%s", VarPath, RET)
+	}
 	if strings.HasPrefix(path, fmt.Sprintf("%s.", VarPath)) {
 		return path
 	}

@@ -82,7 +82,7 @@ func (c *Compiler) VisitFunctionDeclaration(stmt statements.FunctionDeclarationS
 		funcName := path.Join(paths.FunctionBranches, c.currentScope)
 		c.compiledFunctions[funcName] = ir.NewFunction(funcName, cmd)
 		wrapper := c.n()
-		wrapper.Call(funcName)
+		wrapper.Branch(funcName, c.currentScope)
 		wrapper.Ret()
 		c.compiledFunctions[stmt.Name.Lexeme] = ir.NewFunction(c.currentScope, wrapper)
 		return wrapper
