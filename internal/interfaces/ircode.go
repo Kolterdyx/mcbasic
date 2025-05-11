@@ -75,7 +75,8 @@ type IRCode interface {
 	Ret() IRCode
 	Size(source, res string) IRCode
 	Func(name string) IRCode
-	Append(listPath, valuePath string) IRCode
+	AppendSet(listPath string, value nbt.Value) IRCode
+	AppendCopy(listPath, valuePath string) IRCode
 	MakeIndex(valuePath, res string) IRCode
 	IntCompare(regRa, regRb string, operator TokenType, res string) IRCode
 	DoubleCompare(regRa, regRb string, operator TokenType, res string) IRCode

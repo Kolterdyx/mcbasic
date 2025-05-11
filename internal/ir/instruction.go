@@ -10,24 +10,25 @@ import (
 )
 
 const (
-	_      interfaces.InstructionType = ""
-	Set                               = "set"    // `set <storage> <path> <value>`
-	Copy                              = "copy"   // `copy <storage from> <path from> <storage to> <path to>`
-	Remove                            = "remove" // `remove <storage> <path>`
-	Math                              = "math"   // `math <operation>`
-	Load                              = "load"   // `load <path> <score>`
-	Store                             = "store"  // `store <score> <path>`
-	Score                             = "score"  // `score <target> <score>`
-	Append                            = "append" // `append <listPath> <valuePath>`
-	Size                              = "size"   // `size <source> <res>`
-	Cmp                               = "cmp"    // `cmp <score> <condition> <score>`
-	If                                = "if"     // `if <score> <instruction>`
-	Unless                            = "unless" // `unless <score> <instruction>`
-	Ret                               = "ret"    // `ret`
-	Func                              = "func"   // `func <name>\n\t<code>`
-	Call                              = "call"   // `call <name>
-	Branch                            = "branch" // `branch <name>`
-	Raw                               = "raw"    // `raw <command>`
+	_          interfaces.InstructionType = ""
+	Set                                   = "set"        // `set <storage> <path> <value>`
+	Copy                                  = "copy"       // `copy <storage from> <path from> <storage to> <path to>`
+	Remove                                = "remove"     // `remove <storage> <path>`
+	Math                                  = "math"       // `math <operation>`
+	Load                                  = "load"       // `load <path> <score>`
+	Store                                 = "store"      // `store <score> <path>`
+	Score                                 = "score"      // `score <target> <score>`
+	AppendSet                             = "appendSet"  // `appendSet <listPath> <value>`
+	AppendCopy                            = "appendCopy" // `appendCopy <listPath> <valuePath>`
+	Size                                  = "size"       // `size <source> <res>`
+	Cmp                                   = "cmp"        // `cmp <score> <condition> <score>`
+	If                                    = "if"         // `if <score> <instruction>`
+	Unless                                = "unless"     // `unless <score> <instruction>`
+	Ret                                   = "ret"        // `ret`
+	Func                                  = "func"       // `func <name>\n\t<code>`
+	Call                                  = "call"       // `call <name>
+	Branch                                = "branch"     // `branch <name>`
+	Raw                                   = "raw"        // `raw <command>`
 )
 
 type Instruction struct {
@@ -59,8 +60,10 @@ func (i Instruction) ToMCCommand() string {
 		return fmt.Sprintf("execute store result storage %s %s int 1 run scoreboard players get %s %s\n", i.Storage, i.Args[1], i.Args[0], i.DPNamespace)
 	case Score:
 		return fmt.Sprintf("scoreboard players set %s %s %s\n", i.Args[0], i.DPNamespace, i.Args[1])
-	case Append:
-		log.Fatalln("Not implemented")
+	case AppendSet:
+		return fmt.Sprintf("data modify storage %s %s append value %s\n", i.Storage, i.Args[0], i.Args[1])
+	case AppendCopy:
+		return fmt.Sprintf("data modify storage %s %s append from storage %s %s\n", i.Storage, i.Args[0], i.Storage, i.Args[1])
 	case Size:
 		return fmt.Sprintf("execute store result storage %s %s int 1 run data get storage %s %s\n", i.Storage, i.Args[1], i.Storage, i.Args[0])
 	case Cmp:

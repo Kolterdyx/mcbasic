@@ -96,31 +96,26 @@ func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStm
 	if !stmt.Value.ReturnType().Equals(c.getReturnType(stmt.Name.Lexeme)) && !isIndexedAssignment {
 		c.error(stmt.Name.SourceLocation, fmt.Sprintf("Assignment type mismatch: %v != %v", c.getReturnType(stmt.Name.Lexeme).ToString(), stmt.Value.ReturnType().ToString()))
 	}
-	cmd.Extend(stmt.Value.Accept(c))
 	valueReg := c.makeReg(RX)
+	cmd.Extend(stmt.Value.Accept(c))
 	cmd.CopyVar(RX, valueReg)
+	pathReg := c.makeReg(RX)
+	cmd.Set(pathReg, nbt.NewString(""))
 	if isIndexedAssignment {
-		pathReg := c.makeReg(RX)
-		cmd.Set(pathReg, nbt.NewString(""))
 		for _, accessor := range stmt.Accessors {
 			switch accessor := accessor.(type) {
 			case statements.IndexAccessor:
-				indexReg := c.makeReg(RX)
 				cmd.Extend(accessor.Index.Accept(c))
-				cmd.CopyVar(RX, indexReg)
-				// wrap index in brackets and append to pathReg
-				cmd.MakeIndex(indexReg, indexReg)
-				cmd.StringConcat(pathReg, indexReg, pathReg)
+				cmd.MakeIndex(RX, RX)
+				cmd.StringConcat(pathReg, RX, pathReg)
 			case statements.FieldAccessor:
 				fieldReg := c.makeReg(RX)
 				cmd.Set(fieldReg, nbt.NewString(accessor.ToString()))
 				cmd.StringConcat(pathReg, fieldReg, pathReg)
 			}
 		}
-		cmd.PathSet(stmt.Name.Lexeme, pathReg, valueReg)
-	} else {
-		cmd.CopyVar(valueReg, stmt.Name.Lexeme)
 	}
+	cmd.PathSet(stmt.Name.Lexeme, pathReg, valueReg)
 	return cmd
 }
 

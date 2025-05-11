@@ -111,8 +111,12 @@ func (c *Code) Func(name string) interfaces.IRCode {
 	return c.addInst(Func, name)
 }
 
-func (c *Code) Append(listPath, valuePath string) interfaces.IRCode {
-	return c.addInst(Append, c.varPath(listPath), c.varPath(valuePath))
+func (c *Code) AppendSet(listPath string, value nbt.Value) interfaces.IRCode {
+	return c.addInst(AppendSet, c.varPath(listPath), value.ToString())
+}
+
+func (c *Code) AppendCopy(listPath, valuePath string) interfaces.IRCode {
+	return c.addInst(AppendCopy, c.varPath(listPath), c.varPath(valuePath))
 }
 
 func (c *Code) MakeIndex(valuePath, res string) interfaces.IRCode {

@@ -10,5 +10,5 @@ func (c *Code) StructGet(structPath, field, dataPath string) interfaces.IRCode {
 }
 
 func (c *Code) StructSet(dataPath, field, structPath string) interfaces.IRCode {
-	return c.CopyVar(dataPath, fmt.Sprintf("%s.%s", structPath, field))
+	return c.Copy(c.varPath(dataPath), fmt.Sprintf("%s.%s", c.varPath(structPath), field))
 }

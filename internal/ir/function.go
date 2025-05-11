@@ -70,7 +70,7 @@ func split(line string) []string {
 	start := 0
 	for i, r := range line {
 		if r == '"' || r == '\'' {
-			if quote && r == quoteChar {
+			if quote && r == quoteChar && line[i-1] != '\\' {
 				// End of quoted string
 				quote = false
 			} else if !quote && line[i-1] != '\\' {

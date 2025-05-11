@@ -234,9 +234,9 @@ func (c *Compiler) VisitList(s expressions.ListExpr) interfaces.IRCode {
 	cmd.SetVar(regList, nbt.NewList())
 	for _, elem := range s.Elements {
 		cmd.Extend(elem.Accept(c))
-		cmd.Append(regList, RX)
+		cmd.AppendCopy(regList, RX)
 	}
-	cmd.CopyVar(RX, regList)
+	cmd.CopyVar(regList, RX)
 	return cmd
 }
 
