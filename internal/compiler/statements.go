@@ -100,7 +100,7 @@ func (c *Compiler) VisitVariableAssignment(stmt statements.VariableAssignmentStm
 	cmd.Extend(stmt.Value.Accept(c))
 	cmd.CopyVar(RX, valueReg)
 	pathReg := c.makeReg(RX)
-	cmd.Set(pathReg, nbt.NewString(""))
+	cmd.SetVar(pathReg, nbt.NewString(""))
 	if isIndexedAssignment {
 		for _, accessor := range stmt.Accessors {
 			switch accessor := accessor.(type) {
