@@ -1,7 +1,6 @@
-package expressions
+package ast
 
 import (
-	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
@@ -15,12 +14,12 @@ type UnaryExpr struct {
 	Expression Expr
 }
 
-func (u UnaryExpr) Accept(v ExprVisitor) interfaces.IRCode {
+func (u UnaryExpr) Accept(v ExpressionVisitor) any {
 	return v.VisitUnary(u)
 }
 
-func (u UnaryExpr) Type() ast.NodeType {
-	return ast.UnaryExpression
+func (u UnaryExpr) Type() NodeType {
+	return UnaryExpression
 }
 
 func (u UnaryExpr) ReturnType() types.ValueType {

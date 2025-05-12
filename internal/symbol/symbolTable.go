@@ -45,3 +45,7 @@ func (s *Table) ScopeName() string {
 func (s *Table) OriginFile() string {
 	return s.originFile
 }
+
+func (s *Table) AddChild(table *Table) {
+	s.children[table.ScopeName()] = table
+}

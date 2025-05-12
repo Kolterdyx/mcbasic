@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
+	"github.com/Kolterdyx/mcbasic/internal/resolver"
 	"github.com/Kolterdyx/mcbasic/internal/scanner"
-	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/symbol"
+	log "github.com/sirupsen/logrus"
 	"os"
 )
 
@@ -37,33 +38,54 @@ func (f *Frontend) Parse(path string) error {
 	tokens, errs := scanner.Scan(string(src))
 	if len(errs) > 0 {
 		for _, err := range errs {
-			fmt.Println(err)
+			log.Error(err)
 		}
 		return fmt.Errorf("failed to scan file: %s", path)
 	}
 
-	table := symbol.NewTable(nil, "file:"+path, path)
 	p := parser.NewParser(tokens)
 
 	fileAst, errs := p.Parse()
 	if len(errs) > 0 {
-		return err
+		for _, err := range errs {
+			log.Error(err)
+		}
+		return fmt.Errorf("failed to parse file: %s", path)
+	}
+
+	table := symbol.NewTable(nil, "file:"+path, path)
+	r := resolver.NewResolver(fileAst, table)
+	errs = r.Resolve()
+	if len(errs) > 0 {
+		for _, err := range errs {
+			log.Error(err)
+		}
+		return fmt.Errorf("failed to resolve file: %s", path)
+	}
+
+	t := typeChecker.NewTypeChecker()
+	errs = t.Check(fileAst, table)
+	if len(errs) > 0 {
+		for _, err := range errs {
+			log.Error(err)
+		}
+		return fmt.Errorf("failed to type check file: %s", path)
 	}
 
 	unit := &CompilationUnit{
 		FilePath: path,
 		AST:      fileAst,
-		Symbols:  syms,
+		Symbols:  table,
 		Tokens:   tokens,
 	}
 
 	f.units[path] = unit
 	f.symbolManager.AddFile(path, table)
 
-	imports := make(map[string]statements.ImportStmt)
+	imports := make(map[string]ast.ImportStmt)
 	for _, stmt := range fileAst {
 		if stmt.Type() == ast.ImportStatement {
-			importStmt, ok := stmt.(statements.ImportStmt)
+			importStmt, ok := stmt.(ast.ImportStmt)
 			if !ok {
 				return fmt.Errorf("failed to cast statement to ImportStatement")
 			}

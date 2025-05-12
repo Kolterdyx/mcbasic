@@ -2,7 +2,7 @@ package compiler
 
 import (
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal/expressions"
+	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/paths"
@@ -12,15 +12,15 @@ import (
 	"path"
 )
 
-func (c *Compiler) VisitBinary(b expressions.BinaryExpr) interfaces.IRCode {
+func (c *Compiler) VisitBinary(b ast.BinaryExpr) any {
 	regRa := c.makeReg(RA)
 	regRb := c.makeReg(RB)
 
 	cmd := c.n()
 
-	cmd.Extend(b.Left.Accept(c))
+	cmd.Extend(ast.AcceptExpr[interfaces.IRCode](b.Left, c))
 	cmd.CopyVar(RX, regRa)
-	cmd.Extend(b.Right.Accept(c))
+	cmd.Extend(ast.AcceptExpr[interfaces.IRCode](b.Right, c))
 	cmd.CopyVar(RX, regRb)
 
 	switch b.Operator.Type {
@@ -84,31 +84,31 @@ func (c *Compiler) VisitBinary(b expressions.BinaryExpr) interfaces.IRCode {
 	return cmd
 }
 
-func (c *Compiler) VisitGrouping(g expressions.GroupingExpr) interfaces.IRCode {
+func (c *Compiler) VisitGrouping(g ast.GroupingExpr) any {
 	return g.Expression.Accept(c)
 }
 
-func (c *Compiler) VisitLiteral(l expressions.LiteralExpr) interfaces.IRCode {
+func (c *Compiler) VisitLiteral(l ast.LiteralExpr) any {
 	return c.n().SetVar(RX, l.Value)
 }
 
-func (c *Compiler) VisitUnary(u expressions.UnaryExpr) interfaces.IRCode {
+func (c *Compiler) VisitUnary(u ast.UnaryExpr) any {
 	cmd := c.n()
 	switch u.ReturnType() {
 	case types.IntType:
 		switch u.Operator.Type {
 		case tokens.Minus:
-			zero := expressions.LiteralExpr{Value: nbt.NewInt(0), SourceLocation: u.SourceLocation, ValueType: types.IntType}
-			tmp := expressions.BinaryExpr{
+			zero := ast.LiteralExpr{Value: nbt.NewInt(0), SourceLocation: u.SourceLocation, ValueType: types.IntType}
+			tmp := ast.BinaryExpr{
 				Left: zero,
 				Operator: tokens.Token{
 					Type: tokens.Minus,
 				},
 				Right: u.Expression,
 			}
-			cmd.Extend(tmp.Accept(c))
+			cmd.Extend(ast.AcceptExpr[interfaces.IRCode](tmp, c))
 		case tokens.Bang:
-			cmd.Extend(u.Expression.Accept(c))
+			cmd.Extend(ast.AcceptExpr[interfaces.IRCode](u.Expression, c))
 		default:
 			c.error(u.SourceLocation, "Invalid operator for type 'int'")
 		}
@@ -118,24 +118,24 @@ func (c *Compiler) VisitUnary(u expressions.UnaryExpr) interfaces.IRCode {
 	return cmd
 }
 
-func (c *Compiler) VisitVariable(v expressions.VariableExpr) interfaces.IRCode {
+func (c *Compiler) VisitVariable(v ast.VariableExpr) any {
 	cmd := c.n()
 	return cmd.CopyVar(v.Name.Lexeme, RX)
 }
 
-func (c *Compiler) VisitFieldAccess(v expressions.FieldAccessExpr) interfaces.IRCode {
+func (c *Compiler) VisitFieldAccess(v ast.FieldAccessExpr) any {
 	cmd := c.n()
-	cmd.Extend(v.Source.Accept(c))
+	cmd.Extend(ast.AcceptExpr[interfaces.IRCode](v.Source, c))
 	cmd.CopyVar(RX, RA)
 	cmd.StructGet(RA, v.Field.Lexeme, RX)
 	return cmd
 }
 
-func (c *Compiler) VisitFunctionCall(f expressions.FunctionCallExpr) interfaces.IRCode {
+func (c *Compiler) VisitFunctionCall(f ast.FunctionCallExpr) any {
 	cmd := c.n()
 	ns, fn := utils.SplitFunctionName(f.Name.Lexeme, c.Namespace)
 	for j, arg := range f.Arguments {
-		cmd.Extend(arg.Accept(c))
+		cmd.Extend(ast.AcceptExpr[interfaces.IRCode](arg, c))
 		argName := c.functionDefinitions[f.Name.Lexeme].Args[j].Name
 		cmd.CopyArg(RX, fn, argName)
 	}
@@ -151,13 +151,13 @@ func (c *Compiler) VisitFunctionCall(f expressions.FunctionCallExpr) interfaces.
 	return cmd
 }
 
-func (c *Compiler) VisitLogical(l expressions.LogicalExpr) interfaces.IRCode {
+func (c *Compiler) VisitLogical(l ast.LogicalExpr) any {
 	cmd := c.n()
 	regRa := c.makeReg(RA)
 	regRb := c.makeReg(RB)
-	cmd.Extend(l.Left.Accept(c))
+	cmd.Extend(ast.AcceptExpr[interfaces.IRCode](l.Left, c))
 	cmd.CopyVar(RX, regRa)
-	cmd.Extend(l.Right.Accept(c))
+	cmd.Extend(ast.AcceptExpr[interfaces.IRCode](l.Right, c))
 	cmd.CopyVar(RX, regRb)
 
 	switch l.Operator.Type {
@@ -176,21 +176,21 @@ func (c *Compiler) VisitLogical(l expressions.LogicalExpr) interfaces.IRCode {
 	return cmd
 }
 
-func (c *Compiler) VisitSlice(s expressions.SliceExpr) interfaces.IRCode {
+func (c *Compiler) VisitSlice(s ast.SliceExpr) any {
 	cmd := c.n()
 	regIndexStart := c.makeReg(RA)
 	regIndexEnd := c.makeReg(RB)
 
-	cmd.Extend(s.StartIndex.Accept(c))
+	cmd.Extend(ast.AcceptExpr[interfaces.IRCode](s.StartIndex, c))
 	cmd.CopyVar(RX, regIndexStart)
 	if s.EndIndex == nil {
 		cmd.CopyVar(RX, regIndexEnd)
 	} else {
-		cmd.Extend(s.EndIndex.Accept(c))
+		cmd.Extend(ast.AcceptExpr[interfaces.IRCode](s.EndIndex, c))
 		cmd.CopyVar(RX, regIndexEnd)
 	}
 	targetReg := c.makeReg(RX)
-	cmd.Extend(s.TargetExpr.Accept(c))
+	cmd.Extend(ast.AcceptExpr[interfaces.IRCode](s.TargetExpr, c))
 	cmd.CopyVar(RX, targetReg)
 	lenReg := c.makeReg(RX)
 	cmd.Size(targetReg, lenReg)
@@ -243,27 +243,28 @@ func (c *Compiler) VisitSlice(s expressions.SliceExpr) interfaces.IRCode {
 	return cmd
 }
 
-func (c *Compiler) VisitList(s expressions.ListExpr) interfaces.IRCode {
+func (c *Compiler) VisitList(s ast.ListExpr) any {
 	cmd := c.n()
 	regList := c.makeReg(RX)
 	cmd.SetVar(regList, nbt.NewList())
 	for _, elem := range s.Elements {
-		cmd.Extend(elem.Accept(c))
+		cmd.Extend(ast.AcceptExpr[interfaces.IRCode](elem, c))
 		cmd.AppendCopy(regList, RX)
 	}
 	cmd.CopyVar(regList, RX)
 	return cmd
 }
 
-func (c *Compiler) VisitStruct(s expressions.StructExpr) interfaces.IRCode {
-	cmd := c.n()
-	regStruct := c.makeReg(RX)
-	cmd.SetVar(regStruct, s.StructType.ToNBT())
-	fieldNames := s.StructType.GetFieldNames()
-	for j, args := range s.Args {
-		cmd.Extend(args.Accept(c))
-		cmd.StructSet(c.varPath(RX), fieldNames[j], regStruct)
-	}
-	cmd.CopyVar(regStruct, RX)
-	return cmd
-}
+//
+//func (c *Compiler) VisitStruct(s ast.StructExpr) interfaces.IRCode {
+//	cmd := c.n()
+//	regStruct := c.makeReg(RX)
+//	cmd.SetVar(regStruct, s.StructType.ToNBT())
+//	fieldNames := s.StructType.GetFieldNames()
+//	for j, args := range s.Args {
+//		cmd.Extend(args.Accept(c))
+//		cmd.StructSet(c.varPath(RX), fieldNames[j], regStruct)
+//	}
+//	cmd.CopyVar(regStruct, RX)
+//	return cmd
+//}

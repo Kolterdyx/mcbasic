@@ -1,7 +1,6 @@
-package expressions
+package ast
 
 import (
-	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 )
 
@@ -14,12 +13,12 @@ type SliceExpr struct {
 	Expr
 }
 
-func (s SliceExpr) Accept(v ExprVisitor) interfaces.IRCode {
+func (s SliceExpr) Accept(v ExpressionVisitor) any {
 	return v.VisitSlice(s)
 }
 
-func (s SliceExpr) Type() ast.NodeType {
-	return ast.SliceExpression
+func (s SliceExpr) Type() NodeType {
+	return SliceExpression
 }
 
 func (s SliceExpr) ToString() string {

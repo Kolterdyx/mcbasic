@@ -1,7 +1,6 @@
-package expressions
+package ast
 
 import (
-	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 )
 
@@ -12,12 +11,12 @@ type GroupingExpr struct {
 	Expression Expr
 }
 
-func (g GroupingExpr) Accept(v ExprVisitor) interfaces.IRCode {
+func (g GroupingExpr) Accept(v ExpressionVisitor) any {
 	return v.VisitGrouping(g)
 }
 
-func (g GroupingExpr) Type() ast.NodeType {
-	return ast.GroupingExpression
+func (g GroupingExpr) Type() NodeType {
+	return GroupingExpression
 }
 
 func (g GroupingExpr) ToString() string {

@@ -1,25 +1,23 @@
-package statements
+package ast
 
 import (
-	"github.com/Kolterdyx/mcbasic/internal/ast"
-	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 type StructDeclarationStmt struct {
-	Stmt
+	Statement
 
 	Name       tokens.Token
 	StructType types.StructTypeStruct
 }
 
-func (s StructDeclarationStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
+func (s StructDeclarationStmt) Accept(visitor StatementVisitor) any {
 	return visitor.VisitStructDeclaration(s)
 }
 
-func (s StructDeclarationStmt) Type() ast.NodeType {
-	return ast.StructDeclarationStatement
+func (s StructDeclarationStmt) Type() NodeType {
+	return StructDeclarationStatement
 }
 
 func (s StructDeclarationStmt) ToString() string {

@@ -1,25 +1,19 @@
-package statements
-
-import (
-	"github.com/Kolterdyx/mcbasic/internal/ast"
-	"github.com/Kolterdyx/mcbasic/internal/expressions"
-	"github.com/Kolterdyx/mcbasic/internal/interfaces"
-)
+package ast
 
 type IfStmt struct {
-	Stmt
+	Statement
 
-	Condition  expressions.Expr
+	Condition  Expr
 	ThenBranch BlockStmt
 	ElseBranch *BlockStmt
 }
 
-func (i IfStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
+func (i IfStmt) Accept(visitor StatementVisitor) any {
 	return visitor.VisitIf(i)
 }
 
-func (i IfStmt) Type() ast.NodeType {
-	return ast.IfStatement
+func (i IfStmt) Type() NodeType {
+	return IfStatement
 }
 
 func (i IfStmt) ToString() string {

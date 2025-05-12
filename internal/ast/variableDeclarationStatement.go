@@ -1,27 +1,24 @@
-package statements
+package ast
 
 import (
-	"github.com/Kolterdyx/mcbasic/internal/ast"
-	"github.com/Kolterdyx/mcbasic/internal/expressions"
-	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 type VariableDeclarationStmt struct {
-	Stmt
+	Statement
 
 	Name        tokens.Token
-	Initializer expressions.Expr
+	Initializer Expr
 	ValueType   types.ValueType
 }
 
-func (v VariableDeclarationStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
+func (v VariableDeclarationStmt) Accept(visitor StatementVisitor) any {
 	return visitor.VisitVariableDeclaration(v)
 }
 
-func (v VariableDeclarationStmt) Type() ast.NodeType {
-	return ast.VariableDeclarationStatement
+func (v VariableDeclarationStmt) Type() NodeType {
+	return VariableDeclarationStatement
 }
 
 func (v VariableDeclarationStmt) ToString() string {

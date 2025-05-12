@@ -140,7 +140,7 @@ func (p *Parser) getTokenAsValueType(token tokens.Token) (types.ValueType, error
 
 //
 //// getNestedType traverses the accessors to find the type at the end
-//func (p *Parser) getNestedType(name tokens.Token, accessors []statements.Accessor) (types.ValueType, error) {
+//func (p *Parser) getNestedType(name tokens.Token, accessors []ast.Accessor) (types.ValueType, error) {
 //	varSymbol, ok := p.symbols.Lookup(name.Lexeme)
 //	if !ok {
 //		return nil, p.error(name, "Undeclared identifier")
@@ -151,14 +151,14 @@ func (p *Parser) getTokenAsValueType(token tokens.Token) (types.ValueType, error
 //	for _, accessor := range accessors {
 //		accessPath += accessor.ToString()
 //		switch accessor.(type) {
-//		case statements.IndexAccessor:
+//		case ast.IndexAccessor:
 //			if p.isListType(varType) {
 //				varType = varType.(types.ListTypeStruct).ContentType
 //			} else {
 //				return nil, p.error(p.peek(), "Expected list type.")
 //			}
-//		case statements.FieldAccessor:
-//			fieldAccessor := accessor.(statements.FieldAccessor)
+//		case ast.FieldAccessor:
+//			fieldAccessor := accessor.(ast.FieldAccessor)
 //			if p.isStructType(varType) {
 //				vtype, ok := varType.(types.StructTypeStruct).GetField(fieldAccessor.Field.Lexeme)
 //				if !ok {

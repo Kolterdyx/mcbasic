@@ -1,7 +1,6 @@
-package expressions
+package ast
 
 import (
-	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 )
@@ -14,12 +13,12 @@ type FieldAccessExpr struct {
 	Field  tokens.Token
 }
 
-func (v FieldAccessExpr) Accept(visitor ExprVisitor) interfaces.IRCode {
+func (v FieldAccessExpr) Accept(visitor ExpressionVisitor) any {
 	return visitor.VisitFieldAccess(v)
 }
 
-func (v FieldAccessExpr) Type() ast.NodeType {
-	return ast.FieldAccessExpression
+func (v FieldAccessExpr) Type() NodeType {
+	return FieldAccessExpression
 }
 
 func (v FieldAccessExpr) ToString() string {

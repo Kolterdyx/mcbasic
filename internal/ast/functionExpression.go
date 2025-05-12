@@ -1,7 +1,6 @@
-package expressions
+package ast
 
 import (
-	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 )
@@ -14,12 +13,12 @@ type FunctionCallExpr struct {
 	Arguments []Expr
 }
 
-func (f FunctionCallExpr) Accept(visitor ExprVisitor) interfaces.IRCode {
+func (f FunctionCallExpr) Accept(visitor ExpressionVisitor) any {
 	return visitor.VisitFunctionCall(f)
 }
 
-func (f FunctionCallExpr) Type() ast.NodeType {
-	return ast.FunctionCallExpression
+func (f FunctionCallExpr) Type() NodeType {
+	return FunctionCallExpression
 }
 
 func (f FunctionCallExpr) ToString() string {

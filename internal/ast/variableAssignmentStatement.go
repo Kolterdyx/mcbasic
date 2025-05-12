@@ -1,9 +1,6 @@
-package statements
+package ast
 
 import (
-	"github.com/Kolterdyx/mcbasic/internal/ast"
-	"github.com/Kolterdyx/mcbasic/internal/expressions"
-	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 )
 
@@ -14,7 +11,7 @@ type Accessor interface {
 
 // IndexAccessor holds a parsed index expression (foo[expr]).
 type IndexAccessor struct {
-	Index expressions.Expr
+	Index Expr
 }
 
 func (i IndexAccessor) ToString() string {
@@ -31,19 +28,19 @@ func (f FieldAccessor) ToString() string {
 }
 
 type VariableAssignmentStmt struct {
-	Stmt
+	Statement
 
 	Name      tokens.Token
 	Accessors []Accessor
-	Value     expressions.Expr
+	Value     Expr
 }
 
-func (v VariableAssignmentStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
+func (v VariableAssignmentStmt) Accept(visitor StatementVisitor) any {
 	return visitor.VisitVariableAssignment(v)
 }
 
-func (v VariableAssignmentStmt) Type() ast.NodeType {
-	return ast.VariableAssignmentStatement
+func (v VariableAssignmentStmt) Type() NodeType {
+	return VariableAssignmentStatement
 }
 
 func (v VariableAssignmentStmt) ToString() string {

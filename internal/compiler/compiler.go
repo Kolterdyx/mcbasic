@@ -4,12 +4,11 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal/expressions"
+	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/ir"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
 	"github.com/Kolterdyx/mcbasic/internal/paths"
-	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	"github.com/Kolterdyx/mcbasic/internal/utils"
 	log "github.com/sirupsen/logrus"
@@ -46,14 +45,14 @@ const (
 )
 
 type Compiler struct {
-	expressions.ExprVisitor
-	statements.StmtVisitor
+	ast.ExpressionVisitor
+	ast.StatementVisitor
 
 	Namespace    string
 	Scope        string
 	DatapackRoot string
 	Config       interfaces.ProjectConfig
-	Structs      map[string]statements.StructDeclarationStmt
+	Structs      map[string]ast.StructDeclarationStmt
 
 	RX   string
 	RA   string

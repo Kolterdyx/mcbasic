@@ -1,7 +1,6 @@
-package expressions
+package ast
 
 import (
-	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 )
@@ -15,12 +14,12 @@ type LogicalExpr struct {
 	Expr
 }
 
-func (l LogicalExpr) Accept(v ExprVisitor) interfaces.IRCode {
+func (l LogicalExpr) Accept(v ExpressionVisitor) any {
 	return v.VisitLogical(l)
 }
 
-func (l LogicalExpr) Type() ast.NodeType {
-	return ast.LogicalExpression
+func (l LogicalExpr) Type() NodeType {
+	return LogicalExpression
 }
 
 func (l LogicalExpr) ToString() string {

@@ -3,7 +3,7 @@ package parser
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/ast"
-	"github.com/Kolterdyx/mcbasic/internal/statements"
+
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"slices"
 )
@@ -28,9 +28,9 @@ var allowedTopLevelStatements = []ast.NodeType{
 	ast.ImportStatement,
 }
 
-func (p *Parser) Parse() ([]statements.Stmt, []error) {
+func (p *Parser) Parse() ([]ast.Statement, []error) {
 
-	source := make([]statements.Stmt, 0)
+	source := make([]ast.Statement, 0)
 	for !p.IsAtEnd() {
 		statement, err := p.statement()
 		if err != nil {

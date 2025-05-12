@@ -1,7 +1,6 @@
-package expressions
+package ast
 
 import (
-	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 )
@@ -15,12 +14,12 @@ type BinaryExpr struct {
 	Right    Expr
 }
 
-func (b BinaryExpr) Accept(v ExprVisitor) interfaces.IRCode {
+func (b BinaryExpr) Accept(v ExpressionVisitor) any {
 	return v.VisitBinary(b)
 }
 
-func (b BinaryExpr) Type() ast.NodeType {
-	return ast.BinaryExpression
+func (b BinaryExpr) Type() NodeType {
+	return BinaryExpression
 }
 
 func (b BinaryExpr) ToString() string {
