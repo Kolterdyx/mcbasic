@@ -8,7 +8,6 @@ import (
 
 type UnaryExpr struct {
 	Expr
-	interfaces.SourceLocation
 
 	Operator   tokens.Token
 	Expression Expr
@@ -28,4 +27,8 @@ func (u UnaryExpr) ReturnType() types.ValueType {
 
 func (u UnaryExpr) ToString() string {
 	return "(" + u.Operator.Lexeme + " " + u.Expression.ToString() + ")"
+}
+
+func (u UnaryExpr) GetSourceLocation() interfaces.SourceLocation {
+	return u.Operator.SourceLocation
 }

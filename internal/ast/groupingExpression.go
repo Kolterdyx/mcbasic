@@ -1,12 +1,9 @@
 package ast
 
-import (
-	"github.com/Kolterdyx/mcbasic/internal/interfaces"
-)
+import "github.com/Kolterdyx/mcbasic/internal/interfaces"
 
 type GroupingExpr struct {
 	Expr
-	interfaces.SourceLocation
 
 	Expression Expr
 }
@@ -21,4 +18,8 @@ func (g GroupingExpr) Type() NodeType {
 
 func (g GroupingExpr) ToString() string {
 	return "(" + g.Expression.ToString() + ")"
+}
+
+func (g GroupingExpr) GetSourceLocation() interfaces.SourceLocation {
+	return g.Expression.GetSourceLocation()
 }

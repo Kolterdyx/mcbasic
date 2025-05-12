@@ -36,7 +36,7 @@ func (c *Compiler) VisitBinary(b ast.BinaryExpr) any {
 			if b.Operator.Type == tokens.EqualEqual {
 				cmd.StringCompare(regRa, regRb, RX)
 			} else {
-				c.error(b.SourceLocation, "Invalid operator for type 'str'")
+				c.error(b, "Invalid operator for type 'str'")
 			}
 		}
 		return cmd
@@ -57,7 +57,7 @@ func (c *Compiler) VisitBinary(b ast.BinaryExpr) any {
 		case tokens.Percent:
 			cmd.IntMod(regRa, regRb, RX)
 		default:
-			c.error(b.SourceLocation, fmt.Sprintf("Invalid operator for type 'int': %s", b.Operator.Lexeme))
+			c.error(b, fmt.Sprintf("Invalid operator for type 'int': %s", b.Operator.Lexeme))
 		}
 	case types.DoubleType:
 		switch b.Operator.Type {
@@ -72,13 +72,13 @@ func (c *Compiler) VisitBinary(b ast.BinaryExpr) any {
 		case tokens.Percent:
 			cmd.DoubleMod(regRa, regRb, RX)
 		default:
-			c.error(b.SourceLocation, "Invalid operator for type 'double'")
+			c.error(b, "Invalid operator for type 'double'")
 		}
 	case types.StringType:
 		if b.Operator.Type == tokens.Plus {
 			cmd.StringConcat(regRa, regRb, RX)
 		} else {
-			c.error(b.SourceLocation, "Invalid operator for type 'str'")
+			c.error(b, "Invalid operator for type 'str'")
 		}
 	}
 	return cmd
@@ -98,7 +98,7 @@ func (c *Compiler) VisitUnary(u ast.UnaryExpr) any {
 	case types.IntType:
 		switch u.Operator.Type {
 		case tokens.Minus:
-			zero := ast.LiteralExpr{Value: nbt.NewInt(0), SourceLocation: u.SourceLocation, ValueType: types.IntType}
+			zero := ast.LiteralExpr{Value: nbt.NewInt(0), ValueType: types.IntType}
 			tmp := ast.BinaryExpr{
 				Left: zero,
 				Operator: tokens.Token{
@@ -110,10 +110,10 @@ func (c *Compiler) VisitUnary(u ast.UnaryExpr) any {
 		case tokens.Bang:
 			cmd.Extend(ast.AcceptExpr[interfaces.IRCode](u.Expression, c))
 		default:
-			c.error(u.SourceLocation, "Invalid operator for type 'int'")
+			c.error(u, "Invalid operator for type 'int'")
 		}
 	default:
-		c.error(u.SourceLocation, "Invalid type in unary expression")
+		c.error(u, "Invalid type in unary expression")
 	}
 	return cmd
 }
@@ -171,7 +171,7 @@ func (c *Compiler) VisitLogical(l ast.LogicalExpr) any {
 		cmd.Load(regRb, regRb)
 		cmd.If(regRb, c.n().SetVar(RX, nbt.NewInt(1)))
 	default:
-		c.error(l.SourceLocation, fmt.Sprintf("Invalid operator: '%s'", l.Operator.Lexeme))
+		c.error(l, fmt.Sprintf("Invalid operator: '%s'", l.Operator.Lexeme))
 	}
 	return cmd
 }
@@ -235,7 +235,7 @@ func (c *Compiler) VisitSlice(s ast.SliceExpr) any {
 		cmd.If(RX, c.n().Exception(fmt.Sprintf("Exception at %s: Index out of bounds", s.SourceLocation.ToString())))
 		cmd.If(RX, c.n().Ret())
 		if s.EndIndex != nil {
-			c.error(s.SourceLocation, "List slices are not supported.")
+			c.error(s, "List slices are not supported.")
 		}
 		cmd.MakeIndex(regIndexStart, regIndexStart)
 		cmd.PathGet(targetReg, regIndexStart, RX)

@@ -24,3 +24,7 @@ func (v FieldAccessExpr) Type() NodeType {
 func (v FieldAccessExpr) ToString() string {
 	return v.Source.ToString() + "." + v.Field.Lexeme
 }
+
+func (v FieldAccessExpr) GetSourceLocation() interfaces.SourceLocation {
+	return v.SourceLocation
+}

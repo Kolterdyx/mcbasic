@@ -36,3 +36,7 @@ func (s SliceExpr) ToString() string {
 	result += "]"
 	return result
 }
+
+func (s SliceExpr) GetSourceLocation() interfaces.SourceLocation {
+	return s.SourceLocation
+}

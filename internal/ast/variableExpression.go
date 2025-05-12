@@ -7,7 +7,6 @@ import (
 
 type VariableExpr struct {
 	Expr
-	interfaces.SourceLocation
 
 	Name tokens.Token
 }
@@ -22,4 +21,8 @@ func (v VariableExpr) Type() NodeType {
 
 func (v VariableExpr) ToString() string {
 	return v.Name.Lexeme
+}
+
+func (v VariableExpr) GetSourceLocation() interfaces.SourceLocation {
+	return v.Name.SourceLocation
 }

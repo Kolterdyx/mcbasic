@@ -31,3 +31,7 @@ func (f FunctionCallExpr) ToString() string {
 	}
 	return f.Name.Lexeme + "(" + args + ")"
 }
+
+func (f FunctionCallExpr) GetSourceLocation() interfaces.SourceLocation {
+	return f.SourceLocation
+}

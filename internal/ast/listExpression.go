@@ -36,3 +36,7 @@ func (l ListExpr) ToString() string {
 	result += "]"
 	return result
 }
+
+func (l ListExpr) GetSourceLocation() interfaces.SourceLocation {
+	return l.SourceLocation
+}

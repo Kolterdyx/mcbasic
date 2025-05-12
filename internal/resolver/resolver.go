@@ -32,7 +32,7 @@ func (r *Resolver) Resolve() []error {
 }
 
 func (r *Resolver) error(expr ast.Node, message string) any {
-	err := fmt.Errorf("error: %s", message)
+	err := fmt.Errorf("error at %s: %s", expr.GetSourceLocation().ToString(), message)
 	r.errors = append(r.errors, err)
 	return err
 }

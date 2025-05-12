@@ -1,5 +1,7 @@
 package ast
 
+import "github.com/Kolterdyx/mcbasic/internal/interfaces"
+
 type NodeType string
 
 const (
@@ -14,7 +16,6 @@ const (
 	LogicalExpression      NodeType = "LogicalExpression"
 	SliceExpression        NodeType = "SliceExpression"
 	ListExpression         NodeType = "ListExpression"
-	StructExpression       NodeType = "StructExpression"
 
 	ExpressionStatement          NodeType = "ExpressionStatement"
 	VariableDeclarationStatement NodeType = "VariableDeclarationStatement"
@@ -25,11 +26,11 @@ const (
 	WhileStatement               NodeType = "WhileStatement"
 	IfStatement                  NodeType = "IfStatement"
 	ReturnStatement              NodeType = "ReturnStatement"
-	ScoreStatement               NodeType = "ScoreStatement"
 	SetReturnFlagStatement       NodeType = "SetReturnFlagStatement"
 	ImportStatement              NodeType = "ImportStatement"
 )
 
 type Node interface {
 	Type() NodeType
+	GetSourceLocation() interfaces.SourceLocation
 }

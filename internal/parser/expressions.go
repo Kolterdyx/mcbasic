@@ -24,7 +24,7 @@ func (p *Parser) or() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ast.LogicalExpr{Left: expr, Operator: operator, Right: right, SourceLocation: p.location()}
+		expr = ast.LogicalExpr{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr, nil
@@ -42,7 +42,7 @@ func (p *Parser) and() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ast.LogicalExpr{Left: expr, Operator: operator, Right: right, SourceLocation: p.location()}
+		expr = ast.LogicalExpr{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr, nil
@@ -60,7 +60,7 @@ func (p *Parser) equality() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ast.BinaryExpr{Left: expr, Operator: operator, Right: right, SourceLocation: p.location()}
+		expr = ast.BinaryExpr{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr, nil
@@ -78,7 +78,7 @@ func (p *Parser) comparison() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ast.BinaryExpr{Left: expr, Operator: operator, Right: right, SourceLocation: p.location()}
+		expr = ast.BinaryExpr{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr, nil
@@ -96,7 +96,7 @@ func (p *Parser) term() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ast.BinaryExpr{Left: expr, Operator: operator, Right: right, SourceLocation: p.location()}
+		expr = ast.BinaryExpr{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr, nil
@@ -114,7 +114,7 @@ func (p *Parser) factor() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ast.BinaryExpr{Left: expr, Operator: operator, Right: right, SourceLocation: p.location()}
+		expr = ast.BinaryExpr{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr, nil
@@ -127,7 +127,7 @@ func (p *Parser) unary() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		return ast.UnaryExpr{Operator: operator, Expression: right, SourceLocation: p.location()}, nil
+		return ast.UnaryExpr{Operator: operator, Expression: right}, nil
 	}
 
 	return p.value()
@@ -155,8 +155,7 @@ func (p *Parser) baseValue() (ast.Expr, error) {
 		}
 
 		return ast.VariableExpr{
-			Name:           identifier,
-			SourceLocation: p.location(),
+			Name: identifier,
 		}, nil
 	}
 
@@ -300,7 +299,7 @@ func (p *Parser) primary() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		return ast.GroupingExpr{Expression: expr, SourceLocation: p.location()}, nil
+		return ast.GroupingExpr{Expression: expr}, nil
 	}
 	if p.match(tokens.BracketOpen) {
 		var elems []ast.Expr

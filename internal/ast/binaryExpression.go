@@ -7,7 +7,6 @@ import (
 
 type BinaryExpr struct {
 	Expr
-	interfaces.SourceLocation
 
 	Left     Expr
 	Operator tokens.Token
@@ -24,6 +23,10 @@ func (b BinaryExpr) Type() NodeType {
 
 func (b BinaryExpr) ToString() string {
 	return "(" + b.Left.ToString() + " " + b.Operator.Lexeme + " " + b.Right.ToString() + ")"
+}
+
+func (b BinaryExpr) GetSourceLocation() interfaces.SourceLocation {
+	return b.Left.GetSourceLocation()
 }
 
 //

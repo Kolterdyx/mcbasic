@@ -10,7 +10,6 @@ type LogicalExpr struct {
 	Operator tokens.Token
 	Right    Expr
 
-	interfaces.SourceLocation
 	Expr
 }
 
@@ -24,4 +23,8 @@ func (l LogicalExpr) Type() NodeType {
 
 func (l LogicalExpr) ToString() string {
 	return "(" + l.Left.ToString() + " " + l.Operator.Lexeme + " " + l.Right.ToString() + ")"
+}
+
+func (l LogicalExpr) GetSourceLocation() interfaces.SourceLocation {
+	return l.GetSourceLocation()
 }

@@ -29,3 +29,7 @@ func (l LiteralExpr) ReturnType() types.ValueType {
 func (l LiteralExpr) ToString() string {
 	return l.Value.ToString()
 }
+
+func (l LiteralExpr) GetSourceLocation() interfaces.SourceLocation {
+	return l.SourceLocation
+}
