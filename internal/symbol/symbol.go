@@ -19,16 +19,14 @@ type Symbol struct {
 	stype           Type
 	declarationNode ast.Node
 	valueType       types.ValueType
-	originFile      string
 }
 
-func NewSymbol(name string, stype Type, declarationNode ast.Node, valueType types.ValueType, originFile string) Symbol {
+func NewSymbol(name string, stype Type, declarationNode ast.Node, valueType types.ValueType) Symbol {
 	return Symbol{
 		name:            name,
 		stype:           stype,
 		declarationNode: declarationNode,
 		valueType:       valueType,
-		originFile:      originFile,
 	}
 }
 
@@ -38,10 +36,6 @@ func (s Symbol) Name() string {
 
 func (s Symbol) Type() Type {
 	return s.stype
-}
-
-func (s Symbol) OriginFile() string {
-	return s.originFile
 }
 
 func (s Symbol) DeclarationNode() ast.Node {

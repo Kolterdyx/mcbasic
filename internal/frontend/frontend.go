@@ -63,14 +63,14 @@ func (f *Frontend) Parse(path string) error {
 		return fmt.Errorf("failed to resolve file: %s", path)
 	}
 
-	t := typeChecker.NewTypeChecker()
-	errs = t.Check(fileAst, table)
-	if len(errs) > 0 {
-		for _, err := range errs {
-			log.Error(err)
-		}
-		return fmt.Errorf("failed to type check file: %s", path)
-	}
+	//t := typeChecker.NewTypeChecker()
+	//errs = t.Check(fileAst, table)
+	//if len(errs) > 0 {
+	//	for _, err := range errs {
+	//		log.Error(err)
+	//	}
+	//	return fmt.Errorf("failed to type check file: %s", path)
+	//}
 
 	unit := &CompilationUnit{
 		FilePath: path,

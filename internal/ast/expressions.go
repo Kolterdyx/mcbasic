@@ -1,5 +1,7 @@
 package ast
 
+import "fmt"
+
 type ExpressionVisitor interface {
 	VisitBinary(b BinaryExpr) any
 	VisitGrouping(g GroupingExpr) any
@@ -21,5 +23,14 @@ type Expr interface {
 }
 
 func AcceptExpr[T any](expr Expr, v ExpressionVisitor) T {
-	return expr.Accept(v).(T)
+	res := expr.Accept(v)
+	if res == nil {
+		var zero T
+		return zero
+	}
+	val, ok := res.(T)
+	if !ok {
+		panic(fmt.Sprintf("unexpected type: got %T, want %T", res, val))
+	}
+	return val
 }

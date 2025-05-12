@@ -1,5 +1,7 @@
 package ast
 
+import "fmt"
+
 type StatementVisitor interface {
 	VisitExpression(ExpressionStmt) any
 	VisitVariableDeclaration(VariableDeclarationStmt) any
@@ -21,5 +23,14 @@ type Statement interface {
 }
 
 func AcceptStmt[T any](stmt Statement, v StatementVisitor) T {
-	return stmt.Accept(v).(T)
+	res := stmt.Accept(v)
+	if res == nil {
+		var zero T
+		return zero
+	}
+	val, ok := res.(T)
+	if !ok {
+		panic(fmt.Sprintf("unexpected type: got %T, want %T", res, val))
+	}
+	return val
 }

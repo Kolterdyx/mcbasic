@@ -5,13 +5,13 @@ import (
 	"embed"
 	"encoding/json"
 	"github.com/BurntSushi/toml"
-	"github.com/Kolterdyx/mcbasic/internal/compiler"
 	frontend "github.com/Kolterdyx/mcbasic/internal/frontend"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v3"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -50,7 +50,11 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 
 	front := frontend.NewFrontend(projectRoot)
 
-	err := front.Parse(entrypoint)
+	absEntrypoint, err := filepath.Abs(path.Join(projectRoot, entrypoint))
+	if err != nil {
+		return err
+	}
+	err = front.Parse(absEntrypoint)
 	if err != nil {
 		return err
 	}
@@ -60,12 +64,12 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 		return err
 	}
 
-	c := compiler.NewCompiler(config, headers, libs)
-	err = c.Compile(program)
-	if err != nil {
-		log.Error(err)
-		return cli.Exit("There was an error compiling the program", 1)
-	}
+	//c := compiler.NewCompiler(config, headers, libs)
+	//err = c.Compile(program)
+	//if err != nil {
+	//	log.Error(err)
+	//	return cli.Exit("There was an error compiling the program", 1)
+	//}
 	log.Info("Compilation complete")
 	return nil
 }
