@@ -7,7 +7,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/symbol"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
-	log "github.com/sirupsen/logrus"
 )
 
 func (p *Parser) statement() (statements.Stmt, error) {
@@ -76,25 +75,6 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 			return nil, err
 		}
 	}
-	if initializer != nil {
-		if list, ok := initializer.(expressions.ListExpr); ok {
-			// Allow assignment as long as varType is a list
-			if !p.isListType(varType) {
-				return nil, p.error(p.previous(), "Cannot assign empty list to non-list type.")
-			}
-			if len(list.Elements) == 0 {
-				list.ValueType = varType
-			}
-			initializer = list
-		}
-		if varType == nil {
-			varType = initializer.ReturnType()
-		}
-		if initializer.ReturnType() != varType {
-			log.Warnf("%+v", initializer.ReturnType())
-			return nil, p.error(p.previous(), fmt.Sprintf("Cannot assign %s to %s.", initializer.ReturnType().ToString(), varType.ToString()))
-		}
-	}
 	_, err = p.consume(tokens.Semicolon, "Expected ';' or '=' after variable declaration.")
 	if err != nil {
 		return nil, err
@@ -102,12 +82,8 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 
 	stmt := statements.VariableDeclarationStmt{
 		Name:        name,
-		ValueType:   varType,
 		Initializer: initializer,
-	}
-	err = p.symbols.Define(symbol.NewSymbol(name.Lexeme, symbol.VariableSymbol, stmt, p.filePath))
-	if err != nil {
-		return nil, p.error(name, fmt.Sprintf("Variable '%s' already defined in this scope.", name.Lexeme))
+		ValueType:   varType,
 	}
 	return stmt, nil
 }
@@ -186,13 +162,6 @@ func (p *Parser) variableAssignment() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	targetValueType, err := p.getNestedType(name, accessors)
-	if err != nil {
-		return nil, err
-	}
-	if !valueExpr.ReturnType().Equals(targetValueType) {
-		return nil, p.error(p.previous(), fmt.Sprintf("Cannot assign %s to %s.", valueExpr.ReturnType().ToString(), targetValueType.ToString()))
-	}
 	if _, err := p.consume(tokens.Semicolon, "Expected ';' after assignment."); err != nil {
 		return nil, err
 	}
@@ -213,6 +182,7 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 		return nil, err
 	}
 	parameters := make([]statements.VariableDeclarationStmt, 0)
+	parameterTypes := make([]types.ValueType, 0)
 	if !p.check(tokens.ParenClose) {
 		for {
 			if len(parameters) >= 255 {
@@ -226,9 +196,9 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 			if err != nil {
 				return nil, err
 			}
+			parameterTypes = append(parameterTypes, valueType)
 			parameters = append(parameters, statements.VariableDeclarationStmt{
-				Name:      argName,
-				ValueType: valueType,
+				Name: argName,
 			})
 			if !p.match(tokens.Comma) {
 				break
@@ -251,14 +221,14 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 	}
 
 	stmt := statements.FunctionDeclarationStmt{Name: name, Parameters: parameters, ReturnType: returnType}
-	err = p.symbols.Define(symbol.NewSymbol(name.Lexeme, symbol.FunctionSymbol, stmt, p.filePath))
+	err = p.symbols.Define(symbol.NewSymbol(name.Lexeme, symbol.FunctionSymbol, stmt, returnType, p.filePath))
 	if err != nil {
 		return nil, p.error(name, fmt.Sprintf("Function '%s' already defined in this scope.", name.Lexeme))
 	}
 
 	return stmt, p.withScope(name.Lexeme, func() error {
-		for _, arg := range parameters {
-			err = p.symbols.Define(symbol.NewSymbol(arg.Name.Lexeme, symbol.VariableSymbol, arg, p.filePath))
+		for i, parameter := range parameters {
+			err = p.symbols.Define(symbol.NewSymbol(parameter.Name.Lexeme, symbol.VariableSymbol, parameter, parameterTypes[i], p.filePath))
 		}
 		body, err := p.block()
 		if err != nil {
@@ -314,11 +284,9 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 		return nil, p.error(p.peek(), "Struct must have at least one field.")
 	}
 	stmt := statements.StructDeclarationStmt{
-		Name:       name,
-		StructType: structType,
+		Name: name,
 	}
-	//p.structs[name.Lexeme] = stmt
-	err = p.symbols.Define(symbol.NewSymbol(name.Lexeme, symbol.StructSymbol, stmt, p.filePath))
+	err = p.symbols.Define(symbol.NewSymbol(name.Lexeme, symbol.StructSymbol, stmt, structType, p.filePath))
 	if err != nil {
 		return nil, p.error(name, fmt.Sprintf("Struct '%s' already defined in this scope.", name.Lexeme))
 	}

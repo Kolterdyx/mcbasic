@@ -12,8 +12,8 @@ type VariableDeclarationStmt struct {
 	Stmt
 
 	Name        tokens.Token
-	ValueType   types.ValueType
 	Initializer expressions.Expr
+	ValueType   types.ValueType
 }
 
 func (v VariableDeclarationStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
@@ -26,7 +26,7 @@ func (v VariableDeclarationStmt) Type() ast.NodeType {
 
 func (v VariableDeclarationStmt) ToString() string {
 	if v.Initializer != nil {
-		return v.ValueType.ToString() + " " + v.Name.Lexeme + " = " + v.Initializer.ToString() + ";"
+		return v.Name.Lexeme + " = " + v.Initializer.ToString() + ";"
 	}
-	return v.ValueType.ToString() + " " + v.Name.Lexeme + ";"
+	return v.Name.Lexeme + ";"
 }

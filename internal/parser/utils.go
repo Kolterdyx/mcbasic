@@ -60,7 +60,7 @@ func (p *Parser) error(token tokens.Token, message string) error {
 }
 
 func (p *Parser) report(line int, pos int, s string, message string) error {
-	return fmt.Errorf("[Position %d:%d] Exception%s: %s\n", line+1, pos+1, s, message)
+	return fmt.Errorf("[Position %d:%d] Syntax error%s: %s\n", line+1, pos+1, s, message)
 }
 
 func (p *Parser) consume(tokenType interfaces.TokenType, message string) (tokens.Token, error) {

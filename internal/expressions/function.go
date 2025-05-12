@@ -4,7 +4,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
-	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 type FunctionCallExpr struct {
@@ -13,7 +12,6 @@ type FunctionCallExpr struct {
 
 	Name      tokens.Token
 	Arguments []Expr
-	ValueType types.ValueType
 }
 
 func (f FunctionCallExpr) Accept(visitor ExprVisitor) interfaces.IRCode {
@@ -22,10 +20,6 @@ func (f FunctionCallExpr) Accept(visitor ExprVisitor) interfaces.IRCode {
 
 func (f FunctionCallExpr) Type() ast.NodeType {
 	return ast.FunctionCallExpression
-}
-
-func (f FunctionCallExpr) ReturnType() types.ValueType {
-	return f.ValueType
 }
 
 func (f FunctionCallExpr) ToString() string {

@@ -4,15 +4,13 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
-	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 type VariableExpr struct {
 	Expr
 	interfaces.SourceLocation
 
-	Name      tokens.Token
-	ValueType types.ValueType
+	Name tokens.Token
 }
 
 func (v VariableExpr) Accept(visitor ExprVisitor) interfaces.IRCode {
@@ -21,10 +19,6 @@ func (v VariableExpr) Accept(visitor ExprVisitor) interfaces.IRCode {
 
 func (v VariableExpr) Type() ast.NodeType {
 	return ast.VariableExpression
-}
-
-func (v VariableExpr) ReturnType() types.ValueType {
-	return v.ValueType
 }
 
 func (v VariableExpr) ToString() string {

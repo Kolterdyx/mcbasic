@@ -1,11 +1,8 @@
 package parser
 
 import (
-	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
-	"github.com/Kolterdyx/mcbasic/internal/statements"
-	"github.com/Kolterdyx/mcbasic/internal/symbol"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	"strconv"
@@ -100,10 +97,6 @@ func (p *Parser) term() (expressions.Expr, error) {
 			return nil, err
 		}
 		expr = expressions.BinaryExpr{Left: expr, Operator: operator, Right: right, SourceLocation: p.location()}
-		err = expr.Validate()
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return expr, nil
@@ -122,10 +115,6 @@ func (p *Parser) factor() (expressions.Expr, error) {
 			return nil, err
 		}
 		expr = expressions.BinaryExpr{Left: expr, Operator: operator, Right: right, SourceLocation: p.location()}
-		err = expr.Validate()
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return expr, nil
@@ -153,61 +142,21 @@ func (p *Parser) value() (expressions.Expr, error) {
 }
 
 func (p *Parser) baseValue() (expressions.Expr, error) {
-	var namespaceToken tokens.Token
-	var hasNamespace bool
-	var err error
-	if p.match(tokens.Colon) {
-		p.stepBack()
-		p.stepBack()
-	}
 
-	// First, try to parse an identifier (possibly namespaced)
 	if p.match(tokens.Identifier) {
-		// Save the identifier (might be namespace)
 		identifier := p.previous()
-
-		// If a colon follows, treat previous as namespace
-		if p.match(tokens.Colon) {
-			namespaceToken = identifier
-			hasNamespace = true
-			// Next token must be the actual identifier
-			identifier, err = p.consume(tokens.Identifier, "Expected identifier after ':'")
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		// Lookup the declared type
-		identifierSymbol, ok := p.symbols.Lookup(identifier.Lexeme)
-		if !ok {
-			return nil, p.error(identifier, "Undeclared identifier")
-		}
-		identifierType := identifierSymbol.ValueType()
 
 		// If this is a function call, delegate to functionCall (handles namespace)
 		if p.match(tokens.ParenOpen) {
-			if sym, ok := p.symbols.Lookup(identifier.Lexeme); ok && sym.Type() == symbol.StructSymbol {
-				return p.structLiteral(identifier, sym.ValueType().(types.StructTypeStruct))
-			} else {
-				return p.functionCall(namespaceToken, identifier, hasNamespace)
-			}
-		}
-
-		// Otherwise, it's a variable reference.  If namespaced, prefix the lexeme.
-		nameToken := identifier
-		if hasNamespace {
-			nameToken = tokens.Token{
-				Type:           identifier.Type,
-				Lexeme:         fmt.Sprintf("%s:%s", namespaceToken.Lexeme, identifier.Lexeme),
-				Literal:        identifier.Literal,
-				SourceLocation: identifier.SourceLocation,
-			}
+			//if sym, ok := p.symbols.Lookup(identifier.Lexeme); ok && sym.Type() == symbol.StructSymbol {
+			//	return p.structLiteral(identifier, sym.ValueType().(types.StructTypeStruct))
+			//} else {
+			return p.functionCall(identifier)
 		}
 
 		return expressions.VariableExpr{
-			Name:           nameToken,
+			Name:           identifier,
 			SourceLocation: p.location(),
-			ValueType:      identifierType,
 		}, nil
 	}
 
@@ -217,66 +166,24 @@ func (p *Parser) baseValue() (expressions.Expr, error) {
 
 // postfix wraps an Expr in as many [index] or .field as you find:
 func (p *Parser) postfix(expr expressions.Expr) (expressions.Expr, error) {
-	switch returnType := expr.ReturnType().(type) {
-	case types.PrimitiveTypeStruct:
-		if returnType != types.StringType {
-			break
-		}
-		if p.match(tokens.BracketOpen) {
-			return p.bracketPostfix(expr)
-		}
-		if p.match(tokens.Dot) {
-			if p.match(tokens.Identifier) {
-				if p.previous().Lexeme != "length" {
-					return nil, p.error(p.previous(), "Expected 'length' after '.'")
-				}
-				return expressions.FieldAccessExpr{
-					Source:         expr,
-					Field:          p.previous(),
-					SourceLocation: p.location(),
-					ValueType:      types.IntType,
-				}, nil
-			}
-		}
-	case types.ListTypeStruct:
-		if p.match(tokens.BracketOpen) {
-			return p.bracketPostfix(expr)
-		}
-		if p.match(tokens.Dot) {
-			if p.match(tokens.Identifier) {
-				if p.previous().Lexeme != "length" {
-					return nil, p.error(p.previous(), "Expected 'length' after '.'")
-				}
-				return expressions.FieldAccessExpr{
-					Source:         expr,
-					Field:          p.previous(),
-					SourceLocation: p.location(),
-					ValueType:      types.IntType,
-				}, nil
-			}
-		}
-	case types.StructTypeStruct:
-		if p.match(tokens.Dot) {
-			return p.fieldPostfix(expr, returnType)
-		}
+	if p.match(tokens.BracketOpen) {
+		return p.bracketPostfix(expr)
+	}
+	if p.match(tokens.Dot) {
+		return p.fieldPostfix(expr)
 	}
 	return expr, nil
 }
 
-func (p *Parser) fieldPostfix(expr expressions.Expr, returnType types.StructTypeStruct) (expressions.Expr, error) {
+func (p *Parser) fieldPostfix(expr expressions.Expr) (expressions.Expr, error) {
 	fieldTok, err := p.consume(tokens.Identifier, "Expected field name after '.'")
 	if err != nil {
 		return nil, err
-	}
-	fieldTokenType, ok := returnType.GetField(fieldTok.Lexeme)
-	if !ok {
-		return nil, p.error(fieldTok, fmt.Sprintf("Field '%s' not found in struct '%s'", fieldTok.Lexeme, returnType.ToString()))
 	}
 	expr = expressions.FieldAccessExpr{
 		Source:         expr,
 		Field:          fieldTok,
 		SourceLocation: p.location(),
-		ValueType:      fieldTokenType,
 	}
 	return p.postfix(expr)
 }
@@ -305,7 +212,7 @@ func (p *Parser) bracketPostfix(expr expressions.Expr) (expressions.Expr, error)
 	return p.postfix(expr)
 }
 
-func (p *Parser) functionCall(namespace tokens.Token, name tokens.Token, hasNamespace bool) (expressions.Expr, error) {
+func (p *Parser) functionCall(name tokens.Token) (expressions.Expr, error) {
 	location := p.location()
 	args := make([]expressions.Expr, 0)
 	if !p.check(tokens.ParenClose) {
@@ -329,61 +236,12 @@ func (p *Parser) functionCall(namespace tokens.Token, name tokens.Token, hasName
 	}
 	// Find the function in the current scope
 
-	lexeme := name.Lexeme
-	if hasNamespace {
-		lexeme = fmt.Sprintf("%s:%s", namespace.Lexeme, name.Lexeme)
-	}
-
-	funcSymbol, ok := p.symbols.Lookup(lexeme)
-	if !ok || funcSymbol.Type() != symbol.FunctionSymbol {
-		return nil, p.error(name, fmt.Sprintf("Function '%s' not found.", name.Lexeme))
-	}
-
-	funcStmt := funcSymbol.DeclarationNode().(statements.FunctionDeclarationStmt)
-
 	return expressions.FunctionCallExpr{Name: tokens.Token{
 		Type:           tokens.Identifier,
-		Lexeme:         lexeme,
+		Lexeme:         name.Lexeme,
 		Literal:        name.Literal,
 		SourceLocation: name.SourceLocation,
-	}, Arguments: args, SourceLocation: location, ValueType: funcStmt.ReturnType}, nil
-}
-
-func (p *Parser) structLiteral(name tokens.Token, structType types.StructTypeStruct) (expressions.Expr, error) {
-	var args []expressions.Expr
-	if !p.check(tokens.ParenClose) {
-		for {
-			exp, err := p.expression()
-			if err != nil {
-				return nil, err
-			}
-			args = append(args, exp)
-			if len(args) >= 255 {
-				return nil, p.error(p.peek(), "Cannot have more than 255 arguments.")
-			}
-			if !p.match(tokens.Comma) {
-				break
-			}
-		}
-	}
-	_, err := p.consume(tokens.ParenClose, "Expected ')' after arguments.")
-	if err != nil {
-		return nil, err
-	}
-
-	if len(args) != structType.Size() {
-		return nil, p.error(name, fmt.Sprintf("Expected %d arguments, got %d.", structType.Size(), len(args)))
-	}
-
-	fieldNames := structType.GetFieldNames()
-	for i, arg := range args {
-		fieldType, _ := structType.GetField(fieldNames[i])
-		if !arg.ReturnType().Equals(fieldType) && !fieldType.Equals(types.VoidType) {
-			return nil, p.error(p.peekCount(-(structType.Size()-i)*2), fmt.Sprintf("Expected %s, got %s.", fieldType.ToString(), arg.ReturnType().ToString()))
-		}
-	}
-
-	return expressions.StructExpr{Args: args, StructType: structType}, nil
+	}, Arguments: args, SourceLocation: location}, nil
 }
 
 func (p *Parser) slice(expr expressions.Expr) (expressions.Expr, error) {
@@ -454,11 +312,6 @@ func (p *Parser) primary() (expressions.Expr, error) {
 			expr, err := p.expression()
 			if err != nil {
 				return nil, err
-			}
-			if contentType == types.VoidType {
-				contentType = expr.ReturnType()
-			} else if contentType != expr.ReturnType() {
-				return nil, p.error(p.previous(), fmt.Sprintf("Expected %s, got %s.", contentType.ToString(), expr.ReturnType().ToString()))
 			}
 			elems = append(elems, expr)
 			if p.check(tokens.BracketClose) {

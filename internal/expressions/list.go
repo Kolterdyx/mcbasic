@@ -22,10 +22,6 @@ func (l ListExpr) Type() ast.NodeType {
 	return ast.ListExpression
 }
 
-func (l ListExpr) ReturnType() types.ValueType {
-	return l.ValueType
-}
-
 func (l ListExpr) ToString() string {
 	if len(l.Elements) == 0 {
 		return "[]"

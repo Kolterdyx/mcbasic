@@ -2,7 +2,6 @@ package symbol
 
 import (
 	"github.com/Kolterdyx/mcbasic/internal/ast"
-	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
@@ -19,14 +18,16 @@ type Symbol struct {
 	name            string
 	stype           Type
 	declarationNode ast.Node
+	valueType       types.ValueType
 	originFile      string
 }
 
-func NewSymbol(name string, stype Type, declarationNode ast.Node, originFile string) Symbol {
+func NewSymbol(name string, stype Type, declarationNode ast.Node, valueType types.ValueType, originFile string) Symbol {
 	return Symbol{
 		name:            name,
 		stype:           stype,
 		declarationNode: declarationNode,
+		valueType:       valueType,
 		originFile:      originFile,
 	}
 }
@@ -48,19 +49,5 @@ func (s Symbol) DeclarationNode() ast.Node {
 }
 
 func (s Symbol) ValueType() types.ValueType {
-	switch s.stype {
-	case VariableSymbol:
-		if variable, ok := s.declarationNode.(statements.VariableDeclarationStmt); ok {
-			return variable.ValueType
-		}
-	case FunctionSymbol:
-		if function, ok := s.declarationNode.(statements.FunctionDeclarationStmt); ok {
-			return function.ReturnType
-		}
-	case StructSymbol:
-		if structDecl, ok := s.declarationNode.(statements.StructDeclarationStmt); ok {
-			return structDecl.StructType
-		}
-	}
-	return nil
+	return s.valueType
 }
