@@ -77,8 +77,8 @@ func (c *Compiler) makeBranchFunction(branchName string, body ast.BlockStmt) int
 	return ir.NewFunction(branchName, source)
 }
 
-func (c *Compiler) error(location interfaces.SourceLocation, message string) {
-	log.Errorf("[Position %s] Exception: %s\n", location.ToString(), message)
+func (c *Compiler) error(location ast.Node, message string) {
+	log.Errorf("[Position %s] Exception: %s\n", location.GetSourceLocation().ToString(), message)
 }
 
 func (c *Compiler) varPath(path string) string {
