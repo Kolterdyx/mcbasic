@@ -59,7 +59,6 @@ func (t *TypeChecker) VisitLogical(expr ast.LogicalExpr) any {
 }
 
 func (t *TypeChecker) VisitSlice(expr ast.SliceExpr) any {
-	// TODO: fix for strings or lists
 	targetType := ast.AcceptExpr[types.ValueType](expr.TargetExpr, t)
 	sIndexType := ast.AcceptExpr[types.ValueType](expr.StartIndex, t)
 	if sIndexType != types.IntType {
