@@ -3,6 +3,7 @@ package resolver
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/ast"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 func (r *Resolver) VisitBinary(expr ast.BinaryExpr) any {
@@ -34,6 +35,10 @@ func (r *Resolver) VisitVariable(expr ast.VariableExpr) any {
 }
 
 func (r *Resolver) VisitFieldAccess(expr ast.FieldAccessExpr) any {
+	_, ok := ast.AcceptExpr[types.ValueType](expr.Expr, r).GetField(expr.Field.Lexeme)
+	if !ok {
+		return r.error(expr, fmt.Sprintf("field %s not defined", expr.Field.Lexeme))
+	}
 	return nil
 }
 

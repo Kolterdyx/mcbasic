@@ -26,18 +26,12 @@ func (t *TypeChecker) VisitUnary(expr ast.UnaryExpr) any {
 }
 
 func (t *TypeChecker) VisitVariable(expr ast.VariableExpr) any {
-	sym, ok := t.table.Lookup(expr.Name.Lexeme)
-	if !ok {
-		t.error(expr, fmt.Sprintf("variable %s not defined", expr.Name.Lexeme))
-	}
+	sym, _ := t.table.Lookup(expr.Name.Lexeme)
 	return sym.ValueType()
 }
 
 func (t *TypeChecker) VisitFieldAccess(expr ast.FieldAccessExpr) any {
-	vtype, ok := ast.AcceptExpr[types.ValueType](expr.Expr, t).GetField(expr.Field.Lexeme)
-	if !ok {
-		t.error(expr, fmt.Sprintf("field %s not found in %s", expr.Field.Lexeme, expr.Expr.ToString()))
-	}
+	vtype, _ := ast.AcceptExpr[types.ValueType](expr.Expr, t).GetField(expr.Field.Lexeme)
 	return vtype
 }
 
@@ -46,6 +40,7 @@ func (t *TypeChecker) VisitFunctionCall(expr ast.FunctionCallExpr) any {
 	funcStmt := sym.DeclarationNode().(ast.FunctionDeclarationStmt)
 	if len(expr.Arguments) != len(funcStmt.Parameters) {
 		t.error(expr, fmt.Sprintf("function %s expects %d arguments, got %d", expr.Name.Lexeme, len(funcStmt.Parameters), len(expr.Arguments)))
+		return sym.ValueType()
 	}
 	for i, arg := range expr.Arguments {
 		ptype := ast.AcceptExpr[types.ValueType](arg, t)
@@ -65,15 +60,24 @@ func (t *TypeChecker) VisitLogical(expr ast.LogicalExpr) any {
 
 func (t *TypeChecker) VisitSlice(expr ast.SliceExpr) any {
 	// TODO: fix for strings or lists
-	err := ast.AcceptExpr[types.ValueType](expr.TargetExpr, t)
-	if err != nil {
-		return err
+	targetType := ast.AcceptExpr[types.ValueType](expr.TargetExpr, t)
+	sIndexType := ast.AcceptExpr[types.ValueType](expr.StartIndex, t)
+	if sIndexType != types.IntType {
+		t.error(expr.StartIndex, fmt.Sprintf("index must be int, got %s", sIndexType.ToString()))
 	}
-	err = ast.AcceptExpr[types.ValueType](expr.StartIndex, t)
-	if err != nil {
-		return err
+	if expr.EndIndex != nil {
+		eIndexType := ast.AcceptExpr[types.ValueType](expr.EndIndex, t)
+		if eIndexType != types.IntType {
+			t.error(expr.EndIndex, fmt.Sprintf("index must be int, got %s", eIndexType.ToString()))
+		}
 	}
-	return ast.AcceptExpr[types.ValueType](expr.EndIndex, t)
+	if targetType == types.StringType {
+		return types.StringType
+	} else if listType, ok := targetType.(*types.ListTypeStruct); ok {
+		return listType.ContentType
+	}
+	t.error(expr.TargetExpr, fmt.Sprintf("target must be string or list, got %s", targetType.ToString()))
+	return types.VoidType
 }
 
 func (t *TypeChecker) VisitList(expr ast.ListExpr) any {
@@ -84,5 +88,5 @@ func (t *TypeChecker) VisitList(expr ast.ListExpr) any {
 			return err
 		}
 	}
-	return nil
+	return types.VoidType
 }
