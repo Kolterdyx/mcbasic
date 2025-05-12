@@ -43,9 +43,9 @@ func (f *Frontend) Parse(path string) error {
 	}
 
 	table := symbol.NewTable(nil, "file:"+path, path)
-	p := parser.NewParser(tokens, f.symbolManager, table)
+	p := parser.NewParser(tokens)
 
-	syms, fileAst, errs := p.Parse()
+	fileAst, errs := p.Parse()
 	if len(errs) > 0 {
 		return err
 	}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
-	"github.com/Kolterdyx/mcbasic/internal/symbol"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
@@ -101,12 +100,7 @@ func (p *Parser) ParseType() (types.ValueType, error) {
 	case p.match(tokens.VoidType):
 		varType = types.VoidType
 	case p.match(tokens.Identifier):
-		structName := p.previous().Lexeme
-		structSymbol, ok := p.symbols.Lookup(structName)
-		if !ok {
-			return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", structName))
-		}
-		varType = structSymbol.ValueType()
+		varType = types.NewNamedType(p.previous().Lexeme)
 	default:
 		return nil, p.error(p.peek(), "Expected type.")
 	}
@@ -220,23 +214,13 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 		return nil, err
 	}
 
-	stmt := statements.FunctionDeclarationStmt{Name: name, Parameters: parameters, ReturnType: returnType}
-	err = p.symbols.Define(symbol.NewSymbol(name.Lexeme, symbol.FunctionSymbol, stmt, returnType, p.filePath))
+	body, err := p.block()
 	if err != nil {
-		return nil, p.error(name, fmt.Sprintf("Function '%s' already defined in this scope.", name.Lexeme))
+		return nil, err
 	}
+	stmt := statements.FunctionDeclarationStmt{Name: name, Parameters: parameters, ReturnType: returnType, Body: body}
 
-	return stmt, p.withScope(name.Lexeme, func() error {
-		for i, parameter := range parameters {
-			err = p.symbols.Define(symbol.NewSymbol(parameter.Name.Lexeme, symbol.VariableSymbol, parameter, parameterTypes[i], p.filePath))
-		}
-		body, err := p.block()
-		if err != nil {
-			return err
-		}
-		stmt.Body = body
-		return nil
-	})
+	return stmt, nil
 }
 
 func (p *Parser) structDeclaration() (statements.Stmt, error) {
@@ -284,11 +268,8 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 		return nil, p.error(p.peek(), "Struct must have at least one field.")
 	}
 	stmt := statements.StructDeclarationStmt{
-		Name: name,
-	}
-	err = p.symbols.Define(symbol.NewSymbol(name.Lexeme, symbol.StructSymbol, stmt, structType, p.filePath))
-	if err != nil {
-		return nil, p.error(name, fmt.Sprintf("Struct '%s' already defined in this scope.", name.Lexeme))
+		Name:       name,
+		StructType: structType,
 	}
 	return stmt, nil
 }
@@ -380,11 +361,7 @@ func (p *Parser) ifStatement() (statements.Stmt, error) {
 func (p *Parser) returnStatement() (statements.Stmt, error) {
 	var expr expressions.Expr = nil
 	var err error
-	funcSymbol, ok := p.symbols.Lookup(p.symbols.ScopeName())
-	if !ok {
-		return nil, p.error(p.previous(), "Cannot return from top-level code.")
-	}
-	if funcSymbol.ValueType() != types.VoidType {
+	if !p.check(tokens.Semicolon) {
 		expr, err = p.expression()
 		if err != nil {
 			return nil, err

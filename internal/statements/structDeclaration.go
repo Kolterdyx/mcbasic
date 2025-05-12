@@ -4,12 +4,14 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 type StructDeclarationStmt struct {
 	Stmt
 
-	Name tokens.Token
+	Name       tokens.Token
+	StructType types.StructTypeStruct
 }
 
 func (s StructDeclarationStmt) Accept(visitor StmtVisitor) interfaces.IRCode {
