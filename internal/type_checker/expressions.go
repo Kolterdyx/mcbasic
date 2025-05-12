@@ -7,12 +7,9 @@ import (
 )
 
 func (t *TypeChecker) VisitBinary(expr ast.BinaryExpr) any {
-	// TODO: fix
+	// TODO: check type compatibility based on operator
 	rtype := ast.AcceptExpr[types.ValueType](expr.Right, t)
 	ltype := ast.AcceptExpr[types.ValueType](expr.Left, t)
-	if rtype == nil || ltype == nil {
-		return nil
-	}
 	return rtype
 }
 
@@ -45,6 +42,7 @@ func (t *TypeChecker) VisitFieldAccess(expr ast.FieldAccessExpr) any {
 }
 
 func (t *TypeChecker) VisitFunctionCall(expr ast.FunctionCallExpr) any {
+	// TODO: check parameter types
 	sym, ok := t.table.Lookup(expr.Name.Lexeme)
 	if !ok {
 		t.error(expr, fmt.Sprintf("function %s not defined", expr.Name.Lexeme))
@@ -53,13 +51,14 @@ func (t *TypeChecker) VisitFunctionCall(expr ast.FunctionCallExpr) any {
 }
 
 func (t *TypeChecker) VisitLogical(expr ast.LogicalExpr) any {
+	// TODO: check type compatibility based on operator
 	rvalue := ast.AcceptExpr[types.ValueType](expr.Right, t)
 	lvalue := ast.AcceptExpr[types.ValueType](expr.Left, t)
 	return rvalue
 }
 
 func (t *TypeChecker) VisitSlice(expr ast.SliceExpr) any {
-	// TODO: fix
+	// TODO: fix for strings or lists
 	err := ast.AcceptExpr[types.ValueType](expr.TargetExpr, t)
 	if err != nil {
 		return err
