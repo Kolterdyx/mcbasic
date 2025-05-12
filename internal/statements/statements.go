@@ -15,7 +15,6 @@ type StmtVisitor interface {
 	VisitWhile(WhileStmt) interfaces.IRCode
 	VisitIf(IfStmt) interfaces.IRCode
 	VisitReturn(ReturnStmt) interfaces.IRCode
-	VisitScore(ScoreStmt) interfaces.IRCode
 	VisitSetReturnFlag(SetReturnFlagStmt) interfaces.IRCode
 	VisitImport(ImportStmt) interfaces.IRCode
 }

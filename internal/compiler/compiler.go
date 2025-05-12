@@ -173,21 +173,21 @@ func (c *Compiler) setFunctionDefinitions(program parser.Program) {
 	c.functionDefinitions = parser.GetHeaderFuncDefs(c.headers)
 	for _, function := range program.Functions {
 		f := interfaces.FunctionDefinition{
-			Name:       function.Name,
+			Name:       function.Name.Lexeme,
 			Args:       make([]interfaces.TypedIdentifier, 0),
 			ReturnType: function.ReturnType,
 		}
 		for _, parameter := range function.Parameters {
 			f.Args = append(f.Args, interfaces.TypedIdentifier{
-				Name: parameter.Name,
-				Type: parameter.Type,
+				Name: parameter.Name.Lexeme,
+				Type: parameter.ValueType,
 			})
 		}
 		f.Args = append(f.Args, interfaces.TypedIdentifier{
 			Name: "__call__",
 			Type: types.IntType,
 		})
-		c.functionDefinitions[function.Name] = f
+		c.functionDefinitions[function.Name.Lexeme] = f
 	}
 }
 

@@ -1,6 +1,8 @@
 package interfaces
 
-import "github.com/Kolterdyx/mcbasic/internal/types"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/types"
+)
 
 type TypedIdentifier struct {
 	Name string

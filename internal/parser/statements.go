@@ -3,8 +3,8 @@ package parser
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
-	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
+	"github.com/Kolterdyx/mcbasic/internal/symbol"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	log "github.com/sirupsen/logrus"
@@ -99,15 +99,17 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	p.variables[p.currentScope] = append(p.variables[p.currentScope], interfaces.TypedIdentifier{
-		Name: name.Lexeme,
-		Type: varType,
-	})
-	return statements.VariableDeclarationStmt{
+
+	stmt := statements.VariableDeclarationStmt{
 		Name:        name,
 		ValueType:   varType,
 		Initializer: initializer,
-	}, nil
+	}
+	err = p.symbols.Define(symbol.NewSymbol(name.Lexeme, symbol.VariableSymbol, stmt, p.filePath))
+	if err != nil {
+		return nil, p.error(name, fmt.Sprintf("Variable '%s' already defined in this scope.", name.Lexeme))
+	}
+	return stmt, nil
 }
 
 func (p *Parser) ParseType() (types.ValueType, error) {
@@ -124,11 +126,11 @@ func (p *Parser) ParseType() (types.ValueType, error) {
 		varType = types.VoidType
 	case p.match(tokens.Identifier):
 		structName := p.previous().Lexeme
-		structStmt, ok := p.structs[structName]
+		structSymbol, ok := p.symbols.Lookup(structName)
 		if !ok {
 			return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", structName))
 		}
-		varType = structStmt.StructType
+		varType = structSymbol.ValueType()
 	default:
 		return nil, p.error(p.peek(), "Expected type.")
 	}
@@ -210,7 +212,7 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	parameters := make([]interfaces.TypedIdentifier, 0)
+	parameters := make([]statements.VariableDeclarationStmt, 0)
 	if !p.check(tokens.ParenClose) {
 		for {
 			if len(parameters) >= 255 {
@@ -224,7 +226,10 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 			if err != nil {
 				return nil, err
 			}
-			parameters = append(parameters, interfaces.TypedIdentifier{Name: argName.Lexeme, Type: valueType})
+			parameters = append(parameters, statements.VariableDeclarationStmt{
+				Name:      argName,
+				ValueType: valueType,
+			})
 			if !p.match(tokens.Comma) {
 				break
 			}
@@ -244,17 +249,24 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 	if err != nil && !p.check(tokens.BraceOpen) {
 		return nil, err
 	}
-	// Add all parameters to the current scope
-	p.currentScope = name.Lexeme
-	p.functions[p.currentScope] = interfaces.FunctionDefinition{Name: name.Lexeme, Args: parameters, ReturnType: returnType}
-	for _, arg := range parameters {
-		p.variables[p.currentScope] = append(p.variables[p.currentScope], interfaces.TypedIdentifier{Name: arg.Name, Type: arg.Type})
-	}
-	body, err := p.block()
+
+	stmt := statements.FunctionDeclarationStmt{Name: name, Parameters: parameters, ReturnType: returnType}
+	err = p.symbols.Define(symbol.NewSymbol(name.Lexeme, symbol.FunctionSymbol, stmt, p.filePath))
 	if err != nil {
-		return nil, err
+		return nil, p.error(name, fmt.Sprintf("Function '%s' already defined in this scope.", name.Lexeme))
 	}
-	return statements.FunctionDeclarationStmt{Name: name.Lexeme, Parameters: parameters, ReturnType: returnType, Body: body}, nil
+
+	return stmt, p.withScope(name.Lexeme, func() error {
+		for _, arg := range parameters {
+			err = p.symbols.Define(symbol.NewSymbol(arg.Name.Lexeme, symbol.VariableSymbol, arg, p.filePath))
+		}
+		body, err := p.block()
+		if err != nil {
+			return err
+		}
+		stmt.Body = body
+		return nil
+	})
 }
 
 func (p *Parser) structDeclaration() (statements.Stmt, error) {
@@ -305,7 +317,11 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 		Name:       name,
 		StructType: structType,
 	}
-	p.structs[name.Lexeme] = stmt
+	//p.structs[name.Lexeme] = stmt
+	err = p.symbols.Define(symbol.NewSymbol(name.Lexeme, symbol.StructSymbol, stmt, p.filePath))
+	if err != nil {
+		return nil, p.error(name, fmt.Sprintf("Struct '%s' already defined in this scope.", name.Lexeme))
+	}
 	return stmt, nil
 }
 
@@ -320,7 +336,7 @@ func (p *Parser) block(checkBraces ...bool) (statements.BlockStmt, error) {
 	for !p.check(tokens.BraceClose) && !p.IsAtEnd() {
 		stmt, err := p.statement()
 		if err != nil {
-			p.Errors = append(p.Errors, err)
+			p.errors = append(p.errors, err)
 			p.synchronize()
 			continue
 		}
@@ -396,7 +412,11 @@ func (p *Parser) ifStatement() (statements.Stmt, error) {
 func (p *Parser) returnStatement() (statements.Stmt, error) {
 	var expr expressions.Expr = nil
 	var err error
-	if p.functions[p.currentScope].ReturnType != types.VoidType {
+	funcSymbol, ok := p.symbols.Lookup(p.symbols.ScopeName())
+	if !ok {
+		return nil, p.error(p.previous(), "Cannot return from top-level code.")
+	}
+	if funcSymbol.ValueType() != types.VoidType {
 		expr, err = p.expression()
 		if err != nil {
 			return nil, err

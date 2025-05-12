@@ -5,11 +5,10 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/scanner"
 	"github.com/Kolterdyx/mcbasic/internal/statements"
+	"github.com/Kolterdyx/mcbasic/internal/symbol"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	log "github.com/sirupsen/logrus"
-	"reflect"
-	"strings"
 )
 
 func (p *Parser) match(tokenTypes ...interfaces.TokenType) bool {
@@ -27,7 +26,7 @@ func (p *Parser) match(tokenTypes ...interfaces.TokenType) bool {
 }
 
 func (p *Parser) IsAtEnd() bool {
-	return p.current >= len(p.Tokens)
+	return p.current >= len(p.tokenSource)
 }
 
 func (p *Parser) check(tokenType interfaces.TokenType) bool {
@@ -49,7 +48,7 @@ func (p *Parser) advance() tokens.Token {
 }
 
 func (p *Parser) previous() tokens.Token {
-	return p.Tokens[p.current-1]
+	return p.tokenSource[p.current-1]
 }
 
 func (p *Parser) error(token tokens.Token, message string) error {
@@ -97,33 +96,10 @@ func (p *Parser) location() interfaces.SourceLocation {
 }
 
 func (p *Parser) peekCount(offset int) tokens.Token {
-	if p.current+offset >= len(p.Tokens) {
-		return p.Tokens[len(p.Tokens)-1]
+	if p.current+offset >= len(p.tokenSource) {
+		return p.tokenSource[len(p.tokenSource)-1]
 	}
-	return p.Tokens[p.current+offset]
-}
-
-func (p *Parser) getDeclaredType(name tokens.Token) types.ValueType {
-	// Search the variable in the current scope
-	for _, varDef := range p.variables[p.currentScope] {
-		if varDef.Name == name.Lexeme {
-			return varDef.Type
-		}
-	}
-	for _, f := range p.functions {
-
-		split := strings.Split(f.Name, ":")
-		if len(split) > 2 {
-			log.Fatalf("Invalid function name: %s", f.Name)
-		}
-		if len(split) == 2 && split[1] == name.Lexeme || len(split) == 1 && f.Name == name.Lexeme {
-			return f.ReturnType
-		}
-	}
-	if structStmt, ok := p.structs[name.Lexeme]; ok {
-		return structStmt.StructType
-	}
-	return nil
+	return p.tokenSource[p.current+offset]
 }
 
 func (p *Parser) isListType(varType types.ValueType) bool {
@@ -140,7 +116,6 @@ func (p *Parser) isStructType(varType types.ValueType) bool {
 	case types.StructTypeStruct:
 		return true
 	default:
-		log.Debugf("isStructType: %+v", reflect.TypeOf(varType))
 		return false
 	}
 }
@@ -167,10 +142,11 @@ func (p *Parser) getTokenAsValueType(token tokens.Token) (types.ValueType, error
 
 // getNestedType traverses the accessors to find the type at the end
 func (p *Parser) getNestedType(name tokens.Token, accessors []statements.Accessor) (types.ValueType, error) {
-	varType := p.getDeclaredType(name)
-	if varType == nil {
+	varSymbol, ok := p.symbols.Lookup(name.Lexeme)
+	if !ok {
 		return nil, p.error(name, "Undeclared identifier")
 	}
+	varType := varSymbol.ValueType()
 	var err error
 	accessPath := name.Lexeme
 	for _, accessor := range accessors {
@@ -205,8 +181,15 @@ func (p *Parser) getNestedType(name tokens.Token, accessors []statements.Accesso
 
 func parseType(valueType string) (types.ValueType, error) {
 	s := scanner.Scanner{}
+	tokenSource, errs := s.Scan(valueType)
+	if len(errs) > 0 {
+		for _, err := range errs {
+			log.Errorf("Error parsing type: %s", err)
+		}
+		return nil, fmt.Errorf("error parsing type: %s", valueType)
+	}
 	p := Parser{
-		Tokens: s.Scan(valueType),
+		tokenSource: tokenSource,
 	}
 	return p.ParseType()
 }
@@ -244,4 +227,13 @@ func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interface
 		log.Debugf("Loaded header: %s. Functions: %v", header.Namespace, len(header.Definitions.Functions))
 	}
 	return funcDefs
+}
+
+func (p *Parser) withScope(name string, callback func() error) error {
+	newTable := symbol.NewTable(p.symbols, name, p.filePath)
+	oldTable := p.symbols
+	p.symbols = newTable
+	err := callback()
+	p.symbols = oldTable
+	return err
 }

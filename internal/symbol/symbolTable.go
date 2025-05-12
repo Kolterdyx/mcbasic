@@ -20,20 +20,28 @@ func NewTable(parent *Table, scopeName string, originFile string) *Table {
 	}
 }
 
-func (t *Table) Define(symbol Symbol) error {
-	if _, exists := t.symbols[symbol.Name()]; exists {
+func (s *Table) Define(symbol Symbol) error {
+	if _, exists := s.symbols[symbol.Name()]; exists {
 		return fmt.Errorf("symbol already defined: %s", symbol.Name())
 	}
-	t.symbols[symbol.Name()] = symbol
+	s.symbols[symbol.Name()] = symbol
 	return nil
 }
 
-func (t *Table) Lookup(name string) (Symbol, bool) {
-	if symbol, exists := t.symbols[name]; exists {
+func (s *Table) Lookup(name string) (Symbol, bool) {
+	if symbol, exists := s.symbols[name]; exists {
 		return symbol, true
 	}
-	if t.parent != nil {
-		return t.parent.Lookup(name)
+	if s.parent != nil {
+		return s.parent.Lookup(name)
 	}
 	return Symbol{}, false
+}
+
+func (s *Table) ScopeName() string {
+	return s.scopeName
+}
+
+func (s *Table) OriginFile() string {
+	return s.originFile
 }

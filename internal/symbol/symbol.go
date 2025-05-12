@@ -1,30 +1,33 @@
 package symbol
 
-import "github.com/Kolterdyx/mcbasic/internal/tokens"
+import (
+	"github.com/Kolterdyx/mcbasic/internal/ast"
+	"github.com/Kolterdyx/mcbasic/internal/statements"
+	"github.com/Kolterdyx/mcbasic/internal/types"
+)
 
-type SymbolType string
+type Type string
 
 const (
-	_              SymbolType = ""
-	FunctionSymbol            = "Function"
-	StructSymbol              = "Struct"
-	VariableSymbol            = "Variable"
-	ImportSymbol              = "Import"
+	_              Type = ""
+	FunctionSymbol      = "Function"
+	StructSymbol        = "Struct"
+	VariableSymbol      = "Variable"
 )
 
 type Symbol struct {
-	name             string
-	stype            SymbolType
-	declarationToken tokens.Token
-	originFile       string
+	name            string
+	stype           Type
+	declarationNode ast.Node
+	originFile      string
 }
 
-func NewSymbol(name string, stype SymbolType, declarationToken tokens.Token, originFile string) Symbol {
+func NewSymbol(name string, stype Type, declarationNode ast.Node, originFile string) Symbol {
 	return Symbol{
-		name:             name,
-		stype:            stype,
-		declarationToken: declarationToken,
-		originFile:       originFile,
+		name:            name,
+		stype:           stype,
+		declarationNode: declarationNode,
+		originFile:      originFile,
 	}
 }
 
@@ -32,14 +35,32 @@ func (s Symbol) Name() string {
 	return s.name
 }
 
-func (s Symbol) Type() SymbolType {
+func (s Symbol) Type() Type {
 	return s.stype
-}
-
-func (s Symbol) DeclarationToken() tokens.Token {
-	return s.declarationToken
 }
 
 func (s Symbol) OriginFile() string {
 	return s.originFile
+}
+
+func (s Symbol) DeclarationNode() ast.Node {
+	return s.declarationNode
+}
+
+func (s Symbol) ValueType() types.ValueType {
+	switch s.stype {
+	case VariableSymbol:
+		if variable, ok := s.declarationNode.(statements.VariableDeclarationStmt); ok {
+			return variable.ValueType
+		}
+	case FunctionSymbol:
+		if function, ok := s.declarationNode.(statements.FunctionDeclarationStmt); ok {
+			return function.ReturnType
+		}
+	case StructSymbol:
+		if structDecl, ok := s.declarationNode.(statements.StructDeclarationStmt); ok {
+			return structDecl.StructType
+		}
+	}
+	return nil
 }

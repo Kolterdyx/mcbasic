@@ -3,8 +3,9 @@ package parser
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/expressions"
-	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
+	"github.com/Kolterdyx/mcbasic/internal/statements"
+	"github.com/Kolterdyx/mcbasic/internal/symbol"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	"strconv"
@@ -177,15 +178,16 @@ func (p *Parser) baseValue() (expressions.Expr, error) {
 		}
 
 		// Lookup the declared type
-		identifierType := p.getDeclaredType(identifier)
-		if identifierType == nil {
+		identifierSymbol, ok := p.symbols.Lookup(identifier.Lexeme)
+		if !ok {
 			return nil, p.error(identifier, "Undeclared identifier")
 		}
+		identifierType := identifierSymbol.ValueType()
 
 		// If this is a function call, delegate to functionCall (handles namespace)
 		if p.match(tokens.ParenOpen) {
-			if structStmt, ok := p.structs[identifier.Lexeme]; ok {
-				return p.structLiteral(identifier, structStmt.StructType)
+			if sym, ok := p.symbols.Lookup(identifier.Lexeme); ok && sym.Type() == symbol.StructSymbol {
+				return p.structLiteral(identifier, sym.ValueType().(types.StructTypeStruct))
 			} else {
 				return p.functionCall(namespaceToken, identifier, hasNamespace)
 			}
@@ -332,31 +334,19 @@ func (p *Parser) functionCall(namespace tokens.Token, name tokens.Token, hasName
 		lexeme = fmt.Sprintf("%s:%s", namespace.Lexeme, name.Lexeme)
 	}
 
-	var funcDef *interfaces.FunctionDefinition = nil
-	for _, f := range p.functions {
-		if f.Name == lexeme {
-			if len(f.Args) != len(args) {
-				return nil, p.error(name, fmt.Sprintf("Expected %d arguments, got %d.", len(f.Args), len(args)))
-			}
-			for i, arg := range args {
-				if arg.ReturnType() != f.Args[i].Type && f.Args[i].Type != types.VoidType {
-					return nil, p.error(p.peekCount(-(len(f.Args)-i)*2), fmt.Sprintf("Expected %s, got %s.", f.Args[i].Type.ToString(), arg.ReturnType().ToString()))
-				}
-			}
-			funcDef = &f
-			break
-		}
+	funcSymbol, ok := p.symbols.Lookup(lexeme)
+	if !ok || funcSymbol.Type() != symbol.FunctionSymbol {
+		return nil, p.error(name, fmt.Sprintf("Function '%s' not found.", name.Lexeme))
 	}
-	if funcDef == nil {
-		return nil, p.error(name, fmt.Sprintf("Function %s not found.", name.Lexeme))
-	}
+
+	funcStmt := funcSymbol.DeclarationNode().(statements.FunctionDeclarationStmt)
 
 	return expressions.FunctionCallExpr{Name: tokens.Token{
 		Type:           tokens.Identifier,
 		Lexeme:         lexeme,
 		Literal:        name.Literal,
 		SourceLocation: name.SourceLocation,
-	}, Arguments: args, SourceLocation: location, ValueType: funcDef.ReturnType}, nil
+	}, Arguments: args, SourceLocation: location, ValueType: funcStmt.ReturnType}, nil
 }
 
 func (p *Parser) structLiteral(name tokens.Token, structType types.StructTypeStruct) (expressions.Expr, error) {

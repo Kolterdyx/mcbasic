@@ -6,9 +6,8 @@ import (
 	"encoding/json"
 	"github.com/BurntSushi/toml"
 	"github.com/Kolterdyx/mcbasic/internal/compiler"
+	frontend "github.com/Kolterdyx/mcbasic/internal/frontend"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
-	"github.com/Kolterdyx/mcbasic/internal/parser"
-	"github.com/Kolterdyx/mcbasic/internal/scanner"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v3"
 	"os"
@@ -48,32 +47,13 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 	config, projectRoot := parseArgs(cmd)
 
 	entrypoint := config.Project.Entrypoint
-	blob, _ := os.ReadFile(path.Join(projectRoot, entrypoint))
-	source := string(blob)
-	log.Debug("Source loaded successfully")
 
-	s := &scanner.Scanner{}
-	tokens := s.Scan(source)
-	if s.HadError {
-		return cli.Exit("There was an error parsing the program", 1)
-	}
-	log.Debug("Tokens scanned successfully")
+	front := frontend.NewFrontend(projectRoot)
 
-	headers, err := loadHeaders(config.Dependencies.Headers, projectRoot, builtinHeaders)
+	err := front.Parse(entrypoint)
 	if err != nil {
 		return err
 	}
-
-	parser_ := parser.Parser{Tokens: tokens, Headers: headers}
-	program, errs := parser_.Parse()
-	if len(errs) != 0 {
-		for _, err := range errs {
-			log.Error(err)
-		}
-		return cli.Exit("There was an error parsing the program", 1)
-	}
-	log.Debug("Program parsed successfully")
-
 	// Remove the contents of the output directory
 	err = os.RemoveAll(path.Join(config.OutputDir, config.Project.Name))
 	if err != nil {

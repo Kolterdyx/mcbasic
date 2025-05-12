@@ -8,11 +8,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
-type VarDef struct {
-	Name string
-	Type types.ValueType
-}
-
 type VariableDeclarationStmt struct {
 	Stmt
 
