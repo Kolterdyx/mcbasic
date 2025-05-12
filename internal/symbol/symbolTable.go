@@ -49,3 +49,10 @@ func (s *Table) OriginFile() string {
 func (s *Table) AddChild(table *Table) {
 	s.children[table.ScopeName()] = table
 }
+
+func (s *Table) GetChild(scope string) (*Table, bool) {
+	if child, exists := s.children[scope]; exists {
+		return child, true
+	}
+	return nil, false
+}

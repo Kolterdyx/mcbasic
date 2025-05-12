@@ -9,7 +9,7 @@ import (
 func (t *TypeChecker) VisitBinary(expr ast.BinaryExpr) any {
 	// TODO: check type compatibility based on operator
 	rtype := ast.AcceptExpr[types.ValueType](expr.Right, t)
-	ltype := ast.AcceptExpr[types.ValueType](expr.Left, t)
+	ast.AcceptExpr[types.ValueType](expr.Left, t)
 	return rtype
 }
 
@@ -42,10 +42,16 @@ func (t *TypeChecker) VisitFieldAccess(expr ast.FieldAccessExpr) any {
 }
 
 func (t *TypeChecker) VisitFunctionCall(expr ast.FunctionCallExpr) any {
-	// TODO: check parameter types
-	sym, ok := t.table.Lookup(expr.Name.Lexeme)
-	if !ok {
-		t.error(expr, fmt.Sprintf("function %s not defined", expr.Name.Lexeme))
+	sym, _ := t.table.Lookup(expr.Name.Lexeme)
+	funcStmt := sym.DeclarationNode().(ast.FunctionDeclarationStmt)
+	if len(expr.Arguments) != len(funcStmt.Parameters) {
+		t.error(expr, fmt.Sprintf("function %s expects %d arguments, got %d", expr.Name.Lexeme, len(funcStmt.Parameters), len(expr.Arguments)))
+	}
+	for i, arg := range expr.Arguments {
+		ptype := ast.AcceptExpr[types.ValueType](arg, t)
+		if ptype != funcStmt.Parameters[i].ValueType {
+			t.error(arg, fmt.Sprintf("argument %d of function %s has invalid type: expected %s, got %s", i, expr.Name.Lexeme, funcStmt.Parameters[i].ValueType.ToString(), ptype.ToString()))
+		}
 	}
 	return sym.ValueType()
 }
@@ -53,7 +59,7 @@ func (t *TypeChecker) VisitFunctionCall(expr ast.FunctionCallExpr) any {
 func (t *TypeChecker) VisitLogical(expr ast.LogicalExpr) any {
 	// TODO: check type compatibility based on operator
 	rvalue := ast.AcceptExpr[types.ValueType](expr.Right, t)
-	lvalue := ast.AcceptExpr[types.ValueType](expr.Left, t)
+	ast.AcceptExpr[types.ValueType](expr.Left, t)
 	return rvalue
 }
 

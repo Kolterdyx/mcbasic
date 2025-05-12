@@ -31,6 +31,7 @@ func (r *Resolver) VisitFunctionDeclaration(stmt ast.FunctionDeclarationStmt) an
 	newTable := symbol.NewTable(r.table, stmt.Name.Lexeme, r.table.OriginFile())
 	prevTable := r.table
 	r.table = newTable
+	prevTable.AddChild(newTable)
 	defer func() {
 		r.table = prevTable
 	}()

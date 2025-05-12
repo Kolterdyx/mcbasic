@@ -1,5 +1,7 @@
 package ast
 
+import "github.com/Kolterdyx/mcbasic/internal/interfaces"
+
 type ExpressionStmt struct {
 	Statement
 
@@ -16,4 +18,8 @@ func (e ExpressionStmt) Type() NodeType {
 
 func (e ExpressionStmt) ToString() string {
 	return e.Expression.ToString() + ";"
+}
+
+func (e ExpressionStmt) GetSourceLocation() interfaces.SourceLocation {
+	return e.Expression.GetSourceLocation()
 }

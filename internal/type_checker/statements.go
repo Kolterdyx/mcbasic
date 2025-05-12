@@ -5,6 +5,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/symbol"
 	"github.com/Kolterdyx/mcbasic/internal/types"
+	log "github.com/sirupsen/logrus"
 )
 
 func (t *TypeChecker) VisitExpression(stmt ast.ExpressionStmt) any {
@@ -24,33 +25,22 @@ func (t *TypeChecker) VisitVariableDeclaration(stmt ast.VariableDeclarationStmt)
 
 func (t *TypeChecker) VisitFunctionDeclaration(stmt ast.FunctionDeclarationStmt) any {
 
-	err := t.table.Define(symbol.NewSymbol(stmt.Name.Lexeme, symbol.FunctionSymbol, stmt, stmt.ReturnType))
-	if err != nil {
-		t.error(stmt, fmt.Sprintf("function %s already defined", stmt.Name.Lexeme))
-	}
-
-	newTable := symbol.NewTable(t.table, stmt.Name.Lexeme, t.table.OriginFile())
 	prevTable := t.table
+	newTable, ok := t.table.GetChild(stmt.Name.Lexeme)
+	if !ok {
+		log.Fatalf("function %s not found", stmt.Name.Lexeme)
+	}
 	t.table = newTable
 	defer func() {
 		t.table = prevTable
 	}()
 
-	for _, param := range stmt.Parameters {
-		err := t.table.Define(symbol.NewSymbol(param.Name.Lexeme, symbol.VariableSymbol, param, param.ValueType))
-		if err != nil {
-			t.error(param, fmt.Sprintf("parameter %s already defined", param.Name.Lexeme))
-		}
-	}
 	ast.AcceptStmt[any](stmt.Body, t)
 	return nil
 }
 
 func (t *TypeChecker) VisitVariableAssignment(stmt ast.VariableAssignmentStmt) any {
-	sym, ok := t.table.Lookup(stmt.Name.Lexeme)
-	if !ok {
-		t.error(stmt, fmt.Sprintf("variable %s not defined", stmt.Name.Lexeme))
-	}
+	sym, _ := t.table.Lookup(stmt.Name.Lexeme)
 	vtype := ast.AcceptExpr[types.ValueType](stmt.Value, t)
 	if !sym.ValueType().Equals(vtype) {
 		t.error(stmt, fmt.Sprintf("cannot assign %s to %s", vtype.ToString(), sym.ValueType().ToString()))

@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
@@ -22,4 +23,8 @@ func (s StructDeclarationStmt) Type() NodeType {
 
 func (s StructDeclarationStmt) ToString() string {
 	return "struct " + s.Name.Lexeme
+}
+
+func (s StructDeclarationStmt) GetSourceLocation() interfaces.SourceLocation {
+	return s.Name.SourceLocation
 }

@@ -2,10 +2,12 @@ package ast
 
 import (
 	"fmt"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 )
 
 type ImportStmt struct {
 	Statement
+	interfaces.SourceLocation
 
 	Path string
 }
@@ -20,4 +22,8 @@ func (i ImportStmt) Type() NodeType {
 
 func (i ImportStmt) ToString() string {
 	return fmt.Sprintf("import %s", i.Path)
+}
+
+func (i ImportStmt) GetSourceLocation() interfaces.SourceLocation {
+	return i.SourceLocation
 }

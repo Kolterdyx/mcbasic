@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 )
 
@@ -50,4 +51,8 @@ func (v VariableAssignmentStmt) ToString() string {
 	}
 	body += " = " + v.Value.ToString() + ";"
 	return body
+}
+
+func (v VariableAssignmentStmt) GetSourceLocation() interfaces.SourceLocation {
+	return v.Name.SourceLocation
 }

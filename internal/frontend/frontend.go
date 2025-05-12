@@ -7,6 +7,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/resolver"
 	"github.com/Kolterdyx/mcbasic/internal/scanner"
 	"github.com/Kolterdyx/mcbasic/internal/symbol"
+	"github.com/Kolterdyx/mcbasic/internal/type_checker"
 	log "github.com/sirupsen/logrus"
 	"os"
 )
@@ -63,14 +64,14 @@ func (f *Frontend) Parse(path string) error {
 		return fmt.Errorf("failed to resolve file: %s", path)
 	}
 
-	//t := typeChecker.NewTypeChecker()
-	//errs = t.Check(fileAst, table)
-	//if len(errs) > 0 {
-	//	for _, err := range errs {
-	//		log.Error(err)
-	//	}
-	//	return fmt.Errorf("failed to type check file: %s", path)
-	//}
+	t := type_checker.NewTypeChecker(fileAst, table)
+	errs = t.Check()
+	if len(errs) > 0 {
+		for _, err := range errs {
+			log.Error(err)
+		}
+		return fmt.Errorf("failed to type check file: %s", path)
+	}
 
 	unit := &CompilationUnit{
 		FilePath: path,

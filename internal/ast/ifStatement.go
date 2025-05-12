@@ -1,5 +1,7 @@
 package ast
 
+import "github.com/Kolterdyx/mcbasic/internal/interfaces"
+
 type IfStmt struct {
 	Statement
 
@@ -27,4 +29,8 @@ func (i IfStmt) ToString() string {
 		}
 	}
 	return "if " + i.Condition.ToString() + " {\n" + body + "}"
+}
+
+func (i IfStmt) GetSourceLocation() interfaces.SourceLocation {
+	return i.Condition.GetSourceLocation()
 }

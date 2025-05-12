@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
@@ -46,4 +47,8 @@ func (f FunctionDeclarationStmt) ToString() string {
 		params = params[:len(params)-2]
 	}
 	return "function " + f.Name.Lexeme + "(" + params + ") " + "\n" + body
+}
+
+func (f FunctionDeclarationStmt) GetSourceLocation() interfaces.SourceLocation {
+	return f.Name.SourceLocation
 }

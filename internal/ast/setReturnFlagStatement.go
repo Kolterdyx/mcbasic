@@ -1,5 +1,7 @@
 package ast
 
+import "github.com/Kolterdyx/mcbasic/internal/interfaces"
+
 type SetReturnFlagStmt struct {
 	Statement
 }
@@ -14,4 +16,8 @@ func (s SetReturnFlagStmt) Type() NodeType {
 
 func (s SetReturnFlagStmt) ToString() string {
 	return "retf;"
+}
+
+func (s SetReturnFlagStmt) GetSourceLocation() interfaces.SourceLocation {
+	return interfaces.SourceLocation{}
 }

@@ -23,11 +23,10 @@ func NewTypeChecker(source []ast.Statement, table *symbol.Table) *TypeChecker {
 	}
 }
 
-func (t *TypeChecker) Resolve() []error {
+func (t *TypeChecker) Check() []error {
 	for _, stmt := range t.source {
 		ast.AcceptStmt[any](stmt, t)
 	}
-
 	return t.errors
 }
 

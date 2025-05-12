@@ -1,5 +1,7 @@
 package ast
 
+import "github.com/Kolterdyx/mcbasic/internal/interfaces"
+
 type WhileStmt struct {
 	Statement
 
@@ -21,4 +23,8 @@ func (w WhileStmt) ToString() string {
 		body += stmt.ToString() + "\n"
 	}
 	return "while " + w.Condition.ToString() + " {\n" + body + "}"
+}
+
+func (w WhileStmt) GetSourceLocation() interfaces.SourceLocation {
+	return w.Condition.GetSourceLocation()
 }

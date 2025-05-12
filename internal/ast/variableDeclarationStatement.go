@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
@@ -26,4 +27,8 @@ func (v VariableDeclarationStmt) ToString() string {
 		return v.Name.Lexeme + " = " + v.Initializer.ToString() + ";"
 	}
 	return v.Name.Lexeme + ";"
+}
+
+func (v VariableDeclarationStmt) GetSourceLocation() interfaces.SourceLocation {
+	return v.Name.SourceLocation
 }

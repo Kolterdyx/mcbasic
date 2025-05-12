@@ -1,7 +1,10 @@
 package ast
 
+import "github.com/Kolterdyx/mcbasic/internal/interfaces"
+
 type ReturnStmt struct {
 	Statement
+	interfaces.SourceLocation
 
 	Expression Expr
 }
@@ -19,4 +22,8 @@ func (s ReturnStmt) ToString() string {
 		return "return " + s.Expression.ToString() + ";"
 	}
 	return "return;"
+}
+
+func (s ReturnStmt) GetSourceLocation() interfaces.SourceLocation {
+	return s.SourceLocation
 }

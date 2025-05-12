@@ -37,6 +37,7 @@ func (p *Parser) statement() (ast.Statement, error) {
 }
 
 func (p *Parser) importStatement() (ast.Statement, error) {
+	importToken := p.previous()
 	path, err := p.consume(tokens.String, "Expected path string literal after 'import'.")
 	if err != nil {
 		return nil, err
@@ -45,7 +46,7 @@ func (p *Parser) importStatement() (ast.Statement, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ast.ImportStmt{Path: path.Lexeme}, nil
+	return ast.ImportStmt{Path: path.Lexeme, SourceLocation: importToken.SourceLocation}, nil
 }
 
 func (p *Parser) expressionStatement() (ast.Statement, error) {
@@ -186,13 +187,14 @@ func (p *Parser) functionDeclaration() (ast.Statement, error) {
 			if err != nil {
 				return nil, err
 			}
-			valueType, err := p.ParseType()
+			argType, err := p.ParseType()
 			if err != nil {
 				return nil, err
 			}
-			parameterTypes = append(parameterTypes, valueType)
+			parameterTypes = append(parameterTypes, argType)
 			parameters = append(parameters, ast.VariableDeclarationStmt{
-				Name: argName,
+				Name:      argName,
+				ValueType: argType,
 			})
 			if !p.match(tokens.Comma) {
 				break
@@ -276,8 +278,10 @@ func (p *Parser) structDeclaration() (ast.Statement, error) {
 
 func (p *Parser) block(checkBraces ...bool) (ast.BlockStmt, error) {
 	stmts := make([]ast.Statement, 0)
+	var braceOpen tokens.Token
+	var err error
 	if len(checkBraces) == 0 || checkBraces[0] {
-		_, err := p.consume(tokens.BraceOpen, "Expected '{' before block.")
+		braceOpen, err = p.consume(tokens.BraceOpen, "Expected '{' before block.")
 		if err != nil {
 			return ast.BlockStmt{}, err
 		}
@@ -297,7 +301,7 @@ func (p *Parser) block(checkBraces ...bool) (ast.BlockStmt, error) {
 			return ast.BlockStmt{}, err
 		}
 	}
-	return ast.BlockStmt{Statements: stmts}, nil
+	return ast.BlockStmt{Statements: stmts, SourceLocation: braceOpen.SourceLocation}, nil
 }
 
 func (p *Parser) whileStatement() (ast.Statement, error) {
@@ -339,7 +343,7 @@ func (p *Parser) ifStatement() (ast.Statement, error) {
 	}
 	var elseBranch *ast.BlockStmt = nil
 	if p.match(tokens.Else) {
-		elseBranch = &ast.BlockStmt{Statements: make([]ast.Statement, 0)}
+		elseBranch = &ast.BlockStmt{Statements: make([]ast.Statement, 0), SourceLocation: p.previous().SourceLocation}
 		if p.match(tokens.If) {
 			branch, err := p.ifStatement()
 			if err != nil {
@@ -361,6 +365,7 @@ func (p *Parser) ifStatement() (ast.Statement, error) {
 func (p *Parser) returnStatement() (ast.Statement, error) {
 	var expr ast.Expr = nil
 	var err error
+	ret := p.previous()
 	if !p.check(tokens.Semicolon) {
 		expr, err = p.expression()
 		if err != nil {
@@ -371,5 +376,5 @@ func (p *Parser) returnStatement() (ast.Statement, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ast.ReturnStmt{Expression: expr}, nil
+	return ast.ReturnStmt{Expression: expr, SourceLocation: ret.SourceLocation}, nil
 }
