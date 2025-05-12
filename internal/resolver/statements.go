@@ -47,7 +47,7 @@ func (r *Resolver) VisitFunctionDeclaration(stmt ast.FunctionDeclarationStmt) an
 func (r *Resolver) VisitVariableAssignment(stmt ast.VariableAssignmentStmt) any {
 	_, ok := r.table.Lookup(stmt.Name.Lexeme)
 	if !ok {
-		return fmt.Errorf("variable %s not defined", stmt.Name.Lexeme)
+		return r.error(stmt, fmt.Sprintf("variable %s not defined", stmt.Name.Lexeme))
 	}
 	if stmt.Value != nil {
 		stmt.Value.Accept(r)
@@ -84,7 +84,7 @@ func (r *Resolver) VisitIf(stmt ast.IfStmt) any {
 }
 
 func (r *Resolver) VisitReturn(stmt ast.ReturnStmt) any {
-	if stmt.Expression == nil {
+	if stmt.Expression != nil {
 		stmt.Expression.Accept(r)
 	}
 	return nil

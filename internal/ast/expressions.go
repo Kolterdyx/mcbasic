@@ -19,7 +19,6 @@ type Expr interface {
 	Node
 	Accept(v ExpressionVisitor) any
 	ToString() string
-	Validate() error
 }
 
 func AcceptExpr[T any](expr Expr, v ExpressionVisitor) T {

@@ -30,3 +30,7 @@ func (f FunctionTypeStruct) ToNBT() nbt.Value {
 	log.Fatalln("FunctionTypeStruct.ToNBT() should not be called")
 	return nbt.NewCompound()
 }
+
+func (f FunctionTypeStruct) GetField(name string) (ValueType, bool) {
+	return nil, false
+}

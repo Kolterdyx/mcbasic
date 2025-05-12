@@ -53,6 +53,16 @@ func (p PrimitiveTypeStruct) Equals(other ValueType) bool {
 	return false
 }
 
+func (p PrimitiveTypeStruct) GetField(field string) (ValueType, bool) {
+	if field == "length" {
+		switch p.primitiveType {
+		case PrimitiveStringType:
+			return IntType, true
+		}
+	}
+	return nil, false
+}
+
 var (
 	VoidType   = PrimitiveTypeStruct{primitiveType: PrimitiveVoidType}
 	IntType    = PrimitiveTypeStruct{primitiveType: PrimitiveIntType}
