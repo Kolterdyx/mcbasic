@@ -104,7 +104,9 @@ func (p *Parser) ParseType() (types.ValueType, error) {
 		if definedType, ok := p.definedTypes[typeName]; ok {
 			varType = definedType
 		} else {
-			return nil, p.error(p.previous(), fmt.Sprintf("Undefined type: %s", typeName))
+			err := p.error(p.previous(), fmt.Sprintf("Undefined type: %s", typeName))
+			p.synchronize()
+			return nil, err
 		}
 	default:
 		return nil, p.error(p.peek(), "Expected type.")
