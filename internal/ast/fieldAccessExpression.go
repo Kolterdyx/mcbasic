@@ -10,20 +10,21 @@ type FieldAccessExpr struct {
 
 	Source Expr
 	Field  tokens.Token
+	ResolvedType
 }
 
-func (v FieldAccessExpr) Accept(visitor ExpressionVisitor) any {
+func (v *FieldAccessExpr) Accept(visitor ExpressionVisitor) any {
 	return visitor.VisitFieldAccess(v)
 }
 
-func (v FieldAccessExpr) Type() NodeType {
+func (v *FieldAccessExpr) Type() NodeType {
 	return FieldAccessExpression
 }
 
-func (v FieldAccessExpr) ToString() string {
+func (v *FieldAccessExpr) ToString() string {
 	return v.Source.ToString() + "." + v.Field.Lexeme
 }
 
-func (v FieldAccessExpr) GetSourceLocation() interfaces.SourceLocation {
+func (v *FieldAccessExpr) GetSourceLocation() interfaces.SourceLocation {
 	return v.SourceLocation
 }

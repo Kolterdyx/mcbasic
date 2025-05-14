@@ -8,9 +8,10 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/utils"
 )
 
-func (t *TypeChecker) VisitBinary(expr ast.BinaryExpr) any {
+func (t *TypeChecker) VisitBinary(expr *ast.BinaryExpr) any {
 	rtype := ast.AcceptExpr[types.ValueType](expr.Right, t)
 	ltype := ast.AcceptExpr[types.ValueType](expr.Left, t)
+	expr.SetResolvedType(types.VoidType)
 	switch expr.Operator.Type {
 	case tokens.EqualEqual, tokens.BangEqual, tokens.Greater, tokens.GreaterEqual, tokens.Less, tokens.LessEqual:
 		if ltype != rtype {
@@ -20,7 +21,7 @@ func (t *TypeChecker) VisitBinary(expr ast.BinaryExpr) any {
 	case tokens.Plus:
 		switch ltype {
 		case types.StringType:
-			return types.StringType
+			expr.SetResolvedType(types.StringType)
 		}
 		fallthrough
 	case tokens.Minus, tokens.Slash, tokens.Star, tokens.Percent:
@@ -29,53 +30,59 @@ func (t *TypeChecker) VisitBinary(expr ast.BinaryExpr) any {
 			if rtype != types.IntType {
 				t.error(expr, fmt.Sprintf("cannot add %s and %s", ltype.ToString(), rtype.ToString()))
 			}
-			return types.IntType
+			expr.SetResolvedType(types.IntType)
 		case types.DoubleType:
 			if ltype != types.DoubleType {
 				t.error(expr, fmt.Sprintf("cannot add %s and %s", ltype.ToString(), rtype.ToString()))
 			}
-			return types.DoubleType
+			expr.SetResolvedType(types.DoubleType)
 		}
 	default:
 		t.error(expr, fmt.Sprintf("unhandled operator %s", expr.Operator.Lexeme))
 	}
-	return types.VoidType
+	return expr.GetResolvedType()
 }
 
-func (t *TypeChecker) VisitGrouping(expr ast.GroupingExpr) any {
-	return ast.AcceptExpr[types.ValueType](expr.Expression, t)
+func (t *TypeChecker) VisitGrouping(expr *ast.GroupingExpr) any {
+	expr.SetResolvedType(ast.AcceptExpr[types.ValueType](expr.Expression, t))
+	return expr.GetResolvedType()
 }
 
-func (t *TypeChecker) VisitLiteral(expr ast.LiteralExpr) any {
-	return expr.ValueType
+func (t *TypeChecker) VisitLiteral(expr *ast.LiteralExpr) any {
+	return expr.GetResolvedType()
 }
 
-func (t *TypeChecker) VisitUnary(expr ast.UnaryExpr) any {
-	return ast.AcceptExpr[types.ValueType](expr.Expression, t)
+func (t *TypeChecker) VisitUnary(expr *ast.UnaryExpr) any {
+	expr.SetResolvedType(ast.AcceptExpr[types.ValueType](expr.Expression, t))
+	return expr.GetResolvedType()
 }
 
-func (t *TypeChecker) VisitVariable(expr ast.VariableExpr) any {
+func (t *TypeChecker) VisitVariable(expr *ast.VariableExpr) any {
 	sym, _ := t.table.Lookup(expr.Name.Lexeme)
-	return sym.ValueType()
+	expr.SetResolvedType(sym.ValueType())
+	return expr.GetResolvedType()
 }
 
-func (t *TypeChecker) VisitFieldAccess(expr ast.FieldAccessExpr) any {
+func (t *TypeChecker) VisitFieldAccess(expr *ast.FieldAccessExpr) any {
 	sourceType := ast.AcceptExpr[types.ValueType](expr.Source, t)
+	expr.SetResolvedType(sourceType)
 	vtype, ok := sourceType.GetFieldType(expr.Field.Lexeme)
 	if !ok {
 		t.error(expr, fmt.Sprintf("field %s not defined in type %s", expr.Field.Lexeme, sourceType.ToString()))
-		return sourceType
+	} else {
+		expr.SetResolvedType(vtype)
 	}
-	return vtype
+	return expr.GetResolvedType()
 }
 
-func (t *TypeChecker) VisitFunctionCall(expr ast.FunctionCallExpr) any {
+func (t *TypeChecker) VisitFunctionCall(expr *ast.FunctionCallExpr) any {
 	sym, _ := t.table.Lookup(expr.Name.Lexeme)
+	expr.SetResolvedType(sym.ValueType())
 	switch declarationNode := sym.DeclarationNode().(type) {
 	case ast.FunctionDeclarationStmt:
 		if len(expr.Arguments) != len(declarationNode.Parameters) {
 			t.error(expr, fmt.Sprintf("function %s expects %d arguments, got %d", expr.Name.Lexeme, len(declarationNode.Parameters), len(expr.Arguments)))
-			return sym.ValueType()
+			break
 		}
 		for i, arg := range expr.Arguments {
 			ptype := ast.AcceptExpr[types.ValueType](arg, t)
@@ -86,7 +93,7 @@ func (t *TypeChecker) VisitFunctionCall(expr ast.FunctionCallExpr) any {
 	case ast.StructDeclarationStmt:
 		if len(expr.Arguments) != len(declarationNode.StructType.GetFieldNames()) {
 			t.error(expr, fmt.Sprintf("struct %s expects %d arguments, got %d", expr.Name.Lexeme, len(declarationNode.StructType.GetFieldNames()), len(expr.Arguments)))
-			return sym.ValueType()
+			break
 		}
 		for i, arg := range expr.Arguments {
 
@@ -99,16 +106,17 @@ func (t *TypeChecker) VisitFunctionCall(expr ast.FunctionCallExpr) any {
 		}
 
 	}
-	return sym.ValueType()
+	return expr.GetResolvedType()
 }
 
-func (t *TypeChecker) VisitLogical(expr ast.LogicalExpr) any {
+func (t *TypeChecker) VisitLogical(expr *ast.LogicalExpr) any {
 	ast.AcceptExpr[types.ValueType](expr.Left, t)
 	ast.AcceptExpr[types.ValueType](expr.Right, t)
-	return types.IntType
+	expr.SetResolvedType(types.IntType)
+	return expr.GetResolvedType()
 }
 
-func (t *TypeChecker) VisitSlice(expr ast.SliceExpr) any {
+func (t *TypeChecker) VisitSlice(expr *ast.SliceExpr) any {
 	targetType := ast.AcceptExpr[types.ValueType](expr.TargetExpr, t)
 	sIndexType := ast.AcceptExpr[types.ValueType](expr.StartIndex, t)
 	if sIndexType != types.IntType {
@@ -121,15 +129,17 @@ func (t *TypeChecker) VisitSlice(expr ast.SliceExpr) any {
 		}
 	}
 	if targetType == types.StringType {
-		return types.StringType
+		expr.SetResolvedType(types.StringType)
 	} else if utils.IsListType(targetType) {
-		return targetType.(types.ListTypeStruct).ContentType
+		expr.SetResolvedType(targetType.(types.ListTypeStruct).ContentType)
+	} else {
+		t.error(expr.TargetExpr, fmt.Sprintf("target must be string or list, got %s", targetType.ToString()))
+		expr.SetResolvedType(types.VoidType)
 	}
-	t.error(expr.TargetExpr, fmt.Sprintf("target must be string or list, got %s", targetType.ToString()))
-	return types.VoidType
+	return expr.GetResolvedType()
 }
 
-func (t *TypeChecker) VisitList(expr ast.ListExpr) any {
+func (t *TypeChecker) VisitList(expr *ast.ListExpr) any {
 	var itype types.ValueType = types.VoidType
 	for _, item := range expr.Elements {
 		currType := ast.AcceptExpr[types.ValueType](item, t)
@@ -140,5 +150,6 @@ func (t *TypeChecker) VisitList(expr ast.ListExpr) any {
 			t.error(item, fmt.Sprintf("list elements must be of the same type, got %s and %s", itype.ToString(), currType.ToString()))
 		}
 	}
-	return types.NewListType(itype)
+	expr.SetResolvedType(types.NewListType(itype))
+	return expr.GetResolvedType()
 }

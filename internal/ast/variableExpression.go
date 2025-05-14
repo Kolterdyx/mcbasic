@@ -7,20 +7,21 @@ import (
 
 type VariableExpr struct {
 	Name tokens.Token
+	ResolvedType
 }
 
-func (v VariableExpr) Accept(visitor ExpressionVisitor) any {
+func (v *VariableExpr) Accept(visitor ExpressionVisitor) any {
 	return visitor.VisitVariable(v)
 }
 
-func (v VariableExpr) Type() NodeType {
+func (v *VariableExpr) Type() NodeType {
 	return VariableExpression
 }
 
-func (v VariableExpr) ToString() string {
+func (v *VariableExpr) ToString() string {
 	return v.Name.Lexeme
 }
 
-func (v VariableExpr) GetSourceLocation() interfaces.SourceLocation {
+func (v *VariableExpr) GetSourceLocation() interfaces.SourceLocation {
 	return v.Name.SourceLocation
 }

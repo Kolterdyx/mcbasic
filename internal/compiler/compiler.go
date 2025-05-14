@@ -7,8 +7,8 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/ir"
-	"github.com/Kolterdyx/mcbasic/internal/parser"
 	"github.com/Kolterdyx/mcbasic/internal/paths"
+	"github.com/Kolterdyx/mcbasic/internal/symbol"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	"github.com/Kolterdyx/mcbasic/internal/utils"
 	log "github.com/sirupsen/logrus"
@@ -45,24 +45,10 @@ const (
 )
 
 type Compiler struct {
-	ast.ExpressionVisitor
-	ast.StatementVisitor
-
 	Namespace    string
 	Scope        string
 	DatapackRoot string
 	Config       interfaces.ProjectConfig
-	Structs      map[string]ast.StructDeclarationStmt
-
-	RX   string
-	RA   string
-	RB   string
-	RET  string
-	CALL string
-
-	VarPath    string
-	ArgPath    string
-	StructPath string
 
 	registerCounter int
 	storage         string
@@ -70,19 +56,15 @@ type Compiler struct {
 	compiledFunctions map[string]interfaces.Function
 	branchCounter     int
 
-	functionDefinitions map[string]interfaces.FunctionDefinition
-	scopes              map[string][]interfaces.TypedIdentifier
-	currentScope        string
+	currentScope *symbol.Table
 
-	libs    embed.FS
-	headers []interfaces.DatapackHeader
+	libs embed.FS
 
 	funcPath string
 }
 
 func NewCompiler(
 	config interfaces.ProjectConfig,
-	headers []interfaces.DatapackHeader,
 	libs embed.FS,
 ) *Compiler {
 	c := &Compiler{
@@ -90,7 +72,6 @@ func NewCompiler(
 		Config:       config,
 		DatapackRoot: config.OutputDir,
 		Namespace:    config.Project.Namespace,
-		headers:      headers,
 		libs:         libs,
 	}
 
@@ -99,16 +80,13 @@ func NewCompiler(
 	return c
 }
 
-func (c *Compiler) Compile(program parser.Program) error {
-	c.Structs = program.Structs
+func (c *Compiler) Compile(sourceAst ast.Source, symbols *symbol.Table) error {
 	c.compiledFunctions = make(map[string]interfaces.Function)
-	c.scopes = make(map[string][]interfaces.TypedIdentifier)
-
+	c.currentScope = symbols
 	c.createBasePack()
-	c.setFunctionDefinitions(program)
-	functions := c.compileToIR(program)
+	functions := c.compileToIR(sourceAst)
 	functions = append(functions, c.compileBuiltins()...)
-	functions = c.addStructDeclarationFunction(program, functions)
+	functions = c.addStructDeclarationFunction(sourceAst, functions)
 	functions = c.optimizeIRCode(functions)
 	c.compileIRtoDatapack(functions)
 	err := c.writeFunctionTags()
@@ -139,10 +117,12 @@ func (c *Compiler) compileIRtoDatapack(ir []interfaces.Function) {
 	}
 }
 
-func (c *Compiler) addStructDeclarationFunction(program parser.Program, functions []interfaces.Function) []interfaces.Function {
+func (c *Compiler) addStructDeclarationFunction(source ast.Source, functions []interfaces.Function) []interfaces.Function {
 	structDefFuncSource := ir.NewCode(c.Namespace, c.storage)
-	for _, structDef := range program.Structs {
-		structDefFuncSource.Extend(structDef.Accept(c))
+	for _, statement := range source {
+		if statement.Type() == ast.StructDeclarationStatement {
+			structDefFuncSource.Extend(ast.AcceptStmt[interfaces.IRCode](statement, c))
+		}
 	}
 	structDefFuncSource.Ret()
 	return append(functions, ir.NewFunction(path.Join(paths.Internal, "struct_definitions"), structDefFuncSource))
@@ -158,36 +138,16 @@ func (c *Compiler) optimizeIRCode(functions []interfaces.Function) []interfaces.
 	return functions
 }
 
-func (c *Compiler) compileToIR(program parser.Program) []interfaces.Function {
+func (c *Compiler) compileToIR(source ast.Source) []interfaces.Function {
 	functions := make([]interfaces.Function, 0)
-	for _, f := range program.Functions {
-		c.compiledFunctions = make(map[string]interfaces.Function)
-		f.Accept(c)
-		functions = append(functions, slices.Collect(maps.Values(c.compiledFunctions))...)
+	for _, statement := range source {
+		if statement.Type() == ast.FunctionDeclarationStatement {
+			c.compiledFunctions = make(map[string]interfaces.Function)
+			ast.AcceptStmt[interfaces.IRCode](statement, c)
+			functions = append(functions, slices.Collect(maps.Values(c.compiledFunctions))...)
+		}
 	}
 	return functions
-}
-
-func (c *Compiler) setFunctionDefinitions(program parser.Program) {
-	c.functionDefinitions = parser.GetHeaderFuncDefs(c.headers)
-	for _, function := range program.Functions {
-		f := interfaces.FunctionDefinition{
-			Name:       function.Name.Lexeme,
-			Args:       make([]interfaces.TypedIdentifier, 0),
-			ReturnType: function.ReturnType,
-		}
-		for _, parameter := range function.Parameters {
-			f.Args = append(f.Args, interfaces.TypedIdentifier{
-				Name: parameter.Name.Lexeme,
-				Type: parameter.ValueType,
-			})
-		}
-		f.Args = append(f.Args, interfaces.TypedIdentifier{
-			Name: "__call__",
-			Type: types.IntType,
-		})
-		c.functionDefinitions[function.Name.Lexeme] = f
-	}
 }
 
 func (c *Compiler) copyEmbeddedLibs() error {
@@ -366,7 +326,6 @@ func (c *Compiler) registerIRFunction(fullName string, source interfaces.IRCode,
 		f.Args = append(f.Args, interfaces.TypedIdentifier{Name: parameter.Name, Type: parameter.Type})
 	}
 	f.Args = append(f.Args, interfaces.TypedIdentifier{Name: "__call__", Type: types.IntType})
-	c.functionDefinitions[c.currentScope] = f
 	return ir.NewFunction(fmt.Sprintf("%s:%s", ns, fn), source)
 }
 

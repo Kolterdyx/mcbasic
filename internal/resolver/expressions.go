@@ -8,7 +8,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/utils"
 )
 
-func (r *Resolver) VisitBinary(expr ast.BinaryExpr) any {
+func (r *Resolver) VisitBinary(expr *ast.BinaryExpr) any {
 	res := ast.AcceptExpr[Result](expr.Left, r)
 	if !res.Ok {
 		return res
@@ -16,22 +16,22 @@ func (r *Resolver) VisitBinary(expr ast.BinaryExpr) any {
 	return ast.AcceptExpr[Result](expr.Right, r)
 }
 
-func (r *Resolver) VisitGrouping(expr ast.GroupingExpr) any {
+func (r *Resolver) VisitGrouping(expr *ast.GroupingExpr) any {
 	return ast.AcceptExpr[Result](expr.Expression, r)
 }
 
-func (r *Resolver) VisitLiteral(expr ast.LiteralExpr) any {
+func (r *Resolver) VisitLiteral(expr *ast.LiteralExpr) any {
 	return Result{
 		Ok:     true,
-		Symbol: symbol.NewSymbol("__literal__", symbol.LiteralSymbol, expr, expr.ValueType),
+		Symbol: symbol.NewSymbol("__literal__", symbol.LiteralSymbol, expr, expr.GetResolvedType()),
 	}
 }
 
-func (r *Resolver) VisitUnary(expr ast.UnaryExpr) any {
+func (r *Resolver) VisitUnary(expr *ast.UnaryExpr) any {
 	return ast.AcceptExpr[Result](expr.Expression, r)
 }
 
-func (r *Resolver) VisitVariable(expr ast.VariableExpr) any {
+func (r *Resolver) VisitVariable(expr *ast.VariableExpr) any {
 	vtype, ok := r.table.Lookup(expr.Name.Lexeme)
 	if !ok {
 		return r.error(expr, fmt.Sprintf("variable %s not defined", expr.Name.Lexeme))
@@ -42,7 +42,7 @@ func (r *Resolver) VisitVariable(expr ast.VariableExpr) any {
 	}
 }
 
-func (r *Resolver) VisitFieldAccess(expr ast.FieldAccessExpr) any {
+func (r *Resolver) VisitFieldAccess(expr *ast.FieldAccessExpr) any {
 	res := ast.AcceptExpr[Result](expr.Source, r)
 	if !res.Ok {
 		return r.error(expr, fmt.Sprintf("could not resolve source %s", expr.Source.ToString()))
@@ -58,7 +58,7 @@ func (r *Resolver) VisitFieldAccess(expr ast.FieldAccessExpr) any {
 	}
 }
 
-func (r *Resolver) VisitFunctionCall(expr ast.FunctionCallExpr) any {
+func (r *Resolver) VisitFunctionCall(expr *ast.FunctionCallExpr) any {
 	sym, ok := r.table.Lookup(expr.Name.Lexeme)
 	if !ok {
 		return r.error(expr, fmt.Sprintf("function %s not defined", expr.Name.Lexeme))
@@ -69,7 +69,7 @@ func (r *Resolver) VisitFunctionCall(expr ast.FunctionCallExpr) any {
 	}
 }
 
-func (r *Resolver) VisitLogical(expr ast.LogicalExpr) any {
+func (r *Resolver) VisitLogical(expr *ast.LogicalExpr) any {
 	res := ast.AcceptExpr[Result](expr.Left, r)
 	if !res.Ok {
 		return res
@@ -77,7 +77,7 @@ func (r *Resolver) VisitLogical(expr ast.LogicalExpr) any {
 	return ast.AcceptExpr[Result](expr.Right, r)
 }
 
-func (r *Resolver) VisitSlice(expr ast.SliceExpr) any {
+func (r *Resolver) VisitSlice(expr *ast.SliceExpr) any {
 	targetRes := ast.AcceptExpr[Result](expr.TargetExpr, r)
 	if !targetRes.Ok {
 		return targetRes
@@ -107,7 +107,7 @@ func (r *Resolver) VisitSlice(expr ast.SliceExpr) any {
 	return r.error(expr, fmt.Sprintf("slice not supported for type %s", targetType.ToString()))
 }
 
-func (r *Resolver) VisitList(expr ast.ListExpr) any {
+func (r *Resolver) VisitList(expr *ast.ListExpr) any {
 	for _, item := range expr.Elements {
 		res := ast.AcceptExpr[Result](item, r)
 		if !res.Ok {

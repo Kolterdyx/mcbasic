@@ -28,6 +28,7 @@ func NewParser(tokenSource []tokens.Token) *Parser {
 var allowedTopLevelStatements = []ast.NodeType{
 	ast.FunctionDeclarationStatement,
 	ast.StructDeclarationStatement,
+	ast.VariableDeclarationStatement,
 	ast.ImportStatement,
 }
 

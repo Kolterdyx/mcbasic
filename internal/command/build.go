@@ -3,7 +3,6 @@ package command
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"github.com/BurntSushi/toml"
 	frontend "github.com/Kolterdyx/mcbasic/internal/frontend"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
@@ -12,7 +11,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 )
 
 var BuildCommand = &cli.Command{
@@ -48,7 +46,7 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 
 	entrypoint := config.Project.Entrypoint
 
-	front := frontend.NewFrontend(projectRoot)
+	front := frontend.NewFrontend(projectRoot, builtinHeaders, libs)
 
 	absEntrypoint, err := filepath.Abs(path.Join(projectRoot, entrypoint))
 	if err != nil {
@@ -64,50 +62,15 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 		return err
 	}
 
-	//c := compiler.NewCompiler(config, headers, libs)
-	//err = c.Compile(program)
-	//if err != nil {
-	//	log.Error(err)
-	//	return cli.Exit("There was an error compiling the program", 1)
-	//}
+	errs := front.Compile(config)
+	if len(errs) > 0 {
+		for _, err := range errs {
+			log.Error(err)
+		}
+		return nil
+	}
 	log.Info("Compilation complete")
 	return nil
-}
-
-func loadHeaders(headerPaths []string, projectRoot string, builtinHeaders embed.FS) ([]interfaces.DatapackHeader, error) {
-	headers := make([]interfaces.DatapackHeader, 0)
-
-	for i, h := range headerPaths {
-		headerPath := path.Join(projectRoot, h)
-		headerPaths[i] = headerPath
-	}
-
-	// include builtin headers
-	builtinHeaderPaths, err := builtinHeaders.ReadDir("headers")
-	if err != nil {
-		return nil, err
-	}
-	for _, h := range builtinHeaderPaths {
-		if !h.IsDir() && strings.HasSuffix(h.Name(), ".json") {
-			headerPaths = append(headerPaths, path.Join("headers", h.Name()))
-		}
-	}
-
-	for _, headerPath := range headerPaths {
-		log.Debug("Loading header: ", headerPath)
-		headerFile, err := builtinHeaders.ReadFile(headerPath)
-		if err != nil {
-			return nil, err
-		}
-		header := interfaces.DatapackHeader{}
-		err = json.Unmarshal(headerFile, &header)
-		if err != nil {
-			return nil, err
-		}
-		headers = append(headers, header)
-	}
-	log.Debugf("Headers loaded successfully")
-	return headers, nil
 }
 
 func loadProject(file string) interfaces.ProjectConfig {

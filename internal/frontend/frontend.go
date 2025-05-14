@@ -1,8 +1,12 @@
 package frontend
 
 import (
+	"embed"
+	"encoding/json"
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/ast"
+	"github.com/Kolterdyx/mcbasic/internal/compiler"
+	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/parser"
 	"github.com/Kolterdyx/mcbasic/internal/resolver"
 	"github.com/Kolterdyx/mcbasic/internal/scanner"
@@ -10,19 +14,27 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/type_checker"
 	log "github.com/sirupsen/logrus"
 	"os"
+	"path"
+	"strings"
 )
 
 type Frontend struct {
-	visitedFiles  map[string]bool
-	units         map[string]*CompilationUnit
-	symbolManager *symbol.Manager
+	visitedFiles   map[string]bool
+	units          map[string]*CompilationUnit
+	symbolManager  *symbol.Manager
+	projectRoot    string
+	builtinHeaders embed.FS
+	builtinLibs    embed.FS
 }
 
-func NewFrontend(rootPath string) *Frontend {
+func NewFrontend(projectRoot string, builtinHeaders embed.FS, builtinLibs embed.FS) *Frontend {
 	return &Frontend{
-		visitedFiles:  make(map[string]bool),
-		units:         make(map[string]*CompilationUnit),
-		symbolManager: symbol.NewManager(rootPath),
+		visitedFiles:   make(map[string]bool),
+		units:          make(map[string]*CompilationUnit),
+		symbolManager:  symbol.NewManager(projectRoot),
+		projectRoot:    projectRoot,
+		builtinHeaders: builtinHeaders,
+		builtinLibs:    builtinLibs,
 	}
 }
 
@@ -77,7 +89,6 @@ func (f *Frontend) Parse(path string) error {
 		FilePath: path,
 		AST:      fileAst,
 		Symbols:  table,
-		Tokens:   tokens,
 	}
 
 	f.units[path] = unit
@@ -103,4 +114,62 @@ func (f *Frontend) Parse(path string) error {
 	}
 
 	return nil
+}
+
+func (f *Frontend) Compile(config interfaces.ProjectConfig) []error {
+	errs := make([]error, 0)
+	for _, unit := range f.units {
+		log.Debugf("Compiling %s", unit.FilePath)
+		errs = append(errs, f.compileUnit(config, unit))
+	}
+	return errs
+}
+
+func (f *Frontend) compileUnit(config interfaces.ProjectConfig, unit *CompilationUnit) error {
+	//headers, err := f.loadHeaders(config.Dependencies.Headers)
+	//if err != nil {
+	//	return err
+	//}
+	c := compiler.NewCompiler(config, f.builtinLibs)
+	err := c.Compile(unit.AST, unit.Symbols)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (f *Frontend) loadHeaders(headerPaths []string) ([]interfaces.DatapackHeader, error) {
+	headers := make([]interfaces.DatapackHeader, 0)
+
+	for i, h := range headerPaths {
+		headerPath := path.Join(f.projectRoot, h)
+		headerPaths[i] = headerPath
+	}
+
+	// include builtin headers
+	builtinHeaderPaths, err := f.builtinHeaders.ReadDir("headers")
+	if err != nil {
+		return nil, err
+	}
+	for _, h := range builtinHeaderPaths {
+		if !h.IsDir() && strings.HasSuffix(h.Name(), ".json") {
+			headerPaths = append(headerPaths, path.Join("headers", h.Name()))
+		}
+	}
+
+	for _, headerPath := range headerPaths {
+		log.Debug("Loading header: ", headerPath)
+		headerFile, err := f.builtinHeaders.ReadFile(headerPath)
+		if err != nil {
+			return nil, err
+		}
+		header := interfaces.DatapackHeader{}
+		err = json.Unmarshal(headerFile, &header)
+		if err != nil {
+			return nil, err
+		}
+		headers = append(headers, header)
+	}
+	log.Debugf("Headers loaded successfully")
+	return headers, nil
 }

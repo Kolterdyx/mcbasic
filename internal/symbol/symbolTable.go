@@ -56,3 +56,7 @@ func (s *Table) GetChild(scope string) (*Table, bool) {
 	}
 	return nil, false
 }
+
+func (s *Table) GetParent() *Table {
+	return s.parent
+}

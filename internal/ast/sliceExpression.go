@@ -10,17 +10,18 @@ type SliceExpr struct {
 	TargetExpr Expr
 
 	interfaces.SourceLocation
+	ResolvedType
 }
 
-func (s SliceExpr) Accept(v ExpressionVisitor) any {
+func (s *SliceExpr) Accept(v ExpressionVisitor) any {
 	return v.VisitSlice(s)
 }
 
-func (s SliceExpr) Type() NodeType {
+func (s *SliceExpr) Type() NodeType {
 	return SliceExpression
 }
 
-func (s SliceExpr) ToString() string {
+func (s *SliceExpr) ToString() string {
 	if s.StartIndex == nil && s.EndIndex == nil {
 		return s.TargetExpr.ToString()
 	}
@@ -36,6 +37,6 @@ func (s SliceExpr) ToString() string {
 	return result
 }
 
-func (s SliceExpr) GetSourceLocation() interfaces.SourceLocation {
+func (s *SliceExpr) GetSourceLocation() interfaces.SourceLocation {
 	return s.SourceLocation
 }

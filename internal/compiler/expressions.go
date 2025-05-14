@@ -12,7 +12,7 @@ import (
 	"path"
 )
 
-func (c *Compiler) VisitBinary(b ast.BinaryExpr) any {
+func (c *Compiler) VisitBinary(b *ast.BinaryExpr) any {
 	regRa := c.makeReg(RA)
 	regRb := c.makeReg(RB)
 
@@ -25,7 +25,7 @@ func (c *Compiler) VisitBinary(b ast.BinaryExpr) any {
 
 	switch b.Operator.Type {
 	case tokens.EqualEqual, tokens.BangEqual, tokens.Greater, tokens.GreaterEqual, tokens.Less, tokens.LessEqual:
-		switch b.ReturnType() {
+		switch b.GetResolvedType() {
 		case types.IntType:
 			cmd.Load(regRa, regRa)
 			cmd.Load(regRb, regRb)
@@ -43,7 +43,7 @@ func (c *Compiler) VisitBinary(b ast.BinaryExpr) any {
 	default:
 		// nothing
 	}
-	switch b.ReturnType() {
+	switch b.GetResolvedType() {
 	case types.IntType:
 		switch b.Operator.Type {
 		case tokens.Plus:
@@ -84,22 +84,22 @@ func (c *Compiler) VisitBinary(b ast.BinaryExpr) any {
 	return cmd
 }
 
-func (c *Compiler) VisitGrouping(g ast.GroupingExpr) any {
+func (c *Compiler) VisitGrouping(g *ast.GroupingExpr) any {
 	return g.Expression.Accept(c)
 }
 
-func (c *Compiler) VisitLiteral(l ast.LiteralExpr) any {
+func (c *Compiler) VisitLiteral(l *ast.LiteralExpr) any {
 	return c.n().SetVar(RX, l.Value)
 }
 
-func (c *Compiler) VisitUnary(u ast.UnaryExpr) any {
+func (c *Compiler) VisitUnary(u *ast.UnaryExpr) any {
 	cmd := c.n()
 	switch u.ReturnType() {
 	case types.IntType:
 		switch u.Operator.Type {
 		case tokens.Minus:
-			zero := ast.LiteralExpr{Value: nbt.NewInt(0), ValueType: types.IntType}
-			tmp := ast.BinaryExpr{
+			zero := ast.NewLiteralExpr(nbt.NewInt(0), types.IntType, u.GetSourceLocation())
+			tmp := &ast.BinaryExpr{
 				Left: zero,
 				Operator: tokens.Token{
 					Type: tokens.Minus,
@@ -118,12 +118,12 @@ func (c *Compiler) VisitUnary(u ast.UnaryExpr) any {
 	return cmd
 }
 
-func (c *Compiler) VisitVariable(v ast.VariableExpr) any {
+func (c *Compiler) VisitVariable(v *ast.VariableExpr) any {
 	cmd := c.n()
 	return cmd.CopyVar(v.Name.Lexeme, RX)
 }
 
-func (c *Compiler) VisitFieldAccess(v ast.FieldAccessExpr) any {
+func (c *Compiler) VisitFieldAccess(v *ast.FieldAccessExpr) any {
 	cmd := c.n()
 	cmd.Extend(ast.AcceptExpr[interfaces.IRCode](v.Source, c))
 	cmd.CopyVar(RX, RA)
@@ -131,27 +131,33 @@ func (c *Compiler) VisitFieldAccess(v ast.FieldAccessExpr) any {
 	return cmd
 }
 
-func (c *Compiler) VisitFunctionCall(f ast.FunctionCallExpr) any {
+func (c *Compiler) VisitFunctionCall(f *ast.FunctionCallExpr) any {
 	cmd := c.n()
 	ns, fn := utils.SplitFunctionName(f.Name.Lexeme, c.Namespace)
-	for j, arg := range f.Arguments {
-		cmd.Extend(ast.AcceptExpr[interfaces.IRCode](arg, c))
-		argName := c.functionDefinitions[f.Name.Lexeme].Args[j].Name
-		cmd.CopyArg(RX, fn, argName)
+	sym, _ := c.currentScope.Lookup(f.Name.Lexeme)
+	switch sym.DeclarationNode().Type() {
+	case ast.FunctionDeclarationStatement:
+		funcStmt := sym.DeclarationNode().(ast.FunctionDeclarationStmt)
+		for j, arg := range f.Arguments {
+			cmd.Extend(ast.AcceptExpr[interfaces.IRCode](arg, c))
+			argName := funcStmt.Parameters[j].Name.Lexeme
+			cmd.CopyArg(RX, fn, argName)
+		}
+		if ns == c.Namespace {
+			funcName := fmt.Sprintf("%s:%s", ns, path.Join(paths.FunctionBranches, fn))
+			cmd.CallWithArgs(funcName, fmt.Sprintf("%s.%s", ArgPath, fn)) // Call wrapped function
+		} else {
+			cmd.Call(fmt.Sprintf("%s:%s", ns, fn))
+		}
+		if f.GetResolvedType() != types.VoidType {
+			cmd.CopyVar(RET, RX)
+		}
 	}
-	if ns == c.Namespace {
-		funcName := fmt.Sprintf("%s:%s", ns, path.Join(paths.FunctionBranches, fn))
-		cmd.CallWithArgs(funcName, fmt.Sprintf("%s.%s", ArgPath, fn)) // Call wrapped function
-	} else {
-		cmd.Call(fmt.Sprintf("%s:%s", ns, fn))
-	}
-	if f.ReturnType() != types.VoidType {
-		cmd.CopyVar(RET, RX)
-	}
+
 	return cmd
 }
 
-func (c *Compiler) VisitLogical(l ast.LogicalExpr) any {
+func (c *Compiler) VisitLogical(l *ast.LogicalExpr) any {
 	cmd := c.n()
 	regRa := c.makeReg(RA)
 	regRb := c.makeReg(RB)
@@ -176,7 +182,7 @@ func (c *Compiler) VisitLogical(l ast.LogicalExpr) any {
 	return cmd
 }
 
-func (c *Compiler) VisitSlice(s ast.SliceExpr) any {
+func (c *Compiler) VisitSlice(s *ast.SliceExpr) any {
 	cmd := c.n()
 	regIndexStart := c.makeReg(RA)
 	regIndexEnd := c.makeReg(RB)
@@ -213,9 +219,9 @@ func (c *Compiler) VisitSlice(s ast.SliceExpr) any {
 		cmd.If(RX, c.n().Ret())
 	}
 
-	switch s.TargetExpr.ReturnType().(type) {
+	switch s.TargetExpr.GetResolvedType().(type) {
 	case types.PrimitiveTypeStruct:
-		switch s.TargetExpr.ReturnType() {
+		switch s.TargetExpr.GetResolvedType() {
 		case types.StringType:
 			cmd.IntCompare(regIndexStart, lenReg, tokens.GreaterEqual, RX)
 			cmd.Load(RX, RX)
@@ -243,7 +249,7 @@ func (c *Compiler) VisitSlice(s ast.SliceExpr) any {
 	return cmd
 }
 
-func (c *Compiler) VisitList(s ast.ListExpr) any {
+func (c *Compiler) VisitList(s *ast.ListExpr) any {
 	cmd := c.n()
 	regList := c.makeReg(RX)
 	cmd.SetVar(regList, nbt.NewList())
@@ -254,17 +260,3 @@ func (c *Compiler) VisitList(s ast.ListExpr) any {
 	cmd.CopyVar(regList, RX)
 	return cmd
 }
-
-//
-//func (c *Compiler) VisitStruct(s ast.StructExpr) interfaces.IRCode {
-//	cmd := c.n()
-//	regStruct := c.makeReg(RX)
-//	cmd.SetVar(regStruct, s.StructType.ToNBT())
-//	fieldNames := s.StructType.GetFieldNames()
-//	for j, args := range s.Args {
-//		cmd.Extend(args.Accept(c))
-//		cmd.StructSet(c.varPath(RX), fieldNames[j], regStruct)
-//	}
-//	cmd.CopyVar(regStruct, RX)
-//	return cmd
-//}

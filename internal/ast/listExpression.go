@@ -10,17 +10,18 @@ type ListExpr struct {
 
 	Elements  []Expr
 	ValueType types.ValueType
+	ResolvedType
 }
 
-func (l ListExpr) Accept(v ExpressionVisitor) any {
+func (l *ListExpr) Accept(v ExpressionVisitor) any {
 	return v.VisitList(l)
 }
 
-func (l ListExpr) Type() NodeType {
+func (l *ListExpr) Type() NodeType {
 	return ListExpression
 }
 
-func (l ListExpr) ToString() string {
+func (l *ListExpr) ToString() string {
 	if len(l.Elements) == 0 {
 		return "[]"
 	}
@@ -36,6 +37,6 @@ func (l ListExpr) ToString() string {
 	return result
 }
 
-func (l ListExpr) GetSourceLocation() interfaces.SourceLocation {
+func (l *ListExpr) GetSourceLocation() interfaces.SourceLocation {
 	return l.SourceLocation
 }

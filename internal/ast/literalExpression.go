@@ -9,26 +9,31 @@ import (
 type LiteralExpr struct {
 	interfaces.SourceLocation
 
-	Value     nbt.Value
-	ValueType types.ValueType
+	Value nbt.Value
+	ResolvedType
 }
 
-func (l LiteralExpr) Accept(v ExpressionVisitor) any {
+func NewLiteralExpr(value nbt.Value, typ types.ValueType, source interfaces.SourceLocation) *LiteralExpr {
+	literal := &LiteralExpr{
+		Value:          value,
+		SourceLocation: source,
+	}
+	literal.SetResolvedType(typ)
+	return literal
+}
+
+func (l *LiteralExpr) Accept(v ExpressionVisitor) any {
 	return v.VisitLiteral(l)
 }
 
-func (l LiteralExpr) Type() NodeType {
+func (l *LiteralExpr) Type() NodeType {
 	return LiteralExpression
 }
 
-func (l LiteralExpr) ReturnType() types.ValueType {
-	return l.ValueType
-}
-
-func (l LiteralExpr) ToString() string {
+func (l *LiteralExpr) ToString() string {
 	return l.Value.ToString()
 }
 
-func (l LiteralExpr) GetSourceLocation() interfaces.SourceLocation {
+func (l *LiteralExpr) GetSourceLocation() interfaces.SourceLocation {
 	return l.SourceLocation
 }

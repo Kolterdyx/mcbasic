@@ -10,17 +10,18 @@ type FunctionCallExpr struct {
 
 	Name      tokens.Token
 	Arguments []Expr
+	ResolvedType
 }
 
-func (f FunctionCallExpr) Accept(visitor ExpressionVisitor) any {
+func (f *FunctionCallExpr) Accept(visitor ExpressionVisitor) any {
 	return visitor.VisitFunctionCall(f)
 }
 
-func (f FunctionCallExpr) Type() NodeType {
+func (f *FunctionCallExpr) Type() NodeType {
 	return FunctionCallExpression
 }
 
-func (f FunctionCallExpr) ToString() string {
+func (f *FunctionCallExpr) ToString() string {
 	args := ""
 	for i, arg := range f.Arguments {
 		if i > 0 {
@@ -31,6 +32,6 @@ func (f FunctionCallExpr) ToString() string {
 	return f.Name.Lexeme + "(" + args + ")"
 }
 
-func (f FunctionCallExpr) GetSourceLocation() interfaces.SourceLocation {
+func (f *FunctionCallExpr) GetSourceLocation() interfaces.SourceLocation {
 	return f.SourceLocation
 }

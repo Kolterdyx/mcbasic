@@ -23,16 +23,6 @@ func (c *Compiler) makeReg(reg string) string {
 	return fmt.Sprintf("%s%d", reg, c.registerCounter)
 }
 
-// Searches the current scopes for functionDefinitions and variables, returns the type of the variable or function
-func (c *Compiler) getReturnType(name string) types.ValueType {
-	for _, identifier := range c.scopes[c.currentScope] {
-		if identifier.Name == name {
-			return identifier.Type
-		}
-	}
-	return types.VoidType
-}
-
 func (c *Compiler) macroLineIdentifier(source string) string {
 	lines := strings.Split(source, "\n")
 	if len(lines) == 0 {

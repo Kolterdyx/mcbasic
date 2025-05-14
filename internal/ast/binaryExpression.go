@@ -9,20 +9,21 @@ type BinaryExpr struct {
 	Left     Expr
 	Operator tokens.Token
 	Right    Expr
+	ResolvedType
 }
 
-func (b BinaryExpr) Accept(v ExpressionVisitor) any {
+func (b *BinaryExpr) Accept(v ExpressionVisitor) any {
 	return v.VisitBinary(b)
 }
 
-func (b BinaryExpr) Type() NodeType {
+func (b *BinaryExpr) Type() NodeType {
 	return BinaryExpression
 }
 
-func (b BinaryExpr) ToString() string {
+func (b *BinaryExpr) ToString() string {
 	return "(" + b.Left.ToString() + " " + b.Operator.Lexeme + " " + b.Right.ToString() + ")"
 }
 
-func (b BinaryExpr) GetSourceLocation() interfaces.SourceLocation {
+func (b *BinaryExpr) GetSourceLocation() interfaces.SourceLocation {
 	return b.Left.GetSourceLocation()
 }

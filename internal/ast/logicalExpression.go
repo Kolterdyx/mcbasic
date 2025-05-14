@@ -9,21 +9,22 @@ type LogicalExpr struct {
 	Left     Expr
 	Operator tokens.Token
 	Right    Expr
+	ResolvedType
 }
 
-func (l LogicalExpr) Accept(v ExpressionVisitor) any {
+func (l *LogicalExpr) Accept(v ExpressionVisitor) any {
 	return v.VisitLogical(l)
 }
 
-func (l LogicalExpr) Type() NodeType {
+func (l *LogicalExpr) Type() NodeType {
 	return LogicalExpression
 }
 
-func (l LogicalExpr) ToString() string {
+func (l *LogicalExpr) ToString() string {
 	return "(" + l.Left.ToString() + " " + l.Operator.Lexeme + " " + l.Right.ToString() + ")"
 }
 
-func (l LogicalExpr) GetSourceLocation() interfaces.SourceLocation {
+func (l *LogicalExpr) GetSourceLocation() interfaces.SourceLocation {
 	if l.Left != nil {
 		return l.Left.GetSourceLocation()
 	}

@@ -34,3 +34,5 @@ func AcceptStmt[T any](stmt Statement, v StatementVisitor) T {
 	}
 	return val
 }
+
+type Source []Statement

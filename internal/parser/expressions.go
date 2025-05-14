@@ -24,7 +24,7 @@ func (p *Parser) or() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ast.LogicalExpr{Left: expr, Operator: operator, Right: right}
+		expr = &ast.LogicalExpr{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr, nil
@@ -42,7 +42,7 @@ func (p *Parser) and() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ast.LogicalExpr{Left: expr, Operator: operator, Right: right}
+		expr = &ast.LogicalExpr{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr, nil
@@ -60,7 +60,7 @@ func (p *Parser) equality() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ast.BinaryExpr{Left: expr, Operator: operator, Right: right}
+		expr = &ast.BinaryExpr{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr, nil
@@ -78,7 +78,7 @@ func (p *Parser) comparison() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ast.BinaryExpr{Left: expr, Operator: operator, Right: right}
+		expr = &ast.BinaryExpr{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr, nil
@@ -96,7 +96,7 @@ func (p *Parser) term() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ast.BinaryExpr{Left: expr, Operator: operator, Right: right}
+		expr = &ast.BinaryExpr{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr, nil
@@ -114,7 +114,7 @@ func (p *Parser) factor() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		expr = ast.BinaryExpr{Left: expr, Operator: operator, Right: right}
+		expr = &ast.BinaryExpr{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr, nil
@@ -127,7 +127,7 @@ func (p *Parser) unary() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		return ast.UnaryExpr{Operator: operator, Expression: right}, nil
+		return &ast.UnaryExpr{Operator: operator, Expression: right}, nil
 	}
 
 	return p.value()
@@ -154,7 +154,7 @@ func (p *Parser) baseValue() (ast.Expr, error) {
 			return p.functionCall(identifier)
 		}
 
-		return ast.VariableExpr{
+		return &ast.VariableExpr{
 			Name: identifier,
 		}, nil
 	}
@@ -179,7 +179,7 @@ func (p *Parser) fieldPostfix(expr ast.Expr) (ast.Expr, error) {
 	if err != nil {
 		return nil, err
 	}
-	expr = ast.FieldAccessExpr{
+	expr = &ast.FieldAccessExpr{
 		Source:         expr,
 		Field:          fieldTok,
 		SourceLocation: p.location(),
@@ -202,7 +202,7 @@ func (p *Parser) bracketPostfix(expr ast.Expr) (ast.Expr, error) {
 	if _, err = p.consume(tokens.BracketClose, "Expected ']'"); err != nil {
 		return nil, err
 	}
-	expr = ast.SliceExpr{
+	expr = &ast.SliceExpr{
 		TargetExpr:     expr,
 		StartIndex:     start,
 		EndIndex:       end,
@@ -238,7 +238,7 @@ func (p *Parser) functionCall(name tokens.Token) (ast.Expr, error) {
 		return nil, err
 	}
 
-	return ast.FunctionCallExpr{Name: tokens.Token{
+	return &ast.FunctionCallExpr{Name: tokens.Token{
 		Type:           tokens.Identifier,
 		Lexeme:         name.Lexeme,
 		Literal:        name.Literal,
@@ -262,35 +262,35 @@ func (p *Parser) slice(expr ast.Expr) (ast.Expr, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ast.SliceExpr{StartIndex: start, EndIndex: end, TargetExpr: expr, SourceLocation: p.location()}, nil
+	return &ast.SliceExpr{StartIndex: start, EndIndex: end, TargetExpr: expr, SourceLocation: p.location()}, nil
 }
 
 func (p *Parser) primary() (ast.Expr, error) {
 	if p.match(tokens.False) {
-		return ast.LiteralExpr{Value: nbt.NewInt(0), ValueType: types.IntType, SourceLocation: p.location()}, nil
+		return ast.NewLiteralExpr(nbt.NewInt(0), types.IntType, p.location()), nil
 	}
 	if p.match(tokens.True) {
-		return ast.LiteralExpr{Value: nbt.NewInt(1), ValueType: types.IntType, SourceLocation: p.location()}, nil
+		return ast.NewLiteralExpr(nbt.NewInt(1), types.IntType, p.location()), nil
 	}
 	if p.match(tokens.Int) {
 		i, err := strconv.ParseInt(p.previous().Literal, 10, 64)
 		if err != nil {
 			return nil, p.error(p.previous(), "Invalid integer literal.")
 		}
-		return ast.LiteralExpr{Value: nbt.NewInt(i), ValueType: types.IntType, SourceLocation: p.location()}, nil
+		return ast.NewLiteralExpr(nbt.NewInt(i), types.IntType, p.location()), nil
 	}
 	if p.match(tokens.Double) {
 		d, err := strconv.ParseFloat(p.previous().Literal, 64)
 		if err != nil {
 			return nil, p.error(p.previous(), "Invalid integer literal.")
 		}
-		return ast.LiteralExpr{Value: nbt.NewDouble(d), ValueType: types.DoubleType, SourceLocation: p.location()}, nil
+		return ast.NewLiteralExpr(nbt.NewDouble(d), types.DoubleType, p.location()), nil
 	}
 	if p.match(tokens.String) {
 		if p.match(tokens.BracketOpen) {
-			return p.slice(ast.LiteralExpr{Value: nbt.NewString(p.peekCount(-2).Literal), ValueType: types.StringType, SourceLocation: p.location()})
+			return p.slice(ast.NewLiteralExpr(nbt.NewString(p.peekCount(-2).Literal), types.StringType, p.location()))
 		} else {
-			return ast.LiteralExpr{Value: nbt.NewString(p.previous().Literal), ValueType: types.StringType, SourceLocation: p.location()}, nil
+			return ast.NewLiteralExpr(nbt.NewString(p.previous().Literal), types.StringType, p.location()), nil
 		}
 	}
 	if p.match(tokens.ParenOpen) {
@@ -302,7 +302,7 @@ func (p *Parser) primary() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		return ast.GroupingExpr{Expression: expr}, nil
+		return &ast.GroupingExpr{Expression: expr}, nil
 	}
 	if p.match(tokens.BracketOpen) {
 		var elems []ast.Expr
@@ -328,7 +328,7 @@ func (p *Parser) primary() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		return ast.ListExpr{
+		return &ast.ListExpr{
 			Elements:       elems,
 			SourceLocation: p.location(),
 			ValueType:      types.NewListType(contentType),
