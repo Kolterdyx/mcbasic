@@ -75,6 +75,7 @@ func (t *TypeChecker) VisitVariableAssignment(stmt ast.VariableAssignmentStmt) a
 }
 
 func (t *TypeChecker) VisitStructDeclaration(stmt ast.StructDeclarationStmt) any {
+	// There is nothing to check here
 	return nil
 }
 
@@ -86,6 +87,7 @@ func (t *TypeChecker) VisitBlock(stmt ast.BlockStmt) any {
 }
 
 func (t *TypeChecker) VisitWhile(stmt ast.WhileStmt) any {
+	// There is nothing to check here
 	return nil
 }
 
@@ -111,9 +113,11 @@ func (t *TypeChecker) VisitReturn(stmt ast.ReturnStmt) any {
 }
 
 func (t *TypeChecker) VisitSetReturnFlag(stmt ast.SetReturnFlagStmt) any {
+	// There is nothing to check here
 	return nil
 }
 
 func (t *TypeChecker) VisitImport(stmt ast.ImportStmt) any {
+	// There is nothing to check here
 	return nil
 }
