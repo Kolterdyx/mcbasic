@@ -5,8 +5,6 @@ import (
 )
 
 type ListTypeStruct struct {
-	ValueType
-
 	ContentType ValueType
 }
 
@@ -36,4 +34,11 @@ func (l ListTypeStruct) Equals(other ValueType) bool {
 		return l.ContentType.Equals(other.ContentType)
 	}
 	return false
+}
+
+func (l ListTypeStruct) GetFieldType(field string) (ValueType, bool) {
+	if field == "length" {
+		return IntType, true
+	}
+	return nil, false
 }

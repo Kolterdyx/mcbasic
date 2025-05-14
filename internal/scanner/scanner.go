@@ -4,39 +4,37 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
-	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 	"unicode"
 )
 
 type Scanner struct {
-	HadError bool
-	source   string
-	start    int
-	current  int
-	tokens   []tokens.Token
-	row      int
-	col      int
+	errors  []error
+	source  string
+	start   int
+	current int
+	tokens  []tokens.Token
+	row     int
+	col     int
 }
 
 func (s *Scanner) report(line int, column int, message string) {
-	log.Errorf("[Position %d:%d] Exception: %s\n", line+1, column+1, message)
-	s.HadError = true
+	s.errors = append(s.errors, fmt.Errorf("[Position %d:%d] Error: %s\n", line+1, column+1, message))
 }
 
 func (s *Scanner) error(line int, message string) {
 	s.report(line, s.col, message)
 }
 
-func (s *Scanner) Scan(source string) []tokens.Token {
+func (s *Scanner) Scan(source string) ([]tokens.Token, []error) {
 	s.source = source
 	s.tokens = []tokens.Token{}
 	for !s.isAtEnd() {
 		s.start = s.current
 		s.scanToken()
 	}
-	return s.tokens
+	return s.tokens, s.errors
 }
 
 func (s *Scanner) isAtEnd() bool {
@@ -257,4 +255,13 @@ func (s *Scanner) scanIdentifier() {
 	} else {
 		s.addTokenWithLiteral(tokens.Identifier, text)
 	}
+}
+
+func Scan(src string) ([]tokens.Token, []error) {
+	scanner := &Scanner{}
+	tokenSource, errors := scanner.Scan(src)
+	if len(errors) > 0 {
+		return nil, errors
+	}
+	return tokenSource, nil
 }

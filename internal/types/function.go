@@ -6,9 +6,11 @@ import (
 )
 
 type FunctionTypeStruct struct {
-	ValueType
-
 	Name string
+}
+
+func (f FunctionTypeStruct) Equals(other ValueType) bool {
+	return false
 }
 
 func NewFunctionType(name string) FunctionTypeStruct {
@@ -29,4 +31,8 @@ func (f FunctionTypeStruct) ToString() string {
 func (f FunctionTypeStruct) ToNBT() nbt.Value {
 	log.Fatalln("FunctionTypeStruct.ToNBT() should not be called")
 	return nbt.NewCompound()
+}
+
+func (f FunctionTypeStruct) GetFieldType(name string) (ValueType, bool) {
+	return nil, false
 }
