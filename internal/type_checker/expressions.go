@@ -5,6 +5,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
+	"github.com/Kolterdyx/mcbasic/internal/utils"
 )
 
 func (t *TypeChecker) VisitBinary(expr ast.BinaryExpr) any {
@@ -42,7 +43,7 @@ func (t *TypeChecker) VisitBinary(expr ast.BinaryExpr) any {
 }
 
 func (t *TypeChecker) VisitGrouping(expr ast.GroupingExpr) any {
-	return ast.AcceptExpr[types.ValueType](expr.Expr, t)
+	return ast.AcceptExpr[types.ValueType](expr.Expression, t)
 }
 
 func (t *TypeChecker) VisitLiteral(expr ast.LiteralExpr) any {
@@ -50,7 +51,7 @@ func (t *TypeChecker) VisitLiteral(expr ast.LiteralExpr) any {
 }
 
 func (t *TypeChecker) VisitUnary(expr ast.UnaryExpr) any {
-	return ast.AcceptExpr[types.ValueType](expr.Expr, t)
+	return ast.AcceptExpr[types.ValueType](expr.Expression, t)
 }
 
 func (t *TypeChecker) VisitVariable(expr ast.VariableExpr) any {
@@ -59,28 +60,49 @@ func (t *TypeChecker) VisitVariable(expr ast.VariableExpr) any {
 }
 
 func (t *TypeChecker) VisitFieldAccess(expr ast.FieldAccessExpr) any {
-	vtype, _ := ast.AcceptExpr[types.ValueType](expr.Expr, t).GetFieldType(expr.Field.Lexeme)
+	sourceType := ast.AcceptExpr[types.ValueType](expr.Source, t)
+	vtype, ok := sourceType.GetFieldType(expr.Field.Lexeme)
+	if !ok {
+		t.error(expr, fmt.Sprintf("field %s not defined in type %s", expr.Field.Lexeme, sourceType.ToString()))
+		return sourceType
+	}
 	return vtype
 }
 
 func (t *TypeChecker) VisitFunctionCall(expr ast.FunctionCallExpr) any {
 	sym, _ := t.table.Lookup(expr.Name.Lexeme)
-	funcStmt := sym.DeclarationNode().(ast.FunctionDeclarationStmt)
-	if len(expr.Arguments) != len(funcStmt.Parameters) {
-		t.error(expr, fmt.Sprintf("function %s expects %d arguments, got %d", expr.Name.Lexeme, len(funcStmt.Parameters), len(expr.Arguments)))
-		return sym.ValueType()
-	}
-	for i, arg := range expr.Arguments {
-		ptype := ast.AcceptExpr[types.ValueType](arg, t)
-		if ptype != funcStmt.Parameters[i].ValueType {
-			t.error(arg, fmt.Sprintf("argument %d of function %s has invalid type: expected %s, got %s", i, expr.Name.Lexeme, funcStmt.Parameters[i].ValueType.ToString(), ptype.ToString()))
+	switch declarationNode := sym.DeclarationNode().(type) {
+	case ast.FunctionDeclarationStmt:
+		if len(expr.Arguments) != len(declarationNode.Parameters) {
+			t.error(expr, fmt.Sprintf("function %s expects %d arguments, got %d", expr.Name.Lexeme, len(declarationNode.Parameters), len(expr.Arguments)))
+			return sym.ValueType()
 		}
+		for i, arg := range expr.Arguments {
+			ptype := ast.AcceptExpr[types.ValueType](arg, t)
+			if ptype != declarationNode.Parameters[i].ValueType {
+				t.error(arg, fmt.Sprintf("argument %d of function %s has invalid type: expected %s, got %s", i, expr.Name.Lexeme, declarationNode.Parameters[i].ValueType.ToString(), ptype.ToString()))
+			}
+		}
+	case ast.StructDeclarationStmt:
+		if len(expr.Arguments) != len(declarationNode.StructType.GetFieldNames()) {
+			t.error(expr, fmt.Sprintf("struct %s expects %d arguments, got %d", expr.Name.Lexeme, len(declarationNode.StructType.GetFieldNames()), len(expr.Arguments)))
+			return sym.ValueType()
+		}
+		for i, arg := range expr.Arguments {
+
+			ptype := ast.AcceptExpr[types.ValueType](arg, t)
+			fieldName := declarationNode.StructType.GetFieldNames()[i]
+			fieldType, _ := declarationNode.StructType.GetFieldType(fieldName)
+			if !ptype.Equals(fieldType) {
+				t.error(arg, fmt.Sprintf("argument %d of struct %s has invalid type: expected %s, got %s", i, expr.Name.Lexeme, declarationNode.StructType.GetFieldNames()[i], ptype.ToString()))
+			}
+		}
+
 	}
 	return sym.ValueType()
 }
 
 func (t *TypeChecker) VisitLogical(expr ast.LogicalExpr) any {
-	// any type will do, but we always return int.
 	ast.AcceptExpr[types.ValueType](expr.Left, t)
 	ast.AcceptExpr[types.ValueType](expr.Right, t)
 	return types.IntType
@@ -100,8 +122,8 @@ func (t *TypeChecker) VisitSlice(expr ast.SliceExpr) any {
 	}
 	if targetType == types.StringType {
 		return types.StringType
-	} else if listType, ok := targetType.(*types.ListTypeStruct); ok {
-		return listType.ContentType
+	} else if utils.IsListType(targetType) {
+		return targetType.(types.ListTypeStruct).ContentType
 	}
 	t.error(expr.TargetExpr, fmt.Sprintf("target must be string or list, got %s", targetType.ToString()))
 	return types.VoidType

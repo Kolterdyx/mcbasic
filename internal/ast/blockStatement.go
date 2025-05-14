@@ -3,7 +3,6 @@ package ast
 import "github.com/Kolterdyx/mcbasic/internal/interfaces"
 
 type BlockStmt struct {
-	Statement
 	interfaces.SourceLocation
 
 	Statements []Statement

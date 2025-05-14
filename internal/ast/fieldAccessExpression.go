@@ -6,7 +6,6 @@ import (
 )
 
 type FieldAccessExpr struct {
-	Expr
 	interfaces.SourceLocation
 
 	Source Expr

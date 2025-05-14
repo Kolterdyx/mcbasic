@@ -9,8 +9,6 @@ type LogicalExpr struct {
 	Left     Expr
 	Operator tokens.Token
 	Right    Expr
-
-	Expr
 }
 
 func (l LogicalExpr) Accept(v ExpressionVisitor) any {

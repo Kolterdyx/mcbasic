@@ -7,8 +7,6 @@ import (
 )
 
 type UnaryExpr struct {
-	Expr
-
 	Operator   tokens.Token
 	Expression Expr
 }

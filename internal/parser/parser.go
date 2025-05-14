@@ -3,22 +3,25 @@ package parser
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/ast"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"slices"
 )
 
 type Parser struct {
-	tokenSource []tokens.Token
-	errors      []error
-	current     int
+	tokenSource  []tokens.Token
+	errors       []error
+	current      int
+	definedTypes map[string]types.ValueType
 }
 
 func NewParser(tokenSource []tokens.Token) *Parser {
 	return &Parser{
-		tokenSource: tokenSource,
-		errors:      make([]error, 0),
-		current:     0,
+		tokenSource:  tokenSource,
+		errors:       make([]error, 0),
+		current:      0,
+		definedTypes: make(map[string]types.ValueType),
 	}
 }
 

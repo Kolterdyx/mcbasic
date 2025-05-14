@@ -6,7 +6,6 @@ import (
 )
 
 type ImportStmt struct {
-	Statement
 	interfaces.SourceLocation
 
 	Path string

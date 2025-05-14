@@ -3,8 +3,6 @@ package ast
 import "github.com/Kolterdyx/mcbasic/internal/interfaces"
 
 type ExpressionStmt struct {
-	Statement
-
 	Expression Expr
 }
 

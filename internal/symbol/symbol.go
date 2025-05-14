@@ -12,6 +12,7 @@ const (
 	FunctionSymbol      = "Function"
 	StructSymbol        = "Struct"
 	VariableSymbol      = "Variable"
+	LiteralSymbol       = "Literal"
 )
 
 type Symbol struct {

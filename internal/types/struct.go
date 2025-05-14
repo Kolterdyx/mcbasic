@@ -7,8 +7,6 @@ import (
 )
 
 type StructTypeStruct struct {
-	ValueType
-
 	Name   string
 	fields *orderedmap.OrderedMap[string, ValueType]
 }
@@ -37,7 +35,14 @@ func (s StructTypeStruct) Primitive() ValueType {
 }
 
 func (s StructTypeStruct) ToString() string {
-	return s.Name
+	fields := ""
+	for name, field := range s.fields.AllFromFront() {
+		fields += name + ": " + field.ToString() + ", "
+	}
+	if len(fields) > 0 {
+		fields = fields[:len(fields)-2]
+	}
+	return s.Name + "{" + fields + "}"
 }
 
 func (s StructTypeStruct) ToNBT() nbt.Value {

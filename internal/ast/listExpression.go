@@ -6,7 +6,6 @@ import (
 )
 
 type ListExpr struct {
-	Expr
 	interfaces.SourceLocation
 
 	Elements  []Expr

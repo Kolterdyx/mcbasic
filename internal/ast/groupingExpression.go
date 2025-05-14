@@ -3,8 +3,6 @@ package ast
 import "github.com/Kolterdyx/mcbasic/internal/interfaces"
 
 type GroupingExpr struct {
-	Expr
-
 	Expression Expr
 }
 

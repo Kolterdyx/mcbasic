@@ -7,8 +7,6 @@ import (
 )
 
 type StructDeclarationStmt struct {
-	Statement
-
 	Name       tokens.Token
 	StructType types.StructTypeStruct
 }

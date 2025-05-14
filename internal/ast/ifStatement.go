@@ -3,8 +3,6 @@ package ast
 import "github.com/Kolterdyx/mcbasic/internal/interfaces"
 
 type IfStmt struct {
-	Statement
-
 	Condition  Expr
 	ThenBranch BlockStmt
 	ElseBranch *BlockStmt

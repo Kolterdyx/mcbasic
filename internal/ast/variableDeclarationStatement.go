@@ -7,8 +7,6 @@ import (
 )
 
 type VariableDeclarationStmt struct {
-	Statement
-
 	Name        tokens.Token
 	Initializer Expr
 	ValueType   types.ValueType

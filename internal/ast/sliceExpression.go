@@ -10,7 +10,6 @@ type SliceExpr struct {
 	TargetExpr Expr
 
 	interfaces.SourceLocation
-	Expr
 }
 
 func (s SliceExpr) Accept(v ExpressionVisitor) any {

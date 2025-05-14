@@ -7,8 +7,6 @@ import (
 )
 
 type FunctionDeclarationStmt struct {
-	Statement
-
 	Name          tokens.Token
 	Parameters    []VariableDeclarationStmt
 	Body          BlockStmt

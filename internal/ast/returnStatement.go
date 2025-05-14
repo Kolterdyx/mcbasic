@@ -3,7 +3,6 @@ package ast
 import "github.com/Kolterdyx/mcbasic/internal/interfaces"
 
 type ReturnStmt struct {
-	Statement
 	interfaces.SourceLocation
 
 	Expression Expr

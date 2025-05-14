@@ -3,79 +3,119 @@ package resolver
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/ast"
+	"github.com/Kolterdyx/mcbasic/internal/symbol"
 	"github.com/Kolterdyx/mcbasic/internal/types"
+	"github.com/Kolterdyx/mcbasic/internal/utils"
 )
 
 func (r *Resolver) VisitBinary(expr ast.BinaryExpr) any {
-	err := ast.AcceptExpr[error](expr.Left, r)
-	if err != nil {
-		return err
+	res := ast.AcceptExpr[Result](expr.Left, r)
+	if !res.Ok {
+		return res
 	}
-	return ast.AcceptExpr[error](expr.Right, r)
+	return ast.AcceptExpr[Result](expr.Right, r)
 }
 
 func (r *Resolver) VisitGrouping(expr ast.GroupingExpr) any {
-	return ast.AcceptExpr[error](expr.Expr, r)
+	return ast.AcceptExpr[Result](expr.Expression, r)
 }
 
 func (r *Resolver) VisitLiteral(expr ast.LiteralExpr) any {
-	return nil
+	return Result{
+		Ok:     true,
+		Symbol: symbol.NewSymbol("__literal__", symbol.LiteralSymbol, expr, expr.ValueType),
+	}
 }
 
 func (r *Resolver) VisitUnary(expr ast.UnaryExpr) any {
-	return ast.AcceptExpr[error](expr.Expr, r)
+	return ast.AcceptExpr[Result](expr.Expression, r)
 }
 
 func (r *Resolver) VisitVariable(expr ast.VariableExpr) any {
-	_, ok := r.table.Lookup(expr.Name.Lexeme)
+	vtype, ok := r.table.Lookup(expr.Name.Lexeme)
 	if !ok {
 		return r.error(expr, fmt.Sprintf("variable %s not defined", expr.Name.Lexeme))
 	}
-	return nil
+	return Result{
+		Ok:     true,
+		Symbol: vtype,
+	}
 }
 
 func (r *Resolver) VisitFieldAccess(expr ast.FieldAccessExpr) any {
-	_, ok := ast.AcceptExpr[types.ValueType](expr.Expr, r).GetFieldType(expr.Field.Lexeme)
+	res := ast.AcceptExpr[Result](expr.Source, r)
+	if !res.Ok {
+		return r.error(expr, fmt.Sprintf("could not resolve source %s", expr.Source.ToString()))
+	}
+	valueType := res.Symbol.ValueType()
+	fieldType, ok := valueType.GetFieldType(expr.Field.Lexeme)
 	if !ok {
 		return r.error(expr, fmt.Sprintf("field %s not defined", expr.Field.Lexeme))
 	}
-	return nil
+	return Result{
+		Ok:     true,
+		Symbol: symbol.NewSymbol(expr.Field.Lexeme, symbol.LiteralSymbol, expr, fieldType),
+	}
 }
 
 func (r *Resolver) VisitFunctionCall(expr ast.FunctionCallExpr) any {
-	_, ok := r.table.Lookup(expr.Name.Lexeme)
+	sym, ok := r.table.Lookup(expr.Name.Lexeme)
 	if !ok {
 		return r.error(expr, fmt.Sprintf("function %s not defined", expr.Name.Lexeme))
 	}
-	return nil
+	return Result{
+		Ok:     true,
+		Symbol: sym,
+	}
 }
 
 func (r *Resolver) VisitLogical(expr ast.LogicalExpr) any {
-	err := ast.AcceptExpr[error](expr.Left, r)
-	if err != nil {
-		return err
+	res := ast.AcceptExpr[Result](expr.Left, r)
+	if !res.Ok {
+		return res
 	}
-	return ast.AcceptExpr[error](expr.Right, r)
+	return ast.AcceptExpr[Result](expr.Right, r)
 }
 
 func (r *Resolver) VisitSlice(expr ast.SliceExpr) any {
-	err := ast.AcceptExpr[error](expr.TargetExpr, r)
-	if err != nil {
-		return err
+	targetRes := ast.AcceptExpr[Result](expr.TargetExpr, r)
+	if !targetRes.Ok {
+		return targetRes
 	}
-	err = ast.AcceptExpr[error](expr.StartIndex, r)
-	if err != nil {
-		return err
+	res := ast.AcceptExpr[Result](expr.StartIndex, r)
+	if !res.Ok {
+		return res
 	}
-	return ast.AcceptExpr[error](expr.EndIndex, r)
+	if expr.EndIndex != nil {
+		res = ast.AcceptExpr[Result](expr.EndIndex, r)
+		if !res.Ok {
+			return res
+		}
+	}
+	targetType := targetRes.Symbol.ValueType()
+	if targetType.Equals(types.StringType) {
+		return Result{
+			Ok:     true,
+			Symbol: symbol.NewSymbol("__literal__", symbol.LiteralSymbol, expr, types.StringType),
+		}
+	} else if utils.IsListType(targetType) {
+		return Result{
+			Ok:     true,
+			Symbol: symbol.NewSymbol("__literal__", symbol.LiteralSymbol, expr, targetType.(types.ListTypeStruct).ContentType),
+		}
+	}
+	return r.error(expr, fmt.Sprintf("slice not supported for type %s", targetType.ToString()))
 }
 
 func (r *Resolver) VisitList(expr ast.ListExpr) any {
 	for _, item := range expr.Elements {
-		err := ast.AcceptExpr[error](item, r)
-		if err != nil {
-			return err
+		res := ast.AcceptExpr[Result](item, r)
+		if !res.Ok {
+			return res
 		}
 	}
-	return nil
+	return Result{
+		Ok:     true,
+		Symbol: symbol.NewSymbol("__literal__", symbol.LiteralSymbol, expr, expr.ValueType),
+	}
 }

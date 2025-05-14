@@ -46,8 +46,6 @@ func (f FieldAccessor) GetSourceLocation() interfaces.SourceLocation {
 }
 
 type VariableAssignmentStmt struct {
-	Statement
-
 	Name      tokens.Token
 	Accessors []Accessor
 	Value     Expr

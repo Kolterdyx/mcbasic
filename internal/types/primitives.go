@@ -15,8 +15,6 @@ const (
 )
 
 type PrimitiveTypeStruct struct {
-	ValueType
-
 	primitiveType PrimitiveType
 }
 

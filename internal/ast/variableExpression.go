@@ -6,8 +6,6 @@ import (
 )
 
 type VariableExpr struct {
-	Expr
-
 	Name tokens.Token
 }
 

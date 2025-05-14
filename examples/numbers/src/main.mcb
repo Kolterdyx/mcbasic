@@ -1,6 +1,6 @@
 
 func load() {
-	let a int = 10;
+	let n int = 10;
 	let x double = 2.7;
 	let y double = 3.14;
 

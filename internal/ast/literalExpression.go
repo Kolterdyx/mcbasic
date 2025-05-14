@@ -7,7 +7,6 @@ import (
 )
 
 type LiteralExpr struct {
-	Expr
 	interfaces.SourceLocation
 
 	Value     nbt.Value

@@ -6,9 +6,11 @@ import (
 )
 
 type FunctionTypeStruct struct {
-	ValueType
-
 	Name string
+}
+
+func (f FunctionTypeStruct) Equals(other ValueType) bool {
+	return false
 }
 
 func NewFunctionType(name string) FunctionTypeStruct {

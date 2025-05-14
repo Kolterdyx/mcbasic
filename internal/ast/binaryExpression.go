@@ -6,8 +6,6 @@ import (
 )
 
 type BinaryExpr struct {
-	Expr
-
 	Left     Expr
 	Operator tokens.Token
 	Right    Expr

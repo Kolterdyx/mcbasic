@@ -3,7 +3,6 @@ package parser
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/ast"
-
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
@@ -101,7 +100,12 @@ func (p *Parser) ParseType() (types.ValueType, error) {
 	case p.match(tokens.VoidType):
 		varType = types.VoidType
 	case p.match(tokens.Identifier):
-		varType = types.NewNamedType(p.previous().Lexeme)
+		typeName := p.previous().Lexeme
+		if definedType, ok := p.definedTypes[typeName]; ok {
+			varType = definedType
+		} else {
+			return nil, p.error(p.previous(), fmt.Sprintf("Undefined type: %s", typeName))
+		}
 	default:
 		return nil, p.error(p.peek(), "Expected type.")
 	}
@@ -235,6 +239,7 @@ func (p *Parser) structDeclaration() (ast.Statement, error) {
 		return nil, err
 	}
 	structType := types.NewStructType(name.Lexeme)
+	p.definedTypes[name.Lexeme] = structType
 	for !p.check(tokens.BraceClose) && !p.IsAtEnd() {
 		fieldName, err := p.consume(tokens.Identifier, "Expected field name.")
 		if err != nil {

@@ -1,6 +1,9 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+)
 
 type ExpressionVisitor interface {
 	VisitBinary(b BinaryExpr) any
@@ -22,6 +25,10 @@ type Expr interface {
 }
 
 func AcceptExpr[T any](expr Expr, v ExpressionVisitor) T {
+	if expr == nil {
+		var zero T
+		return zero
+	}
 	res := expr.Accept(v)
 	if res == nil {
 		var zero T
@@ -29,7 +36,7 @@ func AcceptExpr[T any](expr Expr, v ExpressionVisitor) T {
 	}
 	val, ok := res.(T)
 	if !ok {
-		panic(fmt.Sprintf("unexpected type: got %T, want %T", res, val))
+		panic(fmt.Sprintf("unexpected type: got %v, want %v", reflect.TypeOf(res), reflect.TypeFor[T]()))
 	}
 	return val
 }

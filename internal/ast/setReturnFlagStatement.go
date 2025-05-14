@@ -3,7 +3,6 @@ package ast
 import "github.com/Kolterdyx/mcbasic/internal/interfaces"
 
 type SetReturnFlagStmt struct {
-	Statement
 }
 
 func (s SetReturnFlagStmt) Accept(v StatementVisitor) any {

@@ -3,8 +3,6 @@ package ast
 import "github.com/Kolterdyx/mcbasic/internal/interfaces"
 
 type WhileStmt struct {
-	Statement
-
 	Condition Expr
 	Body      BlockStmt
 }

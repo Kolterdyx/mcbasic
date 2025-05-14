@@ -6,7 +6,6 @@ import (
 )
 
 type FunctionCallExpr struct {
-	Expr
 	interfaces.SourceLocation
 
 	Name      tokens.Token
