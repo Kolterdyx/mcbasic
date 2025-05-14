@@ -69,7 +69,7 @@ func (t *TypeChecker) VisitVariableAssignment(stmt ast.VariableAssignmentStmt) a
 		}
 	}
 	if !variableType.Equals(valueType) {
-		t.error(stmt, fmt.Sprintf("cannot assign %s to %s", valueType.ToString(), variableType.ToString()))
+		t.error(stmt, fmt.Sprintf("type mismatch: cannot assign value of type %s to variable '%s' of type %s", valueType.ToString(), stmt.Name.Lexeme, variableType.ToString()))
 	}
 	return nil
 }

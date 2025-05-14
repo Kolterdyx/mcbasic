@@ -118,66 +118,6 @@ func (p *Parser) isStructType(varType types.ValueType) bool {
 	}
 }
 
-func (p *Parser) getTokenAsValueType(token tokens.Token) (types.ValueType, error) {
-	var varType types.ValueType = nil
-	var err error
-	switch token.Type {
-	case tokens.IntType:
-		varType = types.IntType
-	case tokens.StringType:
-		varType = types.StringType
-	case tokens.DoubleType:
-		varType = types.DoubleType
-	case tokens.VoidType:
-		varType = types.VoidType
-	case tokens.Identifier:
-		// structs and lists?
-	default:
-		return nil, p.error(p.peek(), "Expected variable type.")
-	}
-	return varType, err
-}
-
-//
-//// getNestedType traverses the accessors to find the type at the end
-//func (p *Parser) getNestedType(name tokens.Token, accessors []ast.Accessor) (types.ValueType, error) {
-//	varSymbol, ok := p.symbols.Lookup(name.Lexeme)
-//	if !ok {
-//		return nil, p.error(name, "Undeclared identifier")
-//	}
-//	varType := varSymbol.ValueType()
-//	var err error
-//	accessPath := name.Lexeme
-//	for _, accessor := range accessors {
-//		accessPath += accessor.ToString()
-//		switch accessor.(type) {
-//		case ast.IndexAccessor:
-//			if p.isListType(varType) {
-//				varType = varType.(types.ListTypeStruct).ContentType
-//			} else {
-//				return nil, p.error(p.peek(), "Expected list type.")
-//			}
-//		case ast.FieldAccessor:
-//			fieldAccessor := accessor.(ast.FieldAccessor)
-//			if p.isStructType(varType) {
-//				vtype, ok := varType.(types.StructTypeStruct).GetFieldType(fieldAccessor.Field.Lexeme)
-//				if !ok {
-//					return nil, p.error(fieldAccessor.Field, fmt.Sprintf("Unknown field: %s", fieldAccessor.Field.Lexeme))
-//				}
-//				varType = vtype
-//			} else {
-//				return nil, p.error(p.peek(), "Expected struct type.")
-//			}
-//		default:
-//			return nil, p.error(p.peek(), "Unknown accessor type.")
-//		}
-//	}
-//	if varType == nil {
-//		return nil, p.error(name, fmt.Sprintf("Unknown variable type: %s", name.Lexeme))
-//	}
-//	return varType, err
-//}
-
 func parseType(valueType string) (types.ValueType, error) {
 	s := scanner.Scanner{}
 	tokenSource, errs := s.Scan(valueType)
