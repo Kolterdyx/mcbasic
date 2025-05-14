@@ -24,5 +24,9 @@ func (l LogicalExpr) ToString() string {
 }
 
 func (l LogicalExpr) GetSourceLocation() interfaces.SourceLocation {
-	return l.GetSourceLocation()
+	if l.Left != nil {
+		return l.Left.GetSourceLocation()
+	}
+	// Return a default SourceLocation if l.Left is nil
+	return interfaces.SourceLocation{}
 }
