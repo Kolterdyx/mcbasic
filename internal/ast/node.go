@@ -5,7 +5,6 @@ import "github.com/Kolterdyx/mcbasic/internal/interfaces"
 type NodeType string
 
 const (
-	_                      NodeType = ""
 	BinaryExpression       NodeType = "BinaryExpression"
 	GroupingExpression     NodeType = "GroupingExpression"
 	LiteralExpression      NodeType = "LiteralExpression"
