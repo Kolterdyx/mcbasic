@@ -7,6 +7,7 @@ import (
 
 // Accessor is one step in an L-value chain: either [expr] or .field
 type Accessor interface {
+	Node
 	ToString() string
 }
 
@@ -19,6 +20,14 @@ func (i IndexAccessor) ToString() string {
 	return "[x]"
 }
 
+func (i IndexAccessor) Type() NodeType {
+	return IndexAccessorType
+}
+
+func (i IndexAccessor) GetSourceLocation() interfaces.SourceLocation {
+	return i.Index.GetSourceLocation()
+}
+
 // FieldAccessor holds a parsed field name (foo.bar).
 type FieldAccessor struct {
 	Field tokens.Token
@@ -26,6 +35,14 @@ type FieldAccessor struct {
 
 func (f FieldAccessor) ToString() string {
 	return "." + f.Field.Lexeme
+}
+
+func (f FieldAccessor) Type() NodeType {
+	return FieldAccessorType
+}
+
+func (f FieldAccessor) GetSourceLocation() interfaces.SourceLocation {
+	return f.Field.SourceLocation
 }
 
 type VariableAssignmentStmt struct {

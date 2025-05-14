@@ -3,8 +3,8 @@ package type_checker
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/ast"
-	"github.com/Kolterdyx/mcbasic/internal/symbol"
 	"github.com/Kolterdyx/mcbasic/internal/types"
+	"github.com/Kolterdyx/mcbasic/internal/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -13,14 +13,15 @@ func (t *TypeChecker) VisitExpression(stmt ast.ExpressionStmt) any {
 }
 
 func (t *TypeChecker) VisitVariableDeclaration(stmt ast.VariableDeclarationStmt) any {
-	err := t.table.Define(symbol.NewSymbol(stmt.Name.Lexeme, symbol.VariableSymbol, stmt, stmt.ValueType))
-	if err != nil {
-		t.error(stmt, fmt.Sprintf("variable %s already defined", stmt.Name.Lexeme))
-	}
+	sym, _ := t.table.Lookup(stmt.Name.Lexeme)
 	if stmt.Initializer != nil {
-		ast.AcceptExpr[types.ValueType](stmt.Initializer, t)
+		itype := ast.AcceptExpr[types.ValueType](stmt.Initializer, t)
+		if !sym.ValueType().Equals(itype) {
+			t.error(stmt, fmt.Sprintf("cannot assign %s to %s", itype.ToString(), sym.ValueType().ToString()))
+			return types.VoidType
+		}
 	}
-	return nil
+	return sym.ValueType()
 }
 
 func (t *TypeChecker) VisitFunctionDeclaration(stmt ast.FunctionDeclarationStmt) any {
@@ -40,10 +41,35 @@ func (t *TypeChecker) VisitFunctionDeclaration(stmt ast.FunctionDeclarationStmt)
 }
 
 func (t *TypeChecker) VisitVariableAssignment(stmt ast.VariableAssignmentStmt) any {
-	sym, _ := t.table.Lookup(stmt.Name.Lexeme)
-	vtype := ast.AcceptExpr[types.ValueType](stmt.Value, t)
-	if !sym.ValueType().Equals(vtype) {
-		t.error(stmt, fmt.Sprintf("cannot assign %s to %s", vtype.ToString(), sym.ValueType().ToString()))
+	variableSymbol, _ := t.table.Lookup(stmt.Name.Lexeme)
+	variableType := variableSymbol.ValueType()
+	valueType := ast.AcceptExpr[types.ValueType](stmt.Value, t)
+	if len(stmt.Accessors) > 0 {
+		for _, accessor := range stmt.Accessors {
+			switch accessor.(type) {
+			case ast.IndexAccessor:
+				if utils.IsListType(variableType) {
+					variableType = variableType.(types.ListTypeStruct).ContentType
+				} else {
+					t.error(accessor, fmt.Sprintf("cannot index %s", variableType.ToString()))
+				}
+			case ast.FieldAccessor:
+				if utils.IsStructType(variableType) {
+					fieldAccessor := accessor.(ast.FieldAccessor)
+					structType := variableType.(types.StructTypeStruct)
+					fieldType, ok := structType.GetFieldType(fieldAccessor.Field.Lexeme)
+					if !ok {
+						t.error(accessor, fmt.Sprintf("fieldType %s not found in %s", fieldAccessor.Field.Lexeme, variableType.ToString()))
+					}
+					variableType = fieldType
+				} else {
+					t.error(accessor, fmt.Sprintf("cannot access field %s of %s", accessor.ToString(), variableType.ToString()))
+				}
+			}
+		}
+	}
+	if !variableType.Equals(valueType) {
+		t.error(stmt, fmt.Sprintf("cannot assign %s to %s", valueType.ToString(), variableType.ToString()))
 	}
 	return nil
 }

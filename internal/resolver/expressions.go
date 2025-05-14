@@ -35,7 +35,7 @@ func (r *Resolver) VisitVariable(expr ast.VariableExpr) any {
 }
 
 func (r *Resolver) VisitFieldAccess(expr ast.FieldAccessExpr) any {
-	_, ok := ast.AcceptExpr[types.ValueType](expr.Expr, r).GetField(expr.Field.Lexeme)
+	_, ok := ast.AcceptExpr[types.ValueType](expr.Expr, r).GetFieldType(expr.Field.Lexeme)
 	if !ok {
 		return r.error(expr, fmt.Sprintf("field %s not defined", expr.Field.Lexeme))
 	}
@@ -45,7 +45,7 @@ func (r *Resolver) VisitFieldAccess(expr ast.FieldAccessExpr) any {
 func (r *Resolver) VisitFunctionCall(expr ast.FunctionCallExpr) any {
 	_, ok := r.table.Lookup(expr.Name.Lexeme)
 	if !ok {
-		return fmt.Errorf("function %s not defined", expr.Name.Lexeme)
+		return r.error(expr, fmt.Sprintf("function %s not defined", expr.Name.Lexeme))
 	}
 	return nil
 }

@@ -24,7 +24,7 @@ func (s StructTypeStruct) SetField(name string, value ValueType) {
 	s.fields.Set(name, value)
 }
 
-func (s StructTypeStruct) GetField(name string) (ValueType, bool) {
+func (s StructTypeStruct) GetFieldType(name string) (ValueType, bool) {
 	return s.fields.Get(name)
 }
 
@@ -64,7 +64,7 @@ func (s StructTypeStruct) Equals(other ValueType) bool {
 			return false
 		}
 		for name, field := range s.fields.AllFromFront() {
-			if otherField, ok := other.GetField(name); !ok || !field.Equals(otherField) {
+			if otherField, ok := other.GetFieldType(name); !ok || !field.Equals(otherField) {
 				return false
 			}
 		}

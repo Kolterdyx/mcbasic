@@ -160,7 +160,7 @@ func (p *Parser) getTokenAsValueType(token tokens.Token) (types.ValueType, error
 //		case ast.FieldAccessor:
 //			fieldAccessor := accessor.(ast.FieldAccessor)
 //			if p.isStructType(varType) {
-//				vtype, ok := varType.(types.StructTypeStruct).GetField(fieldAccessor.Field.Lexeme)
+//				vtype, ok := varType.(types.StructTypeStruct).GetFieldType(fieldAccessor.Field.Lexeme)
 //				if !ok {
 //					return nil, p.error(fieldAccessor.Field, fmt.Sprintf("Unknown field: %s", fieldAccessor.Field.Lexeme))
 //				}

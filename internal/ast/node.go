@@ -28,6 +28,9 @@ const (
 	ReturnStatement              NodeType = "ReturnStatement"
 	SetReturnFlagStatement       NodeType = "SetReturnFlagStatement"
 	ImportStatement              NodeType = "ImportStatement"
+
+	IndexAccessorType NodeType = "IndexAccessorType"
+	FieldAccessorType NodeType = "FieldAccessorType"
 )
 
 type Node interface {

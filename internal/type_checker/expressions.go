@@ -59,7 +59,7 @@ func (t *TypeChecker) VisitVariable(expr ast.VariableExpr) any {
 }
 
 func (t *TypeChecker) VisitFieldAccess(expr ast.FieldAccessExpr) any {
-	vtype, _ := ast.AcceptExpr[types.ValueType](expr.Expr, t).GetField(expr.Field.Lexeme)
+	vtype, _ := ast.AcceptExpr[types.ValueType](expr.Expr, t).GetFieldType(expr.Field.Lexeme)
 	return vtype
 }
 
@@ -118,5 +118,5 @@ func (t *TypeChecker) VisitList(expr ast.ListExpr) any {
 			t.error(item, fmt.Sprintf("list elements must be of the same type, got %s and %s", itype.ToString(), currType.ToString()))
 		}
 	}
-	return types.VoidType
+	return types.NewListType(itype)
 }

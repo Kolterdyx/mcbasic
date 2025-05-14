@@ -31,6 +31,6 @@ func (f FunctionTypeStruct) ToNBT() nbt.Value {
 	return nbt.NewCompound()
 }
 
-func (f FunctionTypeStruct) GetField(name string) (ValueType, bool) {
+func (f FunctionTypeStruct) GetFieldType(name string) (ValueType, bool) {
 	return nil, false
 }
