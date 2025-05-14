@@ -3,14 +3,42 @@ package type_checker
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/ast"
+	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
 
 func (t *TypeChecker) VisitBinary(expr ast.BinaryExpr) any {
-	// TODO: check type compatibility based on operator
 	rtype := ast.AcceptExpr[types.ValueType](expr.Right, t)
-	ast.AcceptExpr[types.ValueType](expr.Left, t)
-	return rtype
+	ltype := ast.AcceptExpr[types.ValueType](expr.Left, t)
+	switch expr.Operator.Type {
+	case tokens.EqualEqual, tokens.BangEqual, tokens.Greater, tokens.GreaterEqual, tokens.Less, tokens.LessEqual:
+		if ltype != rtype {
+			t.error(expr, fmt.Sprintf("cannot compare %s and %s", ltype.ToString(), rtype.ToString()))
+		}
+		return rtype
+	case tokens.Plus:
+		switch ltype {
+		case types.StringType:
+			return types.StringType
+		}
+		fallthrough
+	case tokens.Minus, tokens.Slash, tokens.Star, tokens.Percent:
+		switch rtype {
+		case types.IntType:
+			if rtype != types.IntType {
+				t.error(expr, fmt.Sprintf("cannot add %s and %s", ltype.ToString(), rtype.ToString()))
+			}
+			return types.IntType
+		case types.DoubleType:
+			if ltype != types.DoubleType {
+				t.error(expr, fmt.Sprintf("cannot add %s and %s", ltype.ToString(), rtype.ToString()))
+			}
+			return types.DoubleType
+		}
+	default:
+		t.error(expr, fmt.Sprintf("unhandled operator %s", expr.Operator.Lexeme))
+	}
+	return types.VoidType
 }
 
 func (t *TypeChecker) VisitGrouping(expr ast.GroupingExpr) any {
@@ -52,10 +80,10 @@ func (t *TypeChecker) VisitFunctionCall(expr ast.FunctionCallExpr) any {
 }
 
 func (t *TypeChecker) VisitLogical(expr ast.LogicalExpr) any {
-	// TODO: check type compatibility based on operator
-	rvalue := ast.AcceptExpr[types.ValueType](expr.Right, t)
+	// any type will do, but we always return int.
 	ast.AcceptExpr[types.ValueType](expr.Left, t)
-	return rvalue
+	ast.AcceptExpr[types.ValueType](expr.Right, t)
+	return types.IntType
 }
 
 func (t *TypeChecker) VisitSlice(expr ast.SliceExpr) any {
@@ -80,11 +108,14 @@ func (t *TypeChecker) VisitSlice(expr ast.SliceExpr) any {
 }
 
 func (t *TypeChecker) VisitList(expr ast.ListExpr) any {
-	// TODO: fix
+	var itype types.ValueType = types.VoidType
 	for _, item := range expr.Elements {
-		err := ast.AcceptExpr[types.ValueType](item, t)
-		if err != nil {
-			return err
+		currType := ast.AcceptExpr[types.ValueType](item, t)
+		if itype == types.VoidType {
+			itype = currType
+		}
+		if itype != currType {
+			t.error(item, fmt.Sprintf("list elements must be of the same type, got %s and %s", itype.ToString(), currType.ToString()))
 		}
 	}
 	return types.VoidType
