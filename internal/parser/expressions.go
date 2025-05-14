@@ -224,7 +224,11 @@ func (p *Parser) functionCall(name tokens.Token) (ast.Expr, error) {
 			if len(args) >= 255 {
 				return nil, p.error(p.peek(), "Cannot have more than 255 arguments.")
 			}
-			if !p.match(tokens.Comma) {
+			if p.match(tokens.Comma) {
+				if p.check(tokens.ParenClose) {
+					break
+				}
+			} else {
 				break
 			}
 		}
@@ -233,7 +237,6 @@ func (p *Parser) functionCall(name tokens.Token) (ast.Expr, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Find the function in the current scope
 
 	return ast.FunctionCallExpr{Name: tokens.Token{
 		Type:           tokens.Identifier,
