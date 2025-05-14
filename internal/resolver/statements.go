@@ -7,7 +7,7 @@ import (
 )
 
 func (r *Resolver) VisitExpression(stmt ast.ExpressionStmt) any {
-	return ast.AcceptExpr[error](stmt.Expression, r)
+	return ast.AcceptExpr[Result](stmt.Expression, r)
 }
 
 func (r *Resolver) VisitVariableDeclaration(stmt ast.VariableDeclarationStmt) any {
