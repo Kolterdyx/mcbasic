@@ -153,7 +153,6 @@ func (c *Compiler) VisitFunctionCall(f *ast.FunctionCallExpr) any {
 			cmd.CopyVar(RET, RX)
 		}
 	}
-
 	return cmd
 }
 

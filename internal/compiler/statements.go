@@ -68,7 +68,7 @@ func (c *Compiler) VisitFunctionDeclaration(stmt ast.FunctionDeclarationStmt) an
 			wrapper.SetArgs(c.currentScope.ScopeName(), wrapperArgMacroCompound)
 		}
 		wrapper.
-			CallWithArgs(funcName, fmt.Sprintf("%s.%s", ArgPath, c.currentScope)).
+			CallWithArgs(funcName, fmt.Sprintf("%s.%s", ArgPath, c.currentScope.ScopeName())).
 			Ret()
 		c.compiledFunctions[c.currentScope.ScopeName()] = ir.NewFunction(c.currentScope.ScopeName(), wrapper)
 		return wrapper
@@ -115,7 +115,7 @@ func (c *Compiler) VisitBlock(stmt ast.BlockStmt) any {
 	return cmd
 }
 
-func (c *Compiler) VisitWhile(stmt ast.WhileStmt) any {
+func (c *Compiler) VisitWhile(_ ast.WhileStmt) any {
 	//TODO implement me
 	panic("implement me")
 }
@@ -157,11 +157,11 @@ func (c *Compiler) VisitReturn(stmt ast.ReturnStmt) any {
 	return cmd
 }
 
-func (c *Compiler) VisitSetReturnFlag(stmt ast.SetReturnFlagStmt) any {
+func (c *Compiler) VisitSetReturnFlag(_ ast.SetReturnFlagStmt) any {
 	return c.n().Score(RETF, nbt.NewInt(1))
 }
 
-func (c *Compiler) VisitImport(stmt ast.ImportStmt) any {
+func (c *Compiler) VisitImport(_ ast.ImportStmt) any {
 	//TODO implement me
 	panic("implement me")
 }

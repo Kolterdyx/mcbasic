@@ -65,7 +65,9 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 	errs := front.Compile(config)
 	if len(errs) > 0 {
 		for _, err := range errs {
-			log.Error(err)
+			if err != nil {
+				log.Error(err)
+			}
 		}
 		return nil
 	}
