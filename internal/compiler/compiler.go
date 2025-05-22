@@ -86,7 +86,6 @@ func (c *Compiler) Compile(sourceAst ast.Source, symbols *symbol.Table) error {
 	c.createBasePack()
 	functions := c.compileToIR(sourceAst)
 	functions = append(functions, c.compileBuiltins()...)
-	functions = c.addStructDeclarationFunction(sourceAst, functions)
 	functions = c.optimizeIRCode(functions)
 	c.compileIRtoDatapack(functions)
 	err := c.writeFunctionTags()
@@ -115,17 +114,6 @@ func (c *Compiler) compileIRtoDatapack(ir []interfaces.Function) {
 			log.Fatalln(err)
 		}
 	}
-}
-
-func (c *Compiler) addStructDeclarationFunction(source ast.Source, functions []interfaces.Function) []interfaces.Function {
-	structDefFuncSource := ir.NewCode(c.Namespace, c.storage)
-	for _, statement := range source {
-		if statement.Type() == ast.StructDeclarationStatement {
-			structDefFuncSource.Extend(ast.AcceptStmt[interfaces.IRCode](statement, c))
-		}
-	}
-	structDefFuncSource.Ret()
-	return append(functions, ir.NewFunction(path.Join(paths.Internal, "struct_definitions"), structDefFuncSource))
 }
 
 func (c *Compiler) optimizeIRCode(functions []interfaces.Function) []interfaces.Function {
