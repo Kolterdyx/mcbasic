@@ -214,7 +214,11 @@ func (c *Compiler) VisitSlice(s *ast.SliceExpr) any {
 	if s.EndIndex != nil {
 		cmd.IntCompare(regIndexStart, regIndexEnd, tokens.Greater, RX)
 		cmd.Load(RX, RX)
-		cmd.If(RX, c.n().Exception(fmt.Sprintf("Exception at %s: Invalid slice range. End index can't be smaller than start index", s.EndIndex.GetSourceLocation().ToString())))
+		cmd.If(RX, c.n().ExceptionFormat(
+			nbt.NewFormattedString("Exception at ", nbt.StringFormat{Color: nbt.Red, Italic: true}),
+			nbt.NewFormattedString(s.EndIndex.GetSourceLocation().ToString(), nbt.StringFormat{Color: nbt.Gold}),
+			nbt.NewFormattedString(": Invalid slice range. End index can't be smaller than start index", nbt.StringFormat{Color: nbt.Red, Italic: true})),
+		)
 		cmd.If(RX, c.n().Ret())
 	}
 
@@ -224,12 +228,20 @@ func (c *Compiler) VisitSlice(s *ast.SliceExpr) any {
 		case types.StringType:
 			cmd.IntCompare(regIndexStart, lenReg, tokens.GreaterEqual, RX)
 			cmd.Load(RX, RX)
-			cmd.If(RX, c.n().Exception(fmt.Sprintf("OutOfBoundsException at %s: Invalid slice range. Start index out of bounds", s.StartIndex.GetSourceLocation().ToString())))
+			cmd.If(RX, c.n().ExceptionFormat(
+				nbt.NewErrorString("OutOfBoundsException at "),
+				nbt.NewFormattedString(s.EndIndex.GetSourceLocation().ToString(), nbt.StringFormat{Color: nbt.Gold}),
+				nbt.NewErrorString(": Invalid slice range. Start index out of bounds"),
+			))
 			cmd.If(RX, c.n().Ret())
 			if s.EndIndex != nil {
 				cmd.IntCompare(regIndexEnd, lenReg, tokens.GreaterEqual, RX)
 				cmd.Load(RX, RX)
-				cmd.If(RX, c.n().Exception(fmt.Sprintf("OutOfBoundsException at %s: Invalid slice range. Start index out of bounds", s.EndIndex.GetSourceLocation().ToString())))
+				cmd.If(RX, c.n().ExceptionFormat(
+					nbt.NewErrorString("OutOfBoundsException at ", nbt.StringFormat{Color: nbt.Red, Italic: true}),
+					nbt.NewFormattedString(s.EndIndex.GetSourceLocation().ToString(), nbt.StringFormat{Color: nbt.Gold}),
+					nbt.NewErrorString(": Invalid slice range. End index out of bounds"),
+				))
 				cmd.If(RX, c.n().Ret())
 			}
 			cmd.StringSlice(targetReg, regIndexStart, regIndexEnd, RX)
@@ -237,7 +249,11 @@ func (c *Compiler) VisitSlice(s *ast.SliceExpr) any {
 	case types.ListTypeStruct:
 		cmd.IntCompare(regIndexStart, lenReg, tokens.GreaterEqual, RX)
 		cmd.Load(RX, RX)
-		cmd.If(RX, c.n().Exception(fmt.Sprintf("OutOfBoundsException at %s: Index out of bounds", s.StartIndex.GetSourceLocation().ToString())))
+		cmd.If(RX, c.n().ExceptionFormat(
+			nbt.NewErrorString("OutOfBoundsException at "),
+			nbt.NewFormattedString(s.StartIndex.GetSourceLocation().ToString(), nbt.StringFormat{Color: nbt.Gold}),
+			nbt.NewErrorString(": Index out of bounds"),
+		))
 		cmd.If(RX, c.n().Ret())
 		if s.EndIndex != nil {
 			c.error(s, "List slices are not supported.")

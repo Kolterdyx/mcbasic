@@ -15,6 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -55,8 +56,11 @@ func (f *Frontend) Parse(path string) error {
 		}
 		return fmt.Errorf("failed to scan file: %s", path)
 	}
-
-	p := parser.NewParser(tokens)
+	relPath, err := filepath.Rel(f.projectRoot, path)
+	if err != nil {
+		return err
+	}
+	p := parser.NewParser(relPath, tokens)
 
 	fileAst, errs := p.Parse()
 	if len(errs) > 0 {

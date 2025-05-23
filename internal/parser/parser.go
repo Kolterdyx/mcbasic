@@ -14,14 +14,16 @@ type Parser struct {
 	errors       []error
 	current      int
 	definedTypes map[string]types.ValueType
+	file         string
 }
 
-func NewParser(tokenSource []tokens.Token) *Parser {
+func NewParser(file string, tokenSource []tokens.Token) *Parser {
 	return &Parser{
 		tokenSource:  tokenSource,
 		errors:       make([]error, 0),
 		current:      0,
 		definedTypes: make(map[string]types.ValueType),
+		file:         file,
 	}
 }
 
@@ -32,9 +34,9 @@ var allowedTopLevelStatements = []ast.NodeType{
 	ast.ImportStatement,
 }
 
-func (p *Parser) Parse() ([]ast.Statement, []error) {
+func (p *Parser) Parse() (ast.Source, []error) {
 
-	source := make([]ast.Statement, 0)
+	source := make(ast.Source, 0)
 	for !p.IsAtEnd() {
 		statement, err := p.statement()
 		if err != nil {

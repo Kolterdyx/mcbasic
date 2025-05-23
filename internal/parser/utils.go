@@ -90,7 +90,7 @@ func (p *Parser) stepBack() {
 }
 
 func (p *Parser) location() interfaces.SourceLocation {
-	return interfaces.SourceLocation{Row: p.previous().Row, Col: p.previous().Col}
+	return interfaces.SourceLocation{File: p.file, Row: p.previous().Row, Col: p.previous().Col}
 }
 
 func (p *Parser) peekCount(offset int) tokens.Token {
@@ -142,7 +142,7 @@ func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interface
 
 			returnType, err := parseType(function.ReturnType)
 			if err != nil {
-				log.Errorf("Exception parsing function return type: %s", err)
+				log.Errorf("ExceptionString parsing function return type: %s", err)
 				continue
 			}
 			f := interfaces.FunctionDefinition{
@@ -153,7 +153,7 @@ func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interface
 			for _, parameter := range function.Args {
 				parameterType, err := parseType(parameter.Type)
 				if err != nil {
-					log.Errorf("Exception parsing function parameter type: %s", err)
+					log.Errorf("ExceptionString parsing function parameter type: %s", err)
 					continue
 				}
 				f.Args = append(f.Args, interfaces.TypedIdentifier{
