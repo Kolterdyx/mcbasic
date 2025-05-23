@@ -6,7 +6,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
 	"github.com/Kolterdyx/mcbasic/internal/paths"
 	"github.com/Kolterdyx/mcbasic/internal/utils"
-	log "github.com/sirupsen/logrus"
 )
 
 func (c *Code) XSet(storage, path string, value nbt.Value) interfaces.IRCode {
@@ -140,7 +139,6 @@ func (c *Code) Unless(condVar string, code interfaces.IRCode) interfaces.IRCode 
 func (c *Code) ExceptionString(message string) interfaces.IRCode {
 	format := nbt.StringFormat{Color: nbt.Red, Italic: true}
 	c.SetArg(fmt.Sprintf("mcb:%s/report", paths.Internal), "text", nbt.NewFormattedString(message, format))
-	log.Debugf("format: %s", format.ToString())
 	c.Call(fmt.Sprintf("mcb:%s/report", paths.Internal))
 	return c
 }

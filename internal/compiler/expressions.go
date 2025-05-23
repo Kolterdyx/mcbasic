@@ -152,6 +152,16 @@ func (c *Compiler) VisitFunctionCall(f *ast.FunctionCallExpr) any {
 		if f.GetResolvedType() != types.VoidType {
 			cmd.CopyVar(RET, RX)
 		}
+	case ast.StructDeclarationStatement:
+		structStmt := sym.DeclarationNode().(ast.StructDeclarationStmt)
+		structReg := c.makeReg(RX)
+		cmd.SetVar(structReg, structStmt.StructType.ToNBT())
+		for j, arg := range f.Arguments {
+			cmd.Extend(ast.AcceptExpr[interfaces.IRCode](arg, c))
+			fieldName := structStmt.StructType.GetFieldNames()[j]
+			cmd.StructSet(RX, fieldName, structReg)
+		}
+		cmd.CopyVar(structReg, RX)
 	}
 	return cmd
 }

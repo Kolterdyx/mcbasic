@@ -68,6 +68,18 @@ func (s *Scanner) scanToken() {
 	case '*':
 		s.addToken(tokens.Star)
 	case '/':
+		if s.match('*') {
+			for !s.isAtEnd() && !(s.peek() == '*' && s.peekOffset(1) == '/') {
+				s.advance()
+			}
+			if s.isAtEnd() {
+				s.error(s.row, "Unterminated comment")
+				return
+			}
+			s.advance()
+			s.advance()
+			break
+		}
 		s.addToken(tokens.Slash)
 	case '%':
 		s.addToken(tokens.Percent)

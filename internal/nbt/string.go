@@ -2,7 +2,6 @@ package nbt
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 )
 
 type StringColor string
@@ -72,8 +71,6 @@ func NewFormattedString(value string, format StringFormat, fmtParams ...any) Com
 	for k, v := range format.ToMap() {
 		compound.Set(k, NewAny(v))
 	}
-	log.Debugf("Formatted string: %s", compound.ToString())
-
 	return compound
 }
 
