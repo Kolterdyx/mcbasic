@@ -1,7 +1,6 @@
 package nbt
 
 type Compound struct {
-	Value
 	values map[string]Value
 }
 

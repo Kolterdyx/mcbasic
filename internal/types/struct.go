@@ -7,8 +7,6 @@ import (
 )
 
 type StructTypeStruct struct {
-	ValueType
-
 	Name   string
 	fields *orderedmap.OrderedMap[string, ValueType]
 }
@@ -24,7 +22,7 @@ func (s StructTypeStruct) SetField(name string, value ValueType) {
 	s.fields.Set(name, value)
 }
 
-func (s StructTypeStruct) GetField(name string) (ValueType, bool) {
+func (s StructTypeStruct) GetFieldType(name string) (ValueType, bool) {
 	return s.fields.Get(name)
 }
 
@@ -37,7 +35,14 @@ func (s StructTypeStruct) Primitive() ValueType {
 }
 
 func (s StructTypeStruct) ToString() string {
-	return s.Name
+	fields := ""
+	for name, field := range s.fields.AllFromFront() {
+		fields += name + ": " + field.ToString() + ", "
+	}
+	if len(fields) > 0 {
+		fields = fields[:len(fields)-2]
+	}
+	return s.Name + "{" + fields + "}"
 }
 
 func (s StructTypeStruct) ToNBT() nbt.Value {
@@ -64,7 +69,7 @@ func (s StructTypeStruct) Equals(other ValueType) bool {
 			return false
 		}
 		for name, field := range s.fields.AllFromFront() {
-			if otherField, ok := other.GetField(name); !ok || !field.Equals(otherField) {
+			if otherField, ok := other.GetFieldType(name); !ok || !field.Equals(otherField) {
 				return false
 			}
 		}

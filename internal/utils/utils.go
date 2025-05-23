@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
+	"github.com/Kolterdyx/mcbasic/internal/types"
 	log "github.com/sirupsen/logrus"
 	"strings"
 )
@@ -37,4 +38,20 @@ func SplitFunctionName(lexeme, namespace string) (string, string) {
 		return parts[0], parts[1]
 	}
 	panic(fmt.Sprintf("Invalid function name: %s", lexeme))
+}
+
+func IsListType(valueType types.ValueType) bool {
+	switch valueType.(type) {
+	case types.ListTypeStruct:
+		return true
+	}
+	return false
+}
+
+func IsStructType(valueType types.ValueType) bool {
+	switch valueType.(type) {
+	case types.StructTypeStruct:
+		return true
+	}
+	return false
 }

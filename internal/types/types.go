@@ -7,4 +7,5 @@ type ValueType interface {
 	ToString() string
 	ToNBT() nbt.Value
 	Equals(other ValueType) bool
+	GetFieldType(name string) (ValueType, bool)
 }
