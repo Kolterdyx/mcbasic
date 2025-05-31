@@ -120,7 +120,7 @@ func (p *Parser) isStructType(varType types.ValueType) bool {
 }
 
 func parseType(valueType string) (types.ValueType, error) {
-	s := scanner.Scanner{}
+	s := scanner.NewScanner("")
 	tokenSource, errs := s.Scan(valueType)
 	if len(errs) > 0 {
 		for _, err := range errs {

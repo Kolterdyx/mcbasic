@@ -17,6 +17,20 @@ type Scanner struct {
 	tokens  []tokens.Token
 	row     int
 	col     int
+	file    string
+}
+
+func NewScanner(file string) *Scanner {
+	return &Scanner{
+		errors:  []error{},
+		source:  "",
+		start:   0,
+		current: 0,
+		tokens:  []tokens.Token{},
+		row:     0,
+		col:     0,
+		file:    file,
+	}
 }
 
 func (s *Scanner) report(line int, column int, message string) {
@@ -178,8 +192,9 @@ func (s *Scanner) addTokenWithLiteral(tokenType interfaces.TokenType, literal st
 		Lexeme:  text,
 		Literal: literal,
 		SourceLocation: interfaces.SourceLocation{
-			Row: s.row,
-			Col: s.col,
+			File: s.file,
+			Row:  s.row,
+			Col:  s.col,
 		},
 	})
 }
@@ -269,8 +284,8 @@ func (s *Scanner) scanIdentifier() {
 	}
 }
 
-func Scan(src string) ([]tokens.Token, []error) {
-	scanner := &Scanner{}
+func Scan(file, src string) ([]tokens.Token, []error) {
+	scanner := NewScanner(file)
 	tokenSource, errors := scanner.Scan(src)
 	if len(errors) > 0 {
 		return nil, errors

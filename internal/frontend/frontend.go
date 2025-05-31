@@ -16,7 +16,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 )
 
@@ -107,18 +106,14 @@ func (f *Frontend) Parse(path string) error {
 	if err != nil {
 		return err
 	}
-	scannedTokens, errs := scanner.Scan(string(src))
+	scannedTokens, errs := scanner.Scan(path, string(src))
 	if len(errs) > 0 {
 		for _, err := range errs {
 			log.Error(err)
 		}
 		return fmt.Errorf("failed to scan file: %s", path)
 	}
-	relPath, err := filepath.Rel(f.projectRoot, path)
-	if err != nil {
-		return err
-	}
-	p := parser.NewParser(relPath, scannedTokens)
+	p := parser.NewParser(path, scannedTokens)
 
 	fileAst, errs := p.Parse()
 	if len(errs) > 0 {
@@ -130,6 +125,12 @@ func (f *Frontend) Parse(path string) error {
 
 	table := symbol.NewTable(nil, "file:"+path, path)
 	f.symbolManager.AddFile(path, table)
+
+	err = f.recurseOnImportedFiles(fileAst)
+	if err != nil {
+		return err
+	}
+
 	r := resolver.NewResolver(fileAst, table, f.symbolManager)
 	errs = r.Resolve()
 	if len(errs) > 0 {
@@ -156,6 +157,10 @@ func (f *Frontend) Parse(path string) error {
 
 	f.units[path] = unit
 
+	return nil
+}
+
+func (f *Frontend) recurseOnImportedFiles(fileAst ast.Source) error {
 	imports := make(map[string]ast.ImportStmt)
 	for _, stmt := range fileAst {
 		if stmt.Type() == ast.ImportStatement {
@@ -167,7 +172,6 @@ func (f *Frontend) Parse(path string) error {
 		}
 	}
 
-	// Recurse on imported files
 	for _, importStmt := range imports {
 		err := f.Parse(importStmt.Path)
 		if err != nil {
@@ -175,7 +179,6 @@ func (f *Frontend) Parse(path string) error {
 		}
 
 	}
-
 	return nil
 }
 

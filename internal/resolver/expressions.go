@@ -34,7 +34,7 @@ func (r *Resolver) VisitUnary(expr *ast.UnaryExpr) any {
 func (r *Resolver) VisitVariable(expr *ast.VariableExpr) any {
 	sym, ok := r.table.Lookup(expr.Name.Lexeme)
 	if !ok {
-		return r.error(expr, fmt.Sprintf("variable %s not defined", expr.Name.Lexeme))
+		return r.error(expr, fmt.Sprintf("%s is not defined", expr.Name.Lexeme))
 	}
 	return Result{
 		Ok:     true,
