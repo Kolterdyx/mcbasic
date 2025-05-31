@@ -153,7 +153,6 @@ func (c *Compiler) baseFunctions() []interfaces.Function {
 	initSource.XLoad(CALL, CALL)
 	initSource.SetArg("mcb:log", "text", nbt.NewString("MCB pack loaded"))
 	initSource.Call("mcb:log")
-	initSource.Call(path.Join(paths.Internal, "struct_definitions"))
 	initSource.Call("load")
 	initSource.Ret()
 	funcs = append(
