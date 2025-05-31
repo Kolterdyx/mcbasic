@@ -24,11 +24,10 @@ func (p *Parser) statement() (ast.Statement, error) {
 	case p.match(tokens.Import):
 		return p.importStatement()
 	case p.match(tokens.Identifier):
-		if p.check(tokens.Equal) || p.check(tokens.BracketOpen) || p.check(tokens.Dot) {
+		if p.check(tokens.Equal) {
 			return p.variableAssignment()
-		} else if p.check(tokens.ParenOpen) {
-			p.stepBack()
 		}
+		p.stepBack()
 		fallthrough
 	default:
 		return p.expressionStatement()
@@ -45,7 +44,7 @@ func (p *Parser) importStatement() (ast.Statement, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ast.ImportStmt{Path: path.Lexeme, SourceLocation: importToken.SourceLocation}, nil
+	return ast.ImportStmt{Path: path.Lexeme[1 : len(path.Lexeme)-1], SourceLocation: importToken.SourceLocation}, nil
 }
 
 func (p *Parser) expressionStatement() (ast.Statement, error) {

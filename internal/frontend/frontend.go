@@ -11,6 +11,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/resolver"
 	"github.com/Kolterdyx/mcbasic/internal/scanner"
 	"github.com/Kolterdyx/mcbasic/internal/symbol"
+	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/type_checker"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -29,7 +30,7 @@ type Frontend struct {
 }
 
 func NewFrontend(projectRoot string, builtinHeaders embed.FS, builtinLibs embed.FS) *Frontend {
-	return &Frontend{
+	f := &Frontend{
 		visitedFiles:   make(map[string]bool),
 		units:          make(map[string]*CompilationUnit),
 		symbolManager:  symbol.NewManager(projectRoot),
@@ -37,9 +38,66 @@ func NewFrontend(projectRoot string, builtinHeaders embed.FS, builtinLibs embed.
 		builtinHeaders: builtinHeaders,
 		builtinLibs:    builtinLibs,
 	}
+	builtinHeaderFiles, err := builtinHeaders.ReadDir("headers")
+	if err != nil {
+		log.Fatalf("Failed to read builtin headers: %v", err)
+	}
+	for _, file := range builtinHeaderFiles {
+		if !file.IsDir() && strings.HasSuffix(file.Name(), ".json") {
+			headerPath := path.Join("headers", file.Name())
+			headerFile, err := builtinHeaders.ReadFile(headerPath)
+			if err != nil {
+				log.Fatalf("Failed to read builtin header %s: %v", headerPath, err)
+			}
+			var header interfaces.DatapackHeader
+			err = json.Unmarshal(headerFile, &header)
+			if err != nil {
+				log.Fatalf("Failed to unmarshal builtin header %s: %v", headerPath, err)
+			}
+			headerSymbols := symbol.NewTable(nil, header.Namespace, headerPath)
+			headerFuncDefs := parser.GetHeaderFuncDefs(header)
+			for funcName, funcDef := range headerFuncDefs {
+				params := make([]ast.VariableDeclarationStmt, 0, len(funcDef.Parameters))
+				for _, param := range funcDef.Parameters {
+					params = append(params, ast.VariableDeclarationStmt{
+						Name: tokens.Token{
+							Lexeme:  param.Name,
+							Type:    tokens.Identifier,
+							Literal: param.Name,
+						},
+						ValueType: param.Type,
+					})
+				}
+				err := headerSymbols.Define(
+					symbol.NewSymbol(
+						funcName,
+						symbol.FunctionSymbol,
+						ast.FunctionDeclarationStmt{
+							Name: tokens.Token{
+								Lexeme:  funcName,
+								Type:    tokens.Identifier,
+								Literal: funcName,
+							},
+							Parameters: params,
+							ReturnType: funcDef.ReturnType,
+						},
+						funcDef.ReturnType,
+					),
+				)
+				if err != nil {
+					return nil
+				}
+			}
+			f.symbolManager.AddFile(header.Namespace, headerSymbols)
+			f.visitedFiles[header.Namespace] = true
+			log.Debugf("Loaded builtin header: '%s'", header.Namespace)
+		}
+	}
+	return f
 }
 
 func (f *Frontend) Parse(path string) error {
+	log.Debugf("Parsing %s", path)
 	if f.visitedFiles[path] {
 		return nil // already parsed
 	}
@@ -49,7 +107,7 @@ func (f *Frontend) Parse(path string) error {
 	if err != nil {
 		return err
 	}
-	tokens, errs := scanner.Scan(string(src))
+	scannedTokens, errs := scanner.Scan(string(src))
 	if len(errs) > 0 {
 		for _, err := range errs {
 			log.Error(err)
@@ -60,7 +118,7 @@ func (f *Frontend) Parse(path string) error {
 	if err != nil {
 		return err
 	}
-	p := parser.NewParser(relPath, tokens)
+	p := parser.NewParser(relPath, scannedTokens)
 
 	fileAst, errs := p.Parse()
 	if len(errs) > 0 {
@@ -71,7 +129,8 @@ func (f *Frontend) Parse(path string) error {
 	}
 
 	table := symbol.NewTable(nil, "file:"+path, path)
-	r := resolver.NewResolver(fileAst, table)
+	f.symbolManager.AddFile(path, table)
+	r := resolver.NewResolver(fileAst, table, f.symbolManager)
 	errs = r.Resolve()
 	if len(errs) > 0 {
 		for _, err := range errs {
@@ -96,7 +155,6 @@ func (f *Frontend) Parse(path string) error {
 	}
 
 	f.units[path] = unit
-	f.symbolManager.AddFile(path, table)
 
 	imports := make(map[string]ast.ImportStmt)
 	for _, stmt := range fileAst {
@@ -115,6 +173,7 @@ func (f *Frontend) Parse(path string) error {
 		if err != nil {
 			return err
 		}
+
 	}
 
 	return nil
@@ -130,50 +189,10 @@ func (f *Frontend) Compile(config interfaces.ProjectConfig) []error {
 }
 
 func (f *Frontend) compileUnit(config interfaces.ProjectConfig, unit *CompilationUnit) error {
-	//headers, err := f.loadHeaders(config.Dependencies.Headers)
-	//if err != nil {
-	//	return err
-	//}
 	c := compiler.NewCompiler(config, f.builtinLibs)
 	err := c.Compile(unit.AST, unit.Symbols)
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-func (f *Frontend) loadHeaders(headerPaths []string) ([]interfaces.DatapackHeader, error) {
-	headers := make([]interfaces.DatapackHeader, 0)
-
-	for i, h := range headerPaths {
-		headerPath := path.Join(f.projectRoot, h)
-		headerPaths[i] = headerPath
-	}
-
-	// include builtin headers
-	builtinHeaderPaths, err := f.builtinHeaders.ReadDir("headers")
-	if err != nil {
-		return nil, err
-	}
-	for _, h := range builtinHeaderPaths {
-		if !h.IsDir() && strings.HasSuffix(h.Name(), ".json") {
-			headerPaths = append(headerPaths, path.Join("headers", h.Name()))
-		}
-	}
-
-	for _, headerPath := range headerPaths {
-		log.Debug("Loading header: ", headerPath)
-		headerFile, err := f.builtinHeaders.ReadFile(headerPath)
-		if err != nil {
-			return nil, err
-		}
-		header := interfaces.DatapackHeader{}
-		err = json.Unmarshal(headerFile, &header)
-		if err != nil {
-			return nil, err
-		}
-		headers = append(headers, header)
-	}
-	log.Debugf("Headers loaded successfully")
-	return headers, nil
 }

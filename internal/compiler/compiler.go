@@ -307,13 +307,13 @@ func (c *Compiler) registerIRFunction(fullName string, source interfaces.IRCode,
 	ns, fn := utils.SplitFunctionName(fullName, c.Namespace)
 	f := interfaces.FunctionDefinition{
 		Name:       fn,
-		Args:       make([]interfaces.TypedIdentifier, 0),
+		Parameters: make([]interfaces.TypedIdentifier, 0),
 		ReturnType: returnType,
 	}
 	for _, parameter := range args {
-		f.Args = append(f.Args, interfaces.TypedIdentifier{Name: parameter.Name, Type: parameter.Type})
+		f.Parameters = append(f.Parameters, interfaces.TypedIdentifier{Name: parameter.Name, Type: parameter.Type})
 	}
-	f.Args = append(f.Args, interfaces.TypedIdentifier{Name: "__call__", Type: types.IntType})
+	f.Parameters = append(f.Parameters, interfaces.TypedIdentifier{Name: "__call__", Type: types.IntType})
 	return ir.NewFunction(fmt.Sprintf("%s:%s", ns, fn), source)
 }
 

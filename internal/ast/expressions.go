@@ -12,8 +12,8 @@ type ExpressionVisitor interface {
 	VisitLiteral(l *LiteralExpr) any
 	VisitUnary(u *UnaryExpr) any
 	VisitVariable(v *VariableExpr) any
-	VisitFieldAccess(v *FieldAccessExpr) any
-	VisitFunctionCall(f *FunctionCallExpr) any
+	VisitDotAccess(v *DotAccessExpr) any
+	VisitCall(f *CallExpr) any
 	VisitLogical(l *LogicalExpr) any
 	VisitSlice(s *SliceExpr) any
 	VisitList(s *ListExpr) any

@@ -6,6 +6,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/scanner"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
+	"github.com/Kolterdyx/mcbasic/internal/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -133,37 +134,34 @@ func parseType(valueType string) (types.ValueType, error) {
 	return p.ParseType()
 }
 
-func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interfaces.FunctionDefinition {
+func GetHeaderFuncDefs(header interfaces.DatapackHeader) map[string]interfaces.FunctionDefinition {
 	funcDefs := make(map[string]interfaces.FunctionDefinition)
-	for _, header := range headers {
-		log.Debugf("Loading header: %s. Functions: %v", header.Namespace, len(header.Definitions.Functions))
-		for _, function := range header.Definitions.Functions {
-			funcName := fmt.Sprintf("%s:%s", header.Namespace, function.Name)
+	for _, function := range header.Definitions.Functions {
+		funcName := fmt.Sprintf("%s:%s", header.Namespace, function.Name)
 
-			returnType, err := parseType(function.ReturnType)
+		returnType, err := parseType(function.ReturnType)
+		if err != nil {
+			log.Errorf("Exception parsing function return type: %s", err)
+			continue
+		}
+		_, fn := utils.SplitFunctionName(funcName, "")
+		f := interfaces.FunctionDefinition{
+			Name:       fn,
+			Parameters: make([]interfaces.TypedIdentifier, 0),
+			ReturnType: returnType,
+		}
+		for _, parameter := range function.Args {
+			parameterType, err := parseType(parameter.Type)
 			if err != nil {
-				log.Errorf("ExceptionString parsing function return type: %s", err)
+				log.Errorf("Exception parsing function parameter type: %s", err)
 				continue
 			}
-			f := interfaces.FunctionDefinition{
-				Name:       funcName,
-				Args:       make([]interfaces.TypedIdentifier, 0),
-				ReturnType: returnType,
-			}
-			for _, parameter := range function.Args {
-				parameterType, err := parseType(parameter.Type)
-				if err != nil {
-					log.Errorf("ExceptionString parsing function parameter type: %s", err)
-					continue
-				}
-				f.Args = append(f.Args, interfaces.TypedIdentifier{
-					Name: parameter.Name,
-					Type: parameterType,
-				})
-			}
-			funcDefs[funcName] = f
+			f.Parameters = append(f.Parameters, interfaces.TypedIdentifier{
+				Name: parameter.Name,
+				Type: parameterType,
+			})
 		}
-		log.Debugf("Loaded header: %s. Functions: %v", header.Namespace, len(header.Definitions.Functions))
+		funcDefs[fn] = f
 	}
 	return funcDefs
 }

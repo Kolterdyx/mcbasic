@@ -25,7 +25,7 @@ func (s *Manager) GetFile(filePath string) (*Table, bool) {
 }
 
 func (s *Manager) GetSymbol(filePath, symbolName string) (Symbol, bool) {
-	if table, exists := s.tables[filePath]; exists {
+	if table, exists := s.GetFile(filePath); exists {
 		return table.Lookup(symbolName)
 	}
 	return Symbol{}, false

@@ -15,16 +15,18 @@ type Resolver struct {
 	ast.StatementVisitor
 	ast.ExpressionVisitor
 
-	table  *symbol.Table
-	source []ast.Statement
-	errors []error
+	table         *symbol.Table
+	symbolManager *symbol.Manager
+	source        []ast.Statement
+	errors        []error
 }
 
-func NewResolver(source []ast.Statement, table *symbol.Table) *Resolver {
+func NewResolver(source []ast.Statement, table *symbol.Table, manager *symbol.Manager) *Resolver {
 	return &Resolver{
-		table:  table,
-		source: source,
-		errors: make([]error, 0),
+		table:         table,
+		source:        source,
+		symbolManager: manager,
+		errors:        make([]error, 0),
 	}
 }
 
@@ -37,7 +39,7 @@ func (r *Resolver) Resolve() []error {
 }
 
 func (r *Resolver) error(expr ast.Node, message string) Result {
-	err := fmt.Errorf("error at %s: %s", expr.GetSourceLocation().ToString(), message)
+	err := fmt.Errorf("resolve error at %s: %s", expr.GetSourceLocation().ToString(), message)
 	r.errors = append(r.errors, err)
 	var zero symbol.Symbol
 	return Result{

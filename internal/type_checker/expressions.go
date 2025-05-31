@@ -63,36 +63,36 @@ func (t *TypeChecker) VisitVariable(expr *ast.VariableExpr) any {
 	return expr.GetResolvedType()
 }
 
-func (t *TypeChecker) VisitFieldAccess(expr *ast.FieldAccessExpr) any {
+func (t *TypeChecker) VisitDotAccess(expr *ast.DotAccessExpr) any {
 	sourceType := ast.AcceptExpr[types.ValueType](expr.Source, t)
 	expr.SetResolvedType(sourceType)
-	vtype, ok := sourceType.GetFieldType(expr.Field.Lexeme)
+	vtype, ok := sourceType.GetFieldType(expr.Name.Lexeme)
 	if !ok {
-		t.error(expr, fmt.Sprintf("field %s not defined in type %s", expr.Field.Lexeme, sourceType.ToString()))
+		t.error(expr, fmt.Sprintf("field %s not defined in type %s", expr.Name.Lexeme, sourceType.ToString()))
 	} else {
 		expr.SetResolvedType(vtype)
 	}
 	return expr.GetResolvedType()
 }
 
-func (t *TypeChecker) VisitFunctionCall(expr *ast.FunctionCallExpr) any {
-	sym, _ := t.table.Lookup(expr.Name.Lexeme)
+func (t *TypeChecker) VisitCall(expr *ast.CallExpr) any {
+	sym, _ := t.table.Lookup(expr.GetResolvedName())
 	expr.SetResolvedType(sym.ValueType())
 	switch declarationNode := sym.DeclarationNode().(type) {
 	case ast.FunctionDeclarationStmt:
 		if len(expr.Arguments) != len(declarationNode.Parameters) {
-			t.error(expr, fmt.Sprintf("function %s expects %d arguments, got %d", expr.Name.Lexeme, len(declarationNode.Parameters), len(expr.Arguments)))
+			t.error(expr, fmt.Sprintf("function %s expects %d arguments, got %d", expr.GetResolvedName(), len(declarationNode.Parameters), len(expr.Arguments)))
 			break
 		}
 		for i, arg := range expr.Arguments {
 			ptype := ast.AcceptExpr[types.ValueType](arg, t)
-			if ptype != declarationNode.Parameters[i].ValueType {
-				t.error(arg, fmt.Sprintf("argument %d of function %s has invalid type: expected %s, got %s", i, expr.Name.Lexeme, declarationNode.Parameters[i].ValueType.ToString(), ptype.ToString()))
+			if ptype != declarationNode.Parameters[i].ValueType && declarationNode.Parameters[i].ValueType != types.VoidType {
+				t.error(arg, fmt.Sprintf("argument %d of function %s has invalid type: expected %s, got %s", i, expr.GetResolvedName(), declarationNode.Parameters[i].ValueType.ToString(), ptype.ToString()))
 			}
 		}
 	case ast.StructDeclarationStmt:
 		if len(expr.Arguments) != len(declarationNode.StructType.GetFieldNames()) {
-			t.error(expr, fmt.Sprintf("struct %s expects %d arguments, got %d", expr.Name.Lexeme, len(declarationNode.StructType.GetFieldNames()), len(expr.Arguments)))
+			t.error(expr, fmt.Sprintf("struct %s expects %d arguments, got %d", expr.GetResolvedName(), len(declarationNode.StructType.GetFieldNames()), len(expr.Arguments)))
 			break
 		}
 		for i, arg := range expr.Arguments {
@@ -101,7 +101,7 @@ func (t *TypeChecker) VisitFunctionCall(expr *ast.FunctionCallExpr) any {
 			fieldName := declarationNode.StructType.GetFieldNames()[i]
 			fieldType, _ := declarationNode.StructType.GetFieldType(fieldName)
 			if !ptype.Equals(fieldType) {
-				t.error(arg, fmt.Sprintf("argument %d of struct %s has invalid type: expected %s, got %s", i, expr.Name.Lexeme, declarationNode.StructType.GetFieldNames()[i], ptype.ToString()))
+				t.error(arg, fmt.Sprintf("argument %d of struct %s has invalid type: expected %s, got %s", i, expr.GetResolvedName(), declarationNode.StructType.GetFieldNames()[i], ptype.ToString()))
 			}
 		}
 

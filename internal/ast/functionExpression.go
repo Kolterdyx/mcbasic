@@ -2,26 +2,25 @@ package ast
 
 import (
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
-	"github.com/Kolterdyx/mcbasic/internal/tokens"
 )
 
-type FunctionCallExpr struct {
+type CallExpr struct {
 	interfaces.SourceLocation
-
-	Name      tokens.Token
+	Source    Expr
 	Arguments []Expr
 	ResolvedType
+	resolvedName string
 }
 
-func (f *FunctionCallExpr) Accept(visitor ExpressionVisitor) any {
-	return visitor.VisitFunctionCall(f)
+func (f *CallExpr) Accept(visitor ExpressionVisitor) any {
+	return visitor.VisitCall(f)
 }
 
-func (f *FunctionCallExpr) Type() NodeType {
+func (f *CallExpr) Type() NodeType {
 	return FunctionCallExpression
 }
 
-func (f *FunctionCallExpr) ToString() string {
+func (f *CallExpr) ToString() string {
 	args := ""
 	for i, arg := range f.Arguments {
 		if i > 0 {
@@ -29,9 +28,17 @@ func (f *FunctionCallExpr) ToString() string {
 		}
 		args += arg.ToString()
 	}
-	return f.Name.Lexeme + "(" + args + ")"
+	return "(" + args + ")"
 }
 
-func (f *FunctionCallExpr) GetSourceLocation() interfaces.SourceLocation {
+func (f *CallExpr) SetResolvedName(name string) {
+	f.resolvedName = name
+}
+
+func (f *CallExpr) GetResolvedName() string {
+	return f.resolvedName
+}
+
+func (f *CallExpr) GetSourceLocation() interfaces.SourceLocation {
 	return f.SourceLocation
 }

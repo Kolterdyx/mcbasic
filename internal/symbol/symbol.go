@@ -1,6 +1,7 @@
 package symbol
 
 import (
+	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 )
@@ -13,6 +14,7 @@ const (
 	StructSymbol        = "Struct"
 	VariableSymbol      = "Variable"
 	LiteralSymbol       = "Literal"
+	ImportSymbol        = "Import"
 )
 
 type Symbol struct {
@@ -45,4 +47,13 @@ func (s Symbol) DeclarationNode() ast.Node {
 
 func (s Symbol) ValueType() types.ValueType {
 	return s.valueType
+}
+
+func (s Symbol) AsImportedFrom(importName string) Symbol {
+	return NewSymbol(
+		fmt.Sprintf("%s:%s", importName, s.name),
+		s.stype,
+		s.declarationNode,
+		s.valueType,
+	)
 }

@@ -123,18 +123,18 @@ func (c *Compiler) VisitVariable(v *ast.VariableExpr) any {
 	return cmd.CopyVar(v.Name.Lexeme, RX)
 }
 
-func (c *Compiler) VisitFieldAccess(v *ast.FieldAccessExpr) any {
+func (c *Compiler) VisitDotAccess(v *ast.DotAccessExpr) any {
 	cmd := c.n()
 	cmd.Extend(ast.AcceptExpr[interfaces.IRCode](v.Source, c))
 	cmd.CopyVar(RX, RA)
-	cmd.StructGet(RA, v.Field.Lexeme, RX)
+	cmd.StructGet(RA, v.Name.Lexeme, RX)
 	return cmd
 }
 
-func (c *Compiler) VisitFunctionCall(f *ast.FunctionCallExpr) any {
+func (c *Compiler) VisitCall(f *ast.CallExpr) any {
 	cmd := c.n()
-	ns, fn := utils.SplitFunctionName(f.Name.Lexeme, c.Namespace)
-	sym, _ := c.currentScope.Lookup(f.Name.Lexeme)
+	ns, fn := utils.SplitFunctionName(f.GetResolvedName(), c.Namespace)
+	sym, _ := c.currentScope.Lookup(f.GetResolvedName())
 	switch sym.DeclarationNode().Type() {
 	case ast.FunctionDeclarationStatement:
 		funcStmt := sym.DeclarationNode().(ast.FunctionDeclarationStmt)

@@ -46,6 +46,13 @@ func (s *Table) OriginFile() string {
 	return s.originFile
 }
 
+func (s *Table) ImportTable(table *Table) error {
+	for _, symbol := range table.symbols {
+		s.symbols[symbol.AsImportedFrom(table.ScopeName()).Name()] = symbol
+	}
+	return nil
+}
+
 func (s *Table) AddChild(table *Table) {
 	s.children[table.ScopeName()] = table
 }

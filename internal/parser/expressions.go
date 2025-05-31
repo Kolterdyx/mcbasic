@@ -145,15 +145,6 @@ func (p *Parser) baseValue() (ast.Expr, error) {
 
 	if p.match(tokens.Identifier) {
 		identifier := p.previous()
-
-		// If this is a function call, delegate to functionCall (handles namespace)
-		if p.match(tokens.ParenOpen) {
-			//if sym, ok := p.symbols.Lookup(identifier.Lexeme); ok && sym.Type() == symbol.StructSymbol {
-			//	return p.structLiteral(identifier, sym.ValueType().(types.StructTypeStruct))
-			//} else {
-			return p.functionCall(identifier)
-		}
-
 		return &ast.VariableExpr{
 			Name: identifier,
 		}, nil
@@ -171,6 +162,9 @@ func (p *Parser) postfix(expr ast.Expr) (ast.Expr, error) {
 	if p.match(tokens.Dot) {
 		return p.fieldPostfix(expr)
 	}
+	if p.match(tokens.ParenOpen) {
+		return p.callPostfix(expr)
+	}
 	return expr, nil
 }
 
@@ -179,9 +173,9 @@ func (p *Parser) fieldPostfix(expr ast.Expr) (ast.Expr, error) {
 	if err != nil {
 		return nil, err
 	}
-	expr = &ast.FieldAccessExpr{
+	expr = &ast.DotAccessExpr{
 		Source:         expr,
-		Field:          fieldTok,
+		Name:           fieldTok,
 		SourceLocation: p.location(),
 	}
 	return p.postfix(expr)
@@ -211,7 +205,7 @@ func (p *Parser) bracketPostfix(expr ast.Expr) (ast.Expr, error) {
 	return p.postfix(expr)
 }
 
-func (p *Parser) functionCall(name tokens.Token) (ast.Expr, error) {
+func (p *Parser) callPostfix(expr ast.Expr) (ast.Expr, error) {
 	location := p.location()
 	args := make([]ast.Expr, 0)
 	if !p.check(tokens.ParenClose) {
@@ -238,12 +232,11 @@ func (p *Parser) functionCall(name tokens.Token) (ast.Expr, error) {
 		return nil, err
 	}
 
-	return &ast.FunctionCallExpr{Name: tokens.Token{
-		Type:           tokens.Identifier,
-		Lexeme:         name.Lexeme,
-		Literal:        name.Literal,
-		SourceLocation: name.SourceLocation,
-	}, Arguments: args, SourceLocation: location}, nil
+	return &ast.CallExpr{
+		Source:         expr,
+		Arguments:      args,
+		SourceLocation: location,
+	}, nil
 }
 
 func (p *Parser) slice(expr ast.Expr) (ast.Expr, error) {

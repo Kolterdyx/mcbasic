@@ -96,5 +96,17 @@ func (r *Resolver) VisitSetReturnFlag(stmt ast.SetReturnFlagStmt) any {
 }
 
 func (r *Resolver) VisitImport(stmt ast.ImportStmt) any {
+	err := r.table.Define(symbol.NewSymbol(stmt.Path, symbol.ImportSymbol, stmt, nil))
+	if err != nil {
+		return r.error(stmt, fmt.Sprintf("import %s already defined", stmt.Path))
+	}
+	moduleTable, ok := r.symbolManager.GetFile(stmt.Path)
+	if !ok {
+		return r.error(stmt, fmt.Sprintf("module %s not found", stmt.Path))
+	}
+	err = r.table.ImportTable(moduleTable)
+	if err != nil {
+		return r.error(stmt, fmt.Sprintf("failed to import module %s: %v", stmt.Path, err))
+	}
 	return nil
 }

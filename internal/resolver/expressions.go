@@ -32,37 +32,63 @@ func (r *Resolver) VisitUnary(expr *ast.UnaryExpr) any {
 }
 
 func (r *Resolver) VisitVariable(expr *ast.VariableExpr) any {
-	vtype, ok := r.table.Lookup(expr.Name.Lexeme)
+	sym, ok := r.table.Lookup(expr.Name.Lexeme)
 	if !ok {
 		return r.error(expr, fmt.Sprintf("variable %s not defined", expr.Name.Lexeme))
 	}
 	return Result{
 		Ok:     true,
-		Symbol: vtype,
+		Symbol: sym,
 	}
 }
 
-func (r *Resolver) VisitFieldAccess(expr *ast.FieldAccessExpr) any {
+func (r *Resolver) VisitDotAccess(expr *ast.DotAccessExpr) any {
 	res := ast.AcceptExpr[Result](expr.Source, r)
 	if !res.Ok {
-		return r.error(expr, fmt.Sprintf("could not resolve source %s", expr.Source.ToString()))
+		return r.error(expr, fmt.Sprintf("could not resolve '%s'", expr.Source.ToString()))
 	}
-	valueType := res.Symbol.ValueType()
-	fieldType, ok := valueType.GetFieldType(expr.Field.Lexeme)
-	if !ok {
-		return r.error(expr, fmt.Sprintf("field %s not defined", expr.Field.Lexeme))
-	}
-	return Result{
-		Ok:     true,
-		Symbol: symbol.NewSymbol(expr.Field.Lexeme, symbol.LiteralSymbol, expr, fieldType),
+	if res.Symbol.Type() == symbol.ImportSymbol {
+		sym, ok := r.symbolManager.GetSymbol(res.Symbol.Name(), expr.Name.Lexeme)
+		if !ok {
+			return r.error(expr, fmt.Sprintf("could not resolve '%s' in module '%s'", expr.Name.Lexeme, res.Symbol.Name()))
+		}
+		return Result{
+			Ok:     true,
+			Symbol: sym.AsImportedFrom(res.Symbol.Name()),
+		}
+	} else {
+		valueType := res.Symbol.ValueType()
+		fieldType, ok := valueType.GetFieldType(expr.Name.Lexeme)
+		if !ok {
+			return r.error(expr, fmt.Sprintf("'%s' not defined in '%s'", expr.Name.Lexeme, res.Symbol.Name()))
+		}
+		return Result{
+			Ok:     true,
+			Symbol: symbol.NewSymbol(expr.Name.Lexeme, symbol.LiteralSymbol, expr, fieldType),
+		}
 	}
 }
 
-func (r *Resolver) VisitFunctionCall(expr *ast.FunctionCallExpr) any {
-	sym, ok := r.table.Lookup(expr.Name.Lexeme)
-	if !ok {
-		return r.error(expr, fmt.Sprintf("function %s not defined", expr.Name.Lexeme))
+func (r *Resolver) VisitCall(expr *ast.CallExpr) any {
+	for _, arg := range expr.Arguments {
+		res := ast.AcceptExpr[Result](arg, r)
+		if !res.Ok {
+			return res
+		}
 	}
+	res := ast.AcceptExpr[Result](expr.Source, r)
+	if !res.Ok {
+		return r.error(expr, fmt.Sprintf("could not resolve '%s'", expr.Source.ToString()))
+	}
+	if res.Symbol.Type() != symbol.FunctionSymbol && res.Symbol.Type() != symbol.StructSymbol {
+		return r.error(expr, fmt.Sprintf("'%s' is neither a function nor a struct.", expr.Source.ToString()))
+	}
+	symName := res.Symbol.Name()
+	sym, ok := r.table.Lookup(symName)
+	if !ok {
+		return r.error(expr, fmt.Sprintf("%s '%s' not defined", sym.Type(), symName))
+	}
+	expr.SetResolvedName(symName)
 	return Result{
 		Ok:     true,
 		Symbol: sym,
