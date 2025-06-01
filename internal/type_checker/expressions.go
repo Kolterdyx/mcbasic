@@ -22,7 +22,9 @@ func (t *TypeChecker) VisitBinary(expr *ast.BinaryExpr) any {
 		switch ltype {
 		case types.StringType:
 			expr.SetResolvedType(types.StringType)
+			return expr.GetResolvedType()
 		}
+		fallthrough
 	case tokens.Minus, tokens.Slash, tokens.Star, tokens.Percent:
 		switch rtype {
 		case types.IntType:

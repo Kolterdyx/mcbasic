@@ -1,25 +1,27 @@
 
+import print from "@mcb/core/utils";
+import * from "@mcb/core/math";
+
 func load() {
+	print("Math");
+
 	let n int = 10;
 	let x double = 2.7;
 	let y double = 3.14;
 
-	# Math!
-	let z double = x + y;
-	let a double = x - y;
-	let b double = x * y;
-	let c double = x / y;
+	print("add " + (x + y));
+	print("sub " + (x - y));
+	print("mul " + (x * y));
+	print("div " + (x / y));
 
-	let d double = math:round(z);
-	let e double = math:floor(z);
-	let f double = math:ceil(z);
-	let g double = math:sqrt(z);
-
-	let h double = math:cos(z);
-	let i double = math:sin(z);
-	let j double = math:tan(z);
-
-	let k double = math:acos(z);
-	let l double = math:asin(z);
-	let m double = math:atan(z);
+	print("sqrt  " + sqrt(4.0));
+	print("cos   " + cos(30.0));
+	print("sin   " + sin(30.0));
+	print("tan   " + tan(30.0));
+	print("acos  " + acos(0.2));
+	print("asin  " + asin(0.2));
+	print("atan  " + atan(0.2));
+	print("floor " + floor(0.2));
+	print("ceil  " + ceil(0.2));
+	print("round " + round(0.2));
 }

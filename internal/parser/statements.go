@@ -26,7 +26,7 @@ func (p *Parser) statement() (ast.Statement, error) {
 	case p.match(tokens.Exec):
 		return p.execStatement()
 	case p.match(tokens.Identifier):
-		if p.check(tokens.Equal) {
+		if p.check(tokens.Equal) || p.check(tokens.BracketOpen) || p.check(tokens.Dot) {
 			return p.variableAssignment()
 		}
 		p.stepBack()

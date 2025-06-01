@@ -124,8 +124,8 @@ func (c *Compiler) VisitIf(stmt ast.IfStmt) any {
 	cmd := c.n()
 
 	c.branchCounter++
-	thenBranchName := path.Join(paths.FunctionBranches, fmt.Sprintf("%s_%d_if", c.currentScope, c.branchCounter))
-	elseBranchName := path.Join(paths.FunctionBranches, fmt.Sprintf("%s_%d_else", c.currentScope, c.branchCounter))
+	thenBranchName := path.Join(paths.FunctionBranches, fmt.Sprintf("%s_%d_if", c.currentScope.ScopeName(), c.branchCounter))
+	elseBranchName := path.Join(paths.FunctionBranches, fmt.Sprintf("%s_%d_else", c.currentScope.ScopeName(), c.branchCounter))
 
 	cmd.Score(RETF, nbt.NewInt(0))
 	c.compiledFunctions[thenBranchName] = c.makeBranchFunction(thenBranchName, stmt.ThenBranch)

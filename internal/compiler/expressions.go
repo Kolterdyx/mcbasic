@@ -25,7 +25,7 @@ func (c *Compiler) VisitBinary(b *ast.BinaryExpr) any {
 
 	switch b.Operator.Type {
 	case tokens.EqualEqual, tokens.BangEqual, tokens.Greater, tokens.GreaterEqual, tokens.Less, tokens.LessEqual:
-		switch b.GetResolvedType() {
+		switch b.Left.GetResolvedType() {
 		case types.IntType:
 			cmd.Load(regRa, regRa)
 			cmd.Load(regRb, regRb)
@@ -39,6 +39,7 @@ func (c *Compiler) VisitBinary(b *ast.BinaryExpr) any {
 				c.error(b, "Invalid operator for type 'str'")
 			}
 		}
+
 		return cmd
 	default:
 		// nothing
