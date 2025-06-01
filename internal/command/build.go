@@ -51,11 +51,7 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 	}
 	front := frontend.NewFrontend(config, absProjectRoot, builtinHeaders, libs)
 
-	absEntrypoint, err := filepath.Abs(path.Join(projectRoot, entrypoint))
-	if err != nil {
-		return err
-	}
-	err = front.Parse(absEntrypoint)
+	err = front.Parse(entrypoint)
 	if err != nil {
 		return err
 	}

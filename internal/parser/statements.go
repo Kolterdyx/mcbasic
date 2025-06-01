@@ -38,6 +38,19 @@ func (p *Parser) statement() (ast.Statement, error) {
 
 func (p *Parser) importStatement() (ast.Statement, error) {
 	importToken := p.previous()
+
+	symbols := make([]tokens.Token, 0)
+	for p.match(tokens.Identifier) || p.match(tokens.Star) {
+		symbols = append(symbols, p.previous())
+		if !p.match(tokens.Comma) {
+			break
+		}
+	}
+	_, err := p.consume(tokens.From, "Expected 'from' after import symbols.")
+	if err != nil {
+		return nil, err
+	}
+
 	path, err := p.consume(tokens.String, "Expected path string literal after 'import'.")
 	if err != nil {
 		return nil, err
@@ -46,7 +59,11 @@ func (p *Parser) importStatement() (ast.Statement, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ast.ImportStmt{Path: path.Lexeme[1 : len(path.Lexeme)-1], SourceLocation: importToken.SourceLocation}, nil
+	return ast.ImportStmt{
+		Path:           path.Lexeme[1 : len(path.Lexeme)-1],
+		SymbolNames:    symbols,
+		SourceLocation: importToken.SourceLocation,
+	}, nil
 }
 
 func (p *Parser) execStatement() (ast.Statement, error) {

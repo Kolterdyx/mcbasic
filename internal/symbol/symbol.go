@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/types"
+	"path"
 )
 
 type Type string
@@ -51,7 +52,7 @@ func (s Symbol) ValueType() types.ValueType {
 
 func (s Symbol) AsImportedFrom(importName string) Symbol {
 	return NewSymbol(
-		fmt.Sprintf("%s:%s", importName, s.name),
+		fmt.Sprintf("%s.%s", path.Base(importName), s.name),
 		s.stype,
 		s.declarationNode,
 		s.valueType,

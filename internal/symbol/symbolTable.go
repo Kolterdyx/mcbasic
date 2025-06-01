@@ -1,6 +1,9 @@
 package symbol
 
-import "fmt"
+import (
+	"fmt"
+	log "github.com/sirupsen/logrus"
+)
 
 type Table struct {
 	symbols    map[string]Symbol
@@ -47,8 +50,11 @@ func (s *Table) OriginFile() string {
 }
 
 func (s *Table) ImportTable(table *Table) error {
+	log.Debugf("Importing symbols from table %s into %s", table.ScopeName(), s.ScopeName())
 	for _, symbol := range table.symbols {
-		s.symbols[symbol.AsImportedFrom(table.ScopeName()).Name()] = symbol
+		symName := symbol.AsImportedFrom(table.ScopeName()).Name()
+		s.symbols[symName] = symbol
+		log.Debugf("Imported symbol %s from %s", symName, table.ScopeName())
 	}
 	return nil
 }
@@ -66,4 +72,8 @@ func (s *Table) GetChild(scope string) (*Table, bool) {
 
 func (s *Table) GetParent() *Table {
 	return s.parent
+}
+
+func (s *Table) Symbols() map[string]Symbol {
+	return s.symbols
 }

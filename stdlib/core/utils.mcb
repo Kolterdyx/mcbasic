@@ -1,8 +1,8 @@
-func print(msg void) {
+func print(msg str) {
 	exec "tellraw @a {\"text\":\"" + msg + "\"}";
 }
 
-func log(msg void) {
+func log(msg str) {
 	exec "tellraw @a[tag=mcblog] {\"text\":\"[{{.Namespace}}] " + msg + "\"}";
 }
 

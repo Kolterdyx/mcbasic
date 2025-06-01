@@ -15,7 +15,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"text/template"
 )
 
 type Frontend struct {
@@ -42,64 +41,49 @@ func NewFrontend(config interfaces.ProjectConfig, projectRoot string, stdlib emb
 	return f
 }
 
-func loadStdlib(f *Frontend, stdlib embed.FS) {
-	stdlibFiles, err := stdlib.ReadDir("stdlib")
-	if err != nil {
-		log.Fatalf("Failed to read stdlib files: %v", err)
-	}
-	for _, filepath := range stdlibFiles {
-		if !filepath.IsDir() && strings.HasSuffix(filepath.Name(), ".mcb") {
-			log.Debugf("Adding stdlib %s", filepath.Name())
-			file, err := stdlib.ReadFile(path.Join("stdlib", filepath.Name()))
-			if err != nil {
-				log.Fatalf("Failed to read stdlib file %s: %v", filepath.Name(), err)
-			}
-			tmpl, err := template.New("stdlib").Parse(string(file))
-			if err != nil {
-				log.Fatalf("Failed to parse stdlib file %s: %v", filepath.Name(), err)
-			}
-			var content strings.Builder
-			err = tmpl.Execute(&content, f.config.Project)
-			if err != nil {
-				log.Fatalf("Failed to execute template for stdlib file %s: %v", filepath.Name(), err)
-			}
-			f.stdlib[filepath.Name()] = content.String()
-		}
-	}
-}
-
-func (f *Frontend) Parse(path string) error {
-	log.Debugf("Parsing %s", path)
-	if f.visitedFiles[path] {
+func (f *Frontend) Parse(filePath string) error {
+	log.Debugf("Parsing %s", filePath)
+	if f.visitedFiles[filePath] {
 		return nil // already parsed
 	}
-	f.visitedFiles[path] = true
+	f.visitedFiles[filePath] = true
 
-	src, err := os.ReadFile(path)
-	if err != nil {
-		return err
+	var src string
+	if strings.HasPrefix(filePath, "@") {
+		// If the filePath starts with '@', it is a stdlib file
+		src2, ok := f.stdlib[filePath]
+		if !ok {
+			return fmt.Errorf("stdlib file %s not found", filePath)
+		}
+		src = src2
+	} else {
+		src2, err := os.ReadFile(path.Join(f.projectRoot, filePath))
+		if err != nil {
+			return err
+		}
+		src = string(src2)
 	}
-	scannedTokens, errs := scanner.Scan(path, string(src))
+	scannedTokens, errs := scanner.Scan(filePath, src)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			log.Error(err)
 		}
-		return fmt.Errorf("failed to scan file: %s", path)
+		return fmt.Errorf("failed to scan file: %s", filePath)
 	}
-	p := parser.NewParser(path, scannedTokens)
+	p := parser.NewParser(filePath, scannedTokens)
 
 	fileAst, errs := p.Parse()
 	if len(errs) > 0 {
 		for _, err := range errs {
 			log.Error(err)
 		}
-		return fmt.Errorf("failed to parse file: %s", path)
+		return fmt.Errorf("failed to parse file: %s", filePath)
 	}
 
-	table := symbol.NewTable(nil, "file:"+path, path)
-	f.symbolManager.AddFile(path, table)
+	table := symbol.NewTable(nil, filePath, filePath)
+	f.symbolManager.AddFile(filePath, table)
 
-	err = f.recurseOnImportedFiles(fileAst)
+	err := f.recurseOnImportedFiles(fileAst)
 	if err != nil {
 		return err
 	}
@@ -110,7 +94,7 @@ func (f *Frontend) Parse(path string) error {
 		for _, err := range errs {
 			log.Error(err)
 		}
-		return fmt.Errorf("failed to resolve file: %s", path)
+		return fmt.Errorf("failed to resolve file: %s", filePath)
 	}
 
 	t := type_checker.NewTypeChecker(fileAst, table)
@@ -119,17 +103,16 @@ func (f *Frontend) Parse(path string) error {
 		for _, err := range errs {
 			log.Error(err)
 		}
-		return fmt.Errorf("failed to type check file: %s", path)
+		return fmt.Errorf("failed to type check file: %s", filePath)
 	}
 
 	unit := &CompilationUnit{
-		FilePath: path,
+		FilePath: filePath,
 		AST:      fileAst,
 		Symbols:  table,
 	}
 
-	f.units[path] = unit
-
+	f.units[filePath] = unit
 	return nil
 }
 

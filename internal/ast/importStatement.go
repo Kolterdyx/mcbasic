@@ -3,12 +3,14 @@ package ast
 import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
+	"github.com/Kolterdyx/mcbasic/internal/tokens"
 )
 
 type ImportStmt struct {
 	interfaces.SourceLocation
 
-	Path string
+	Path        string
+	SymbolNames []tokens.Token
 }
 
 func (i ImportStmt) Accept(visitor StatementVisitor) any {
