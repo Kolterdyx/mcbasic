@@ -1,8 +1,6 @@
 package nbt
 
 type List struct {
-	Value
-
 	values []Value
 }
 
@@ -10,6 +8,10 @@ func NewList(values ...Value) *List {
 	return &List{
 		values: values,
 	}
+}
+
+func (l *List) Add(value Value) {
+	l.values = append(l.values, value)
 }
 
 func (l *List) ToString() string {

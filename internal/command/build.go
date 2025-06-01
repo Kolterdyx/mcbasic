@@ -3,17 +3,14 @@ package command
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"github.com/BurntSushi/toml"
-	"github.com/Kolterdyx/mcbasic/internal/compiler"
+	frontend "github.com/Kolterdyx/mcbasic/internal/frontend"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
-	"github.com/Kolterdyx/mcbasic/internal/parser"
-	"github.com/Kolterdyx/mcbasic/internal/scanner"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v3"
 	"os"
 	"path"
-	"strings"
+	"path/filepath"
 )
 
 var BuildCommand = &cli.Command{
@@ -38,7 +35,7 @@ var BuildCommand = &cli.Command{
 	},
 	Action: func(ctx context.Context, cmd *cli.Command) error {
 		data := ctx.Value("data").(*Data)
-		return Build(cmd, data.BuiltinHeaders, data.Libs)
+		return Build(cmd, data.Stdlib, data.Embedded)
 	},
 }
 
@@ -48,82 +45,33 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 	config, projectRoot := parseArgs(cmd)
 
 	entrypoint := config.Project.Entrypoint
-	blob, _ := os.ReadFile(path.Join(projectRoot, entrypoint))
-	source := string(blob)
-	log.Debug("Source loaded successfully")
-
-	s := &scanner.Scanner{}
-	tokens := s.Scan(source)
-	if s.HadError {
-		return cli.Exit("There was an error parsing the program", 1)
-	}
-	log.Debug("Tokens scanned successfully")
-
-	headers, err := loadHeaders(config.Dependencies.Headers, projectRoot, builtinHeaders)
+	absProjectRoot, err := filepath.Abs(projectRoot)
 	if err != nil {
 		return err
 	}
+	front := frontend.NewFrontend(config, absProjectRoot, builtinHeaders, libs)
 
-	parser_ := parser.Parser{Tokens: tokens, Headers: headers}
-	program, errs := parser_.Parse()
-	if len(errs) != 0 {
-		for _, err := range errs {
-			log.Error(err)
-		}
-		return cli.Exit("There was an error parsing the program", 1)
+	err = front.Parse(entrypoint)
+	if err != nil {
+		return err
 	}
-	log.Debug("Program parsed successfully")
-
 	// Remove the contents of the output directory
 	err = os.RemoveAll(path.Join(config.OutputDir, config.Project.Name))
 	if err != nil {
 		return err
 	}
 
-	c := compiler.NewCompiler(config, headers, libs)
-	err = c.Compile(program)
-	if err != nil {
-		log.Error(err)
-		return cli.Exit("There was an error compiling the program", 1)
+	errs := front.Compile()
+	if len(errs) > 0 {
+		for _, err := range errs {
+			if err != nil {
+				log.Error(err)
+			}
+		}
+		return nil
 	}
 	log.Info("Compilation complete")
 	return nil
-}
-
-func loadHeaders(headerPaths []string, projectRoot string, builtinHeaders embed.FS) ([]interfaces.DatapackHeader, error) {
-	headers := make([]interfaces.DatapackHeader, 0)
-
-	for i, h := range headerPaths {
-		headerPath := path.Join(projectRoot, h)
-		headerPaths[i] = headerPath
-	}
-
-	// include builtin headers
-	builtinHeaderPaths, err := builtinHeaders.ReadDir("headers")
-	if err != nil {
-		return nil, err
-	}
-	for _, h := range builtinHeaderPaths {
-		if !h.IsDir() && strings.HasSuffix(h.Name(), ".json") {
-			headerPaths = append(headerPaths, path.Join("headers", h.Name()))
-		}
-	}
-
-	for _, headerPath := range headerPaths {
-		log.Debug("Loading header: ", headerPath)
-		headerFile, err := builtinHeaders.ReadFile(headerPath)
-		if err != nil {
-			return nil, err
-		}
-		header := interfaces.DatapackHeader{}
-		err = json.Unmarshal(headerFile, &header)
-		if err != nil {
-			return nil, err
-		}
-		headers = append(headers, header)
-	}
-	log.Debugf("Headers loaded successfully")
-	return headers, nil
 }
 
 func loadProject(file string) interfaces.ProjectConfig {

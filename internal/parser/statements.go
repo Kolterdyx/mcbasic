@@ -2,15 +2,12 @@ package parser
 
 import (
 	"fmt"
-	"github.com/Kolterdyx/mcbasic/internal/expressions"
-	"github.com/Kolterdyx/mcbasic/internal/interfaces"
-	"github.com/Kolterdyx/mcbasic/internal/statements"
+	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
-	log "github.com/sirupsen/logrus"
 )
 
-func (p *Parser) statement() (statements.Stmt, error) {
+func (p *Parser) statement() (ast.Statement, error) {
 	switch {
 	case p.match(tokens.Let):
 		return p.letDeclaration()
@@ -26,19 +23,43 @@ func (p *Parser) statement() (statements.Stmt, error) {
 		return p.structDeclaration()
 	case p.match(tokens.Import):
 		return p.importStatement()
+	case p.match(tokens.Exec):
+		return p.execStatement()
 	case p.match(tokens.Identifier):
 		if p.check(tokens.Equal) || p.check(tokens.BracketOpen) || p.check(tokens.Dot) {
 			return p.variableAssignment()
-		} else if p.check(tokens.ParenOpen) {
-			p.stepBack()
 		}
+		p.stepBack()
 		fallthrough
 	default:
 		return p.expressionStatement()
 	}
 }
 
-func (p *Parser) importStatement() (statements.Stmt, error) {
+func (p *Parser) importStatement() (ast.Statement, error) {
+	importToken := p.previous()
+
+	symbols := make(map[string]tokens.Token)
+	for p.match(tokens.Identifier) || p.match(tokens.Star) {
+		symToken := p.previous()
+		alias := symToken.Lexeme
+		if p.match(tokens.As) {
+			aliasToken, err := p.consume(tokens.Identifier, "Expected alias after 'as'.")
+			if err != nil {
+				return nil, err
+			}
+			alias = aliasToken.Lexeme
+		}
+		symbols[alias] = symToken
+		if !p.match(tokens.Comma) {
+			break
+		}
+	}
+	_, err := p.consume(tokens.From, "Expected 'from' after import symbols.")
+	if err != nil {
+		return nil, err
+	}
+
 	path, err := p.consume(tokens.String, "Expected path string literal after 'import'.")
 	if err != nil {
 		return nil, err
@@ -47,10 +68,25 @@ func (p *Parser) importStatement() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return statements.ImportStmt{Path: path.Lexeme}, nil
+	return ast.ImportStmt{
+		Path:           path.Lexeme[1 : len(path.Lexeme)-1],
+		SymbolNames:    symbols,
+		SourceLocation: importToken.SourceLocation,
+	}, nil
 }
 
-func (p *Parser) expressionStatement() (statements.Stmt, error) {
+func (p *Parser) execStatement() (ast.Statement, error) {
+	expr, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	if _, err := p.consume(tokens.Semicolon, "Expected ';' after exec expression."); err != nil {
+		return nil, err
+	}
+	return ast.ExecStmt{Expression: expr, SourceLocation: p.previous().SourceLocation}, nil
+}
+
+func (p *Parser) expressionStatement() (ast.Statement, error) {
 	value, err := p.expression()
 	if err != nil {
 		return nil, err
@@ -58,10 +94,10 @@ func (p *Parser) expressionStatement() (statements.Stmt, error) {
 	if _, err = p.consume(tokens.Semicolon, "Expected ';' after value."); err != nil {
 		return nil, err
 	}
-	return statements.ExpressionStmt{Expression: value}, nil
+	return ast.ExpressionStmt{Expression: value}, nil
 }
 
-func (p *Parser) letDeclaration() (statements.Stmt, error) {
+func (p *Parser) letDeclaration() (ast.Statement, error) {
 	name, err := p.consume(tokens.Identifier, "Expected variable name.")
 	if err != nil {
 		return nil, err
@@ -70,44 +106,23 @@ func (p *Parser) letDeclaration() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	var initializer expressions.Expr
+	var initializer ast.Expr
 	if p.match(tokens.Equal) {
 		if initializer, err = p.expression(); err != nil {
 			return nil, err
-		}
-	}
-	if initializer != nil {
-		if list, ok := initializer.(expressions.ListExpr); ok {
-			// Allow assignment as long as varType is a list
-			if !p.isListType(varType) {
-				return nil, p.error(p.previous(), "Cannot assign empty list to non-list type.")
-			}
-			if len(list.Elements) == 0 {
-				list.ValueType = varType
-			}
-			initializer = list
-		}
-		if varType == nil {
-			varType = initializer.ReturnType()
-		}
-		if initializer.ReturnType() != varType {
-			log.Warnf("%+v", initializer.ReturnType())
-			return nil, p.error(p.previous(), fmt.Sprintf("Cannot assign %s to %s.", initializer.ReturnType().ToString(), varType.ToString()))
 		}
 	}
 	_, err = p.consume(tokens.Semicolon, "Expected ';' or '=' after variable declaration.")
 	if err != nil {
 		return nil, err
 	}
-	p.variables[p.currentScope] = append(p.variables[p.currentScope], interfaces.TypedIdentifier{
-		Name: name.Lexeme,
-		Type: varType,
-	})
-	return statements.VariableDeclarationStmt{
+
+	stmt := ast.VariableDeclarationStmt{
 		Name:        name,
-		ValueType:   varType,
 		Initializer: initializer,
-	}, nil
+		ValueType:   varType,
+	}
+	return stmt, nil
 }
 
 func (p *Parser) ParseType() (types.ValueType, error) {
@@ -123,12 +138,14 @@ func (p *Parser) ParseType() (types.ValueType, error) {
 	case p.match(tokens.VoidType):
 		varType = types.VoidType
 	case p.match(tokens.Identifier):
-		structName := p.previous().Lexeme
-		structStmt, ok := p.structs[structName]
-		if !ok {
-			return nil, p.error(p.previous(), fmt.Sprintf("Struct '%s' is not defined.", structName))
+		typeName := p.previous().Lexeme
+		if definedType, ok := p.definedTypes[typeName]; ok {
+			varType = definedType
+		} else {
+			err := p.error(p.previous(), fmt.Sprintf("Undefined type: %s", typeName))
+			p.synchronize()
+			return nil, err
 		}
-		varType = structStmt.StructType
 	default:
 		return nil, p.error(p.peek(), "Expected type.")
 	}
@@ -150,11 +167,11 @@ func (p *Parser) typePostfix(varType types.ValueType) (types.ValueType, error) {
 }
 
 // variableAssignment parses assignments to variables, list indices, or struct fields
-func (p *Parser) variableAssignment() (statements.Stmt, error) {
+func (p *Parser) variableAssignment() (ast.Statement, error) {
 	name := p.previous()
 
 	// Collect any number of [index] or .field accessors
-	var accessors []statements.Accessor
+	var accessors []ast.Accessor
 	for {
 		if p.match(tokens.BracketOpen) {
 			idxExpr, err := p.expression()
@@ -164,7 +181,7 @@ func (p *Parser) variableAssignment() (statements.Stmt, error) {
 			if _, err := p.consume(tokens.BracketClose, "Expected ']' after index"); err != nil {
 				return nil, err
 			}
-			accessors = append(accessors, statements.IndexAccessor{Index: idxExpr})
+			accessors = append(accessors, ast.IndexAccessor{Index: idxExpr})
 			continue
 		}
 		if p.match(tokens.Dot) {
@@ -172,7 +189,7 @@ func (p *Parser) variableAssignment() (statements.Stmt, error) {
 			if err != nil {
 				return nil, err
 			}
-			accessors = append(accessors, statements.FieldAccessor{Field: fieldTok})
+			accessors = append(accessors, ast.FieldAccessor{Field: fieldTok})
 			continue
 		}
 		break
@@ -184,24 +201,17 @@ func (p *Parser) variableAssignment() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	targetValueType, err := p.getNestedType(name, accessors)
-	if err != nil {
-		return nil, err
-	}
-	if !valueExpr.ReturnType().Equals(targetValueType) {
-		return nil, p.error(p.previous(), fmt.Sprintf("Cannot assign %s to %s.", valueExpr.ReturnType().ToString(), targetValueType.ToString()))
-	}
 	if _, err := p.consume(tokens.Semicolon, "Expected ';' after assignment."); err != nil {
 		return nil, err
 	}
-	return statements.VariableAssignmentStmt{
+	return ast.VariableAssignmentStmt{
 		Name:      name,
 		Accessors: accessors,
 		Value:     valueExpr,
 	}, nil
 }
 
-func (p *Parser) functionDeclaration() (statements.Stmt, error) {
+func (p *Parser) functionDeclaration() (ast.Statement, error) {
 	name, err := p.consume(tokens.Identifier, "Expected function name.")
 	if err != nil {
 		return nil, err
@@ -210,7 +220,8 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	parameters := make([]interfaces.TypedIdentifier, 0)
+	parameters := make([]ast.VariableDeclarationStmt, 0)
+	parameterTypes := make([]types.ValueType, 0)
 	if !p.check(tokens.ParenClose) {
 		for {
 			if len(parameters) >= 255 {
@@ -220,11 +231,15 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 			if err != nil {
 				return nil, err
 			}
-			valueType, err := p.ParseType()
+			argType, err := p.ParseType()
 			if err != nil {
 				return nil, err
 			}
-			parameters = append(parameters, interfaces.TypedIdentifier{Name: argName.Lexeme, Type: valueType})
+			parameterTypes = append(parameterTypes, argType)
+			parameters = append(parameters, ast.VariableDeclarationStmt{
+				Name:      argName,
+				ValueType: argType,
+			})
 			if !p.match(tokens.Comma) {
 				break
 			}
@@ -244,20 +259,17 @@ func (p *Parser) functionDeclaration() (statements.Stmt, error) {
 	if err != nil && !p.check(tokens.BraceOpen) {
 		return nil, err
 	}
-	// Add all parameters to the current scope
-	p.currentScope = name.Lexeme
-	p.functions[p.currentScope] = interfaces.FunctionDefinition{Name: name.Lexeme, Args: parameters, ReturnType: returnType}
-	for _, arg := range parameters {
-		p.variables[p.currentScope] = append(p.variables[p.currentScope], interfaces.TypedIdentifier{Name: arg.Name, Type: arg.Type})
-	}
+
 	body, err := p.block()
 	if err != nil {
 		return nil, err
 	}
-	return statements.FunctionDeclarationStmt{Name: name.Lexeme, Parameters: parameters, ReturnType: returnType, Body: body}, nil
+	stmt := ast.FunctionDeclarationStmt{Name: name, Parameters: parameters, ReturnType: returnType, Body: body}
+
+	return stmt, nil
 }
 
-func (p *Parser) structDeclaration() (statements.Stmt, error) {
+func (p *Parser) structDeclaration() (ast.Statement, error) {
 	name, err := p.consume(tokens.Identifier, "Expected struct name.")
 	if err != nil {
 		return nil, err
@@ -267,6 +279,7 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 		return nil, err
 	}
 	structType := types.NewStructType(name.Lexeme)
+	p.definedTypes[name.Lexeme] = structType
 	for !p.check(tokens.BraceClose) && !p.IsAtEnd() {
 		fieldName, err := p.consume(tokens.Identifier, "Expected field name.")
 		if err != nil {
@@ -301,26 +314,27 @@ func (p *Parser) structDeclaration() (statements.Stmt, error) {
 	if structType.Size() == 0 {
 		return nil, p.error(p.peek(), "Struct must have at least one field.")
 	}
-	stmt := statements.StructDeclarationStmt{
+	stmt := ast.StructDeclarationStmt{
 		Name:       name,
 		StructType: structType,
 	}
-	p.structs[name.Lexeme] = stmt
 	return stmt, nil
 }
 
-func (p *Parser) block(checkBraces ...bool) (statements.BlockStmt, error) {
-	stmts := make([]statements.Stmt, 0)
+func (p *Parser) block(checkBraces ...bool) (ast.BlockStmt, error) {
+	stmts := make([]ast.Statement, 0)
+	var braceOpen tokens.Token
+	var err error
 	if len(checkBraces) == 0 || checkBraces[0] {
-		_, err := p.consume(tokens.BraceOpen, "Expected '{' before block.")
+		braceOpen, err = p.consume(tokens.BraceOpen, "Expected '{' before block.")
 		if err != nil {
-			return statements.BlockStmt{}, err
+			return ast.BlockStmt{}, err
 		}
 	}
 	for !p.check(tokens.BraceClose) && !p.IsAtEnd() {
 		stmt, err := p.statement()
 		if err != nil {
-			p.Errors = append(p.Errors, err)
+			p.errors = append(p.errors, err)
 			p.synchronize()
 			continue
 		}
@@ -329,13 +343,13 @@ func (p *Parser) block(checkBraces ...bool) (statements.BlockStmt, error) {
 	if len(checkBraces) == 0 || checkBraces[0] {
 		_, err := p.consume(tokens.BraceClose, "Expected '}' after block.")
 		if err != nil {
-			return statements.BlockStmt{}, err
+			return ast.BlockStmt{}, err
 		}
 	}
-	return statements.BlockStmt{Statements: stmts}, nil
+	return ast.BlockStmt{Statements: stmts, SourceLocation: braceOpen.SourceLocation}, nil
 }
 
-func (p *Parser) whileStatement() (statements.Stmt, error) {
+func (p *Parser) whileStatement() (ast.Statement, error) {
 	_, err := p.consume(tokens.ParenOpen, "Expected '(' after 'while'.")
 	if err != nil {
 		return nil, err
@@ -352,10 +366,10 @@ func (p *Parser) whileStatement() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return statements.WhileStmt{Condition: condition, Body: body}, nil
+	return ast.WhileStmt{Condition: condition, Body: body}, nil
 }
 
-func (p *Parser) ifStatement() (statements.Stmt, error) {
+func (p *Parser) ifStatement() (ast.Statement, error) {
 	_, err := p.consume(tokens.ParenOpen, "Expected '(' after 'if'.")
 	if err != nil {
 		return nil, err
@@ -372,9 +386,9 @@ func (p *Parser) ifStatement() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	var elseBranch *statements.BlockStmt = nil
+	var elseBranch *ast.BlockStmt = nil
 	if p.match(tokens.Else) {
-		elseBranch = &statements.BlockStmt{Statements: make([]statements.Stmt, 0)}
+		elseBranch = &ast.BlockStmt{Statements: make([]ast.Statement, 0), SourceLocation: p.previous().SourceLocation}
 		if p.match(tokens.If) {
 			branch, err := p.ifStatement()
 			if err != nil {
@@ -390,13 +404,14 @@ func (p *Parser) ifStatement() (statements.Stmt, error) {
 
 		}
 	}
-	return statements.IfStmt{Condition: condition, ThenBranch: thenBranch, ElseBranch: elseBranch}, nil
+	return ast.IfStmt{Condition: condition, ThenBranch: thenBranch, ElseBranch: elseBranch}, nil
 }
 
-func (p *Parser) returnStatement() (statements.Stmt, error) {
-	var expr expressions.Expr = nil
+func (p *Parser) returnStatement() (ast.Statement, error) {
+	var expr ast.Expr = nil
 	var err error
-	if p.functions[p.currentScope].ReturnType != types.VoidType {
+	ret := p.previous()
+	if !p.check(tokens.Semicolon) {
 		expr, err = p.expression()
 		if err != nil {
 			return nil, err
@@ -406,5 +421,5 @@ func (p *Parser) returnStatement() (statements.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return statements.ReturnStmt{Expression: expr}, nil
+	return ast.ReturnStmt{Expression: expr, SourceLocation: ret.SourceLocation}, nil
 }

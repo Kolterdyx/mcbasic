@@ -1,0 +1,65 @@
+
+func __ret() {
+	exec "data modify storage {{.Namespace}}:data vars.$RET set from storage gm:io out";
+}
+
+func sqrt(x double) double {
+	exec "function gm:sqrt {x:$(x)}";
+	__ret();
+}
+
+func cos(x double) double {
+	exec "function gm:cos {x:$(x)}";
+	__ret();
+}
+
+func sin(x double) double {
+	exec "function gm:sin {x:$(x)}";
+	__ret();
+}
+
+func tan(x double) double {
+	exec "function gm:tan {x:$(x)}";
+	__ret();
+}
+
+func acos(x double) double {
+	exec "function gm:arccos {x:$(x)}";
+	__ret();
+}
+
+func asin(x double) double {
+	exec "function gm:arcsin {x:$(x)}";
+	__ret();
+}
+
+func atan(x double) double {
+	exec "function gm:arctan {x:$(x)}";
+	__ret();
+}
+
+func floor(x double) double {
+	exec "function gm:floor {x:$(x)}";
+	__ret();
+}
+
+func ceil(x double) double {
+	exec "function gm:ceil {x:$(x)}";
+	__ret();
+}
+
+func round(x double) double {
+	exec "function gm:round {x:$(x)}";
+	__ret();
+}
+
+func pow(x double, y int) double {
+	if (y == 0) {
+		return 1.0;
+	} else if (y == 1) {
+		return x;
+	} else if (y < 0) {
+		return 1.0 / pow(x, -y);
+	}
+	return x * pow(x, y - 1);
+}

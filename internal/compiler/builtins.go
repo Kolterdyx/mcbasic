@@ -11,130 +11,7 @@ import (
 )
 
 func (c *Compiler) compileBuiltins() []interfaces.Function {
-	code := c.math()
-	code = append(code, c.baseFunctions()...)
-	return code
-}
-
-func (c *Compiler) math() []interfaces.Function {
-	return []interfaces.Function{
-		c.registerIRFunction(
-			"math:sqrt",
-			ir.NewCode(c.Namespace, c.storage).
-				DoubleSqrt("x", RET).
-				Ret(),
-			[]interfaces.TypedIdentifier{
-				{Name: "x", Type: types.DoubleType},
-			},
-			types.DoubleType,
-		),
-
-		// Trigonometric functions
-		c.registerIRFunction(
-			"math:cos",
-			ir.NewCode(c.Namespace, c.storage).
-				DoubleCos("x", RET).
-				Ret(),
-			[]interfaces.TypedIdentifier{
-				{Name: "x", Type: types.DoubleType},
-			},
-			types.DoubleType,
-		),
-		c.registerIRFunction(
-			"math:sin",
-			ir.NewCode(c.Namespace, c.storage).
-				DoubleSin("x", RET).
-				Ret(),
-			[]interfaces.TypedIdentifier{
-				{Name: "x", Type: types.DoubleType},
-			},
-			types.DoubleType,
-		),
-		c.registerIRFunction(
-			"math:tan",
-			ir.NewCode(c.Namespace, c.storage).
-				DoubleTan("x", RET).
-				Ret(),
-			[]interfaces.TypedIdentifier{
-				{Name: "x", Type: types.DoubleType},
-			},
-			types.DoubleType,
-		),
-		c.registerIRFunction(
-			"math:acos",
-			ir.NewCode(c.Namespace, c.storage).
-				Copy(
-					fmt.Sprintf("%s.acos.x", ArgPath),
-					fmt.Sprintf("%s.x", VarPath),
-				).
-				DoubleAcos("x", RET).
-				Ret(),
-			[]interfaces.TypedIdentifier{
-				{Name: "x", Type: types.DoubleType},
-			},
-			types.DoubleType,
-		),
-		c.registerIRFunction(
-			"math:asin",
-			ir.NewCode(c.Namespace, c.storage).
-				Copy(
-					fmt.Sprintf("%s.asin.x", ArgPath),
-					fmt.Sprintf("%s.x", VarPath),
-				).
-				DoubleAsin("x", RET).
-				Ret(),
-			[]interfaces.TypedIdentifier{
-				{Name: "x", Type: types.DoubleType},
-			},
-			types.DoubleType,
-		),
-		c.registerIRFunction(
-			"math:atan",
-			ir.NewCode(c.Namespace, c.storage).
-				Copy(
-					fmt.Sprintf("%s.atan.x", ArgPath),
-					fmt.Sprintf("%s.x", VarPath),
-				).
-				DoubleAtan("x", RET).
-				Ret(),
-			[]interfaces.TypedIdentifier{
-				{Name: "x", Type: types.DoubleType},
-			},
-			types.DoubleType,
-		),
-
-		// Rounding functions
-		c.registerIRFunction(
-			"math:floor",
-			ir.NewCode(c.Namespace, c.storage).
-				DoubleFloor("x", RET).
-				Ret(),
-			[]interfaces.TypedIdentifier{
-				{Name: "x", Type: types.DoubleType},
-			},
-			types.DoubleType,
-		),
-		c.registerIRFunction(
-			"math:ceil",
-			ir.NewCode(c.Namespace, c.storage).
-				DoubleCeil("x", RET).
-				Ret(),
-			[]interfaces.TypedIdentifier{
-				{Name: "x", Type: types.DoubleType},
-			},
-			types.DoubleType,
-		),
-		c.registerIRFunction(
-			"math:round",
-			ir.NewCode(c.Namespace, c.storage).
-				DoubleRound("x", RET).
-				Ret(),
-			[]interfaces.TypedIdentifier{
-				{Name: "x", Type: types.DoubleType},
-			},
-			types.DoubleType,
-		),
-	}
+	return c.baseFunctions()
 }
 
 func (c *Compiler) baseFunctions() []interfaces.Function {
@@ -151,9 +28,6 @@ func (c *Compiler) baseFunctions() []interfaces.Function {
 	}
 	initSource.Set(fmt.Sprintf("%s.%s", VarPath, CALL), nbt.NewInt(0))
 	initSource.XLoad(CALL, CALL)
-	initSource.SetArg("mcb:log", "text", nbt.NewString("MCB pack loaded"))
-	initSource.Call("mcb:log")
-	initSource.Call(path.Join(paths.Internal, "struct_definitions"))
 	initSource.Call("load")
 	initSource.Ret()
 	funcs = append(

@@ -7,8 +7,8 @@ import (
 )
 
 type Data struct {
-	BuiltinHeaders embed.FS
-	Libs           embed.FS
+	Stdlib   embed.FS
+	Embedded embed.FS
 }
 
 func DebugFlagHandler(cmd *cli.Command) {

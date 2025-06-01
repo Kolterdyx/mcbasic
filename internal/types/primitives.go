@@ -15,8 +15,6 @@ const (
 )
 
 type PrimitiveTypeStruct struct {
-	ValueType
-
 	primitiveType PrimitiveType
 }
 
@@ -51,6 +49,16 @@ func (p PrimitiveTypeStruct) Equals(other ValueType) bool {
 		return p.primitiveType == other.primitiveType
 	}
 	return false
+}
+
+func (p PrimitiveTypeStruct) GetFieldType(field string) (ValueType, bool) {
+	if field == "length" {
+		switch p.primitiveType {
+		case PrimitiveStringType:
+			return IntType, true
+		}
+	}
+	return nil, false
 }
 
 var (

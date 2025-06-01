@@ -1,4 +1,6 @@
 
+import print from "@mcb/core/utils";
+
 struct Point {
 	x double;
 	y double;
@@ -30,6 +32,6 @@ func load() {
 		),
 	]);
 
-	mcb:print(polygon);
-	mcb:print(polygon.edges[1].start.x);
+	print("" + polygon);
+	print("" + polygon.edges[1].start.x);
 }

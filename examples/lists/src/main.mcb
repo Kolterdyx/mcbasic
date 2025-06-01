@@ -1,4 +1,6 @@
 
+import print from "@mcb/core/utils";
+
 func load() {
 	let list1 int[] = [1, 2, 3];
 	let list2 int[] = [4, 5, 6];
@@ -8,7 +10,7 @@ func load() {
 	list2[1] = 11;
 	list3[2][2] = 12;
 
-	mcb:print(list1[0]);
-	mcb:print(list2[1]);
-	mcb:print(list3[2][2]);
+	print("" + list1[0]);
+	print("" + list2[1]);
+	print("" + list3[2][2]);
 }

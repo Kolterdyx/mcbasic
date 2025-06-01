@@ -4,39 +4,51 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
-	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 	"unicode"
 )
 
 type Scanner struct {
-	HadError bool
-	source   string
-	start    int
-	current  int
-	tokens   []tokens.Token
-	row      int
-	col      int
+	errors  []error
+	source  string
+	start   int
+	current int
+	tokens  []tokens.Token
+	row     int
+	col     int
+	file    string
+}
+
+func NewScanner(file string) *Scanner {
+	return &Scanner{
+		errors:  []error{},
+		source:  "",
+		start:   0,
+		current: 0,
+		tokens:  []tokens.Token{},
+		row:     0,
+		col:     0,
+		file:    file,
+	}
 }
 
 func (s *Scanner) report(line int, column int, message string) {
-	log.Errorf("[Position %d:%d] Exception: %s\n", line+1, column+1, message)
-	s.HadError = true
+	s.errors = append(s.errors, fmt.Errorf("[Position %d:%d] Error: %s\n", line+1, column+1, message))
 }
 
 func (s *Scanner) error(line int, message string) {
 	s.report(line, s.col, message)
 }
 
-func (s *Scanner) Scan(source string) []tokens.Token {
+func (s *Scanner) Scan(source string) ([]tokens.Token, []error) {
 	s.source = source
 	s.tokens = []tokens.Token{}
 	for !s.isAtEnd() {
 		s.start = s.current
 		s.scanToken()
 	}
-	return s.tokens
+	return s.tokens, s.errors
 }
 
 func (s *Scanner) isAtEnd() bool {
@@ -70,6 +82,18 @@ func (s *Scanner) scanToken() {
 	case '*':
 		s.addToken(tokens.Star)
 	case '/':
+		if s.match('*') {
+			for !s.isAtEnd() && !(s.peek() == '*' && s.peekOffset(1) == '/') {
+				s.advance()
+			}
+			if s.isAtEnd() {
+				s.error(s.row, "Unterminated comment")
+				return
+			}
+			s.advance()
+			s.advance()
+			break
+		}
 		s.addToken(tokens.Slash)
 	case '%':
 		s.addToken(tokens.Percent)
@@ -168,8 +192,9 @@ func (s *Scanner) addTokenWithLiteral(tokenType interfaces.TokenType, literal st
 		Lexeme:  text,
 		Literal: literal,
 		SourceLocation: interfaces.SourceLocation{
-			Row: s.row,
-			Col: s.col,
+			File: s.file,
+			Row:  s.row,
+			Col:  s.col,
 		},
 	})
 }
@@ -257,4 +282,13 @@ func (s *Scanner) scanIdentifier() {
 	} else {
 		s.addTokenWithLiteral(tokens.Identifier, text)
 	}
+}
+
+func Scan(file, src string) ([]tokens.Token, []error) {
+	scanner := NewScanner(file)
+	tokenSource, errors := scanner.Scan(src)
+	if len(errors) > 0 {
+		return nil, errors
+	}
+	return tokenSource, nil
 }

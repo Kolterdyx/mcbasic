@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/scanner"
-	"github.com/Kolterdyx/mcbasic/internal/statements"
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
+	"github.com/Kolterdyx/mcbasic/internal/utils"
 	log "github.com/sirupsen/logrus"
-	"reflect"
-	"strings"
 )
 
 func (p *Parser) match(tokenTypes ...interfaces.TokenType) bool {
@@ -27,7 +25,7 @@ func (p *Parser) match(tokenTypes ...interfaces.TokenType) bool {
 }
 
 func (p *Parser) IsAtEnd() bool {
-	return p.current >= len(p.Tokens)
+	return p.current >= len(p.tokenSource)
 }
 
 func (p *Parser) check(tokenType interfaces.TokenType) bool {
@@ -49,7 +47,7 @@ func (p *Parser) advance() tokens.Token {
 }
 
 func (p *Parser) previous() tokens.Token {
-	return p.Tokens[p.current-1]
+	return p.tokenSource[p.current-1]
 }
 
 func (p *Parser) error(token tokens.Token, message string) error {
@@ -61,7 +59,7 @@ func (p *Parser) error(token tokens.Token, message string) error {
 }
 
 func (p *Parser) report(line int, pos int, s string, message string) error {
-	return fmt.Errorf("[Position %d:%d] Exception%s: %s\n", line+1, pos+1, s, message)
+	return fmt.Errorf("[Position %d:%d] Syntax error%s: %s\n", line+1, pos+1, s, message)
 }
 
 func (p *Parser) consume(tokenType interfaces.TokenType, message string) (tokens.Token, error) {
@@ -93,37 +91,14 @@ func (p *Parser) stepBack() {
 }
 
 func (p *Parser) location() interfaces.SourceLocation {
-	return interfaces.SourceLocation{Row: p.previous().Row, Col: p.previous().Col}
+	return interfaces.SourceLocation{File: p.file, Row: p.previous().Row, Col: p.previous().Col}
 }
 
 func (p *Parser) peekCount(offset int) tokens.Token {
-	if p.current+offset >= len(p.Tokens) {
-		return p.Tokens[len(p.Tokens)-1]
+	if p.current+offset >= len(p.tokenSource) {
+		return p.tokenSource[len(p.tokenSource)-1]
 	}
-	return p.Tokens[p.current+offset]
-}
-
-func (p *Parser) getDeclaredType(name tokens.Token) types.ValueType {
-	// Search the variable in the current scope
-	for _, varDef := range p.variables[p.currentScope] {
-		if varDef.Name == name.Lexeme {
-			return varDef.Type
-		}
-	}
-	for _, f := range p.functions {
-
-		split := strings.Split(f.Name, ":")
-		if len(split) > 2 {
-			log.Fatalf("Invalid function name: %s", f.Name)
-		}
-		if len(split) == 2 && split[1] == name.Lexeme || len(split) == 1 && f.Name == name.Lexeme {
-			return f.ReturnType
-		}
-	}
-	if structStmt, ok := p.structs[name.Lexeme]; ok {
-		return structStmt.StructType
-	}
-	return nil
+	return p.tokenSource[p.current+offset]
 }
 
 func (p *Parser) isListType(varType types.ValueType) bool {
@@ -140,108 +115,53 @@ func (p *Parser) isStructType(varType types.ValueType) bool {
 	case types.StructTypeStruct:
 		return true
 	default:
-		log.Debugf("isStructType: %+v", reflect.TypeOf(varType))
 		return false
 	}
 }
 
-func (p *Parser) getTokenAsValueType(token tokens.Token) (types.ValueType, error) {
-	var varType types.ValueType = nil
-	var err error
-	switch token.Type {
-	case tokens.IntType:
-		varType = types.IntType
-	case tokens.StringType:
-		varType = types.StringType
-	case tokens.DoubleType:
-		varType = types.DoubleType
-	case tokens.VoidType:
-		varType = types.VoidType
-	case tokens.Identifier:
-		// structs and lists?
-	default:
-		return nil, p.error(p.peek(), "Expected variable type.")
-	}
-	return varType, err
-}
-
-// getNestedType traverses the accessors to find the type at the end
-func (p *Parser) getNestedType(name tokens.Token, accessors []statements.Accessor) (types.ValueType, error) {
-	varType := p.getDeclaredType(name)
-	if varType == nil {
-		return nil, p.error(name, "Undeclared identifier")
-	}
-	var err error
-	accessPath := name.Lexeme
-	for _, accessor := range accessors {
-		accessPath += accessor.ToString()
-		switch accessor.(type) {
-		case statements.IndexAccessor:
-			if p.isListType(varType) {
-				varType = varType.(types.ListTypeStruct).ContentType
-			} else {
-				return nil, p.error(p.peek(), "Expected list type.")
-			}
-		case statements.FieldAccessor:
-			fieldAccessor := accessor.(statements.FieldAccessor)
-			if p.isStructType(varType) {
-				vtype, ok := varType.(types.StructTypeStruct).GetField(fieldAccessor.Field.Lexeme)
-				if !ok {
-					return nil, p.error(fieldAccessor.Field, fmt.Sprintf("Unknown field: %s", fieldAccessor.Field.Lexeme))
-				}
-				varType = vtype
-			} else {
-				return nil, p.error(p.peek(), "Expected struct type.")
-			}
-		default:
-			return nil, p.error(p.peek(), "Unknown accessor type.")
-		}
-	}
-	if varType == nil {
-		return nil, p.error(name, fmt.Sprintf("Unknown variable type: %s", name.Lexeme))
-	}
-	return varType, err
-}
-
 func parseType(valueType string) (types.ValueType, error) {
-	s := scanner.Scanner{}
+	s := scanner.NewScanner("")
+	tokenSource, errs := s.Scan(valueType)
+	if len(errs) > 0 {
+		for _, err := range errs {
+			log.Errorf("Error parsing type: %s", err)
+		}
+		return nil, fmt.Errorf("error parsing type: %s", valueType)
+	}
 	p := Parser{
-		Tokens: s.Scan(valueType),
+		tokenSource: tokenSource,
 	}
 	return p.ParseType()
 }
 
-func GetHeaderFuncDefs(headers []interfaces.DatapackHeader) map[string]interfaces.FunctionDefinition {
+func GetHeaderFuncDefs(header interfaces.DatapackHeader) map[string]interfaces.FunctionDefinition {
 	funcDefs := make(map[string]interfaces.FunctionDefinition)
-	for _, header := range headers {
-		log.Debugf("Loading header: %s. Functions: %v", header.Namespace, len(header.Definitions.Functions))
-		for _, function := range header.Definitions.Functions {
-			funcName := fmt.Sprintf("%s:%s", header.Namespace, function.Name)
+	for _, function := range header.Definitions.Functions {
+		funcName := fmt.Sprintf("%s:%s", header.Namespace, function.Name)
 
-			returnType, err := parseType(function.ReturnType)
+		returnType, err := parseType(function.ReturnType)
+		if err != nil {
+			log.Errorf("Exception parsing function return type: %s", err)
+			continue
+		}
+		_, fn := utils.SplitFunctionName(funcName, "")
+		f := interfaces.FunctionDefinition{
+			Name:       fn,
+			Parameters: make([]interfaces.TypedIdentifier, 0),
+			ReturnType: returnType,
+		}
+		for _, parameter := range function.Args {
+			parameterType, err := parseType(parameter.Type)
 			if err != nil {
-				log.Errorf("Exception parsing function return type: %s", err)
+				log.Errorf("Exception parsing function parameter type: %s", err)
 				continue
 			}
-			f := interfaces.FunctionDefinition{
-				Name:       funcName,
-				Args:       make([]interfaces.TypedIdentifier, 0),
-				ReturnType: returnType,
-			}
-			for _, parameter := range function.Args {
-				parameterType, err := parseType(parameter.Type)
-				if err != nil {
-					log.Errorf("Exception parsing function parameter type: %s", err)
-					continue
-				}
-				f.Args = append(f.Args, interfaces.TypedIdentifier{
-					Name: parameter.Name,
-					Type: parameterType,
-				})
-			}
-			funcDefs[funcName] = f
+			f.Parameters = append(f.Parameters, interfaces.TypedIdentifier{
+				Name: parameter.Name,
+				Type: parameterType,
+			})
 		}
-		log.Debugf("Loaded header: %s. Functions: %v", header.Namespace, len(header.Definitions.Functions))
+		funcDefs[fn] = f
 	}
 	return funcDefs
 }

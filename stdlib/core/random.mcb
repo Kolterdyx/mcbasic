@@ -1,0 +1,4 @@
+
+func random() double {
+	exec "execute store result storage {{.Namespace}}:data vars.$RET double 0.000000001 run random value 0..999999999";
+}

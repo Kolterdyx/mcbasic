@@ -30,6 +30,7 @@ type IRCode interface {
 	CallWithArgs(funcName, argPath string) IRCode
 	Branch(branchName, funcName string) IRCode
 	Exec(mcCommand string) IRCode
+	ExecReg(varName string) IRCode
 	Raw(mcCommand string) IRCode
 
 	IntAdd(x, y, to string) IRCode
@@ -83,7 +84,8 @@ type IRCode interface {
 	DoubleCompare(regRa, regRb string, operator TokenType, res string) IRCode
 	If(condVar string, code IRCode) IRCode
 	Unless(condVar string, code IRCode) IRCode
-	Exception(message string) IRCode
+	ExceptionString(message string) IRCode
+	ExceptionFormat(messageParts ...nbt.Value) IRCode
 
 	PathGet(obj, path, to string) IRCode
 	PathSet(obj, path, valuePath string) IRCode

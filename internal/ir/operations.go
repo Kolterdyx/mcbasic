@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/nbt"
+	"github.com/Kolterdyx/mcbasic/internal/paths"
 	"github.com/Kolterdyx/mcbasic/internal/utils"
 )
 
@@ -135,8 +136,19 @@ func (c *Code) Unless(condVar string, code interfaces.IRCode) interfaces.IRCode 
 	return c
 }
 
-func (c *Code) Exception(message string) interfaces.IRCode {
-	c.SetArg("mcb:error", "text", nbt.NewString(message))
-	c.Call("mcb:error")
+func (c *Code) ExceptionString(message string) interfaces.IRCode {
+	format := nbt.StringFormat{Color: nbt.Red, Italic: true}
+	c.SetArg(fmt.Sprintf("mcb:%s/report", paths.Internal), "text", nbt.NewFormattedString(message, format))
+	c.Call(fmt.Sprintf("mcb:%s/report", paths.Internal))
+	return c
+}
+
+func (c *Code) ExceptionFormat(messageParts ...nbt.Value) interfaces.IRCode {
+	message := nbt.NewList()
+	for _, part := range messageParts {
+		message.Add(part)
+	}
+	c.SetArg(fmt.Sprintf("mcb:%s/report", paths.Internal), "text", message)
+	c.Call(fmt.Sprintf("mcb:%s/report", paths.Internal))
 	return c
 }
