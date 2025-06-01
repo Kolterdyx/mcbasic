@@ -34,7 +34,7 @@ func (r *Resolver) VisitUnary(expr *ast.UnaryExpr) any {
 func (r *Resolver) VisitVariable(expr *ast.VariableExpr) any {
 	sym, ok := r.table.Lookup(expr.Name.Lexeme)
 	if !ok {
-		return r.error(expr, fmt.Sprintf("%s is not defined", expr.Name.Lexeme))
+		return r.error(expr, fmt.Sprintf("'%s' is not defined", expr.Name.Lexeme))
 	}
 	return Result{
 		Ok:     true,
@@ -45,7 +45,7 @@ func (r *Resolver) VisitVariable(expr *ast.VariableExpr) any {
 func (r *Resolver) VisitDotAccess(expr *ast.DotAccessExpr) any {
 	res := ast.AcceptExpr[Result](expr.Source, r)
 	if !res.Ok {
-		return r.error(expr, fmt.Sprintf("could not resolve '%s'", expr.Source.ToString()))
+		return res
 	}
 
 	valueType := res.Symbol.ValueType()
@@ -69,7 +69,7 @@ func (r *Resolver) VisitCall(expr *ast.CallExpr) any {
 	}
 	res := ast.AcceptExpr[Result](expr.Source, r)
 	if !res.Ok {
-		return r.error(expr, fmt.Sprintf("could not resolve '%s'", expr.Source.ToString()))
+		return res
 	}
 	if res.Symbol.Type() != symbol.FunctionSymbol && res.Symbol.Type() != symbol.StructSymbol {
 		return r.error(expr, fmt.Sprintf("'%s' is neither a function nor a struct.", expr.Source.ToString()))

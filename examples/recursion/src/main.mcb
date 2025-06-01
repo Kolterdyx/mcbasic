@@ -1,20 +1,15 @@
 
-func fib(n int) int {
-    if (n <= 1) {
-        return n;
-    }
-    return fib(n - 1) + fib(n - 2);
-}
+import print from "@mcb/core/utils";
 
 func fizbuzz(n int) {
     if (n % 3 == 0 and n % 5 == 0) {
-        mcb:print("FizzBuzz!");
+        print("FizzBuzz!");
     } else if (n % 3 == 0) {
-        mcb:print("Fizz");
+        print("Fizz");
     } else if (n % 5 == 0) {
-        mcb:print("Buzz");
+        print("Buzz");
     } else {
-        mcb:print(n);
+        print("" + n);
     }
 }
 
@@ -25,7 +20,14 @@ func print_fizzbuzz(n int, max int) {
 	}
 }
 
+func fib(n int) int {
+    if (n <= 1) {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+
 func load() {
     print_fizzbuzz(1, 30);
-    mcb:print("10th fib: " + fib(10));
+    print("10th fib: " + fib(10));
 }
