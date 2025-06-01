@@ -26,12 +26,14 @@ func (c *Code) Branch(branchName, funcName string) interfaces.IRCode {
 
 func (c *Code) Exec(mcCommand string) interfaces.IRCode {
 	c.SetArg("mcb:exec", "command", nbt.NewString(strings.TrimSpace(mcCommand)))
+	c.SetArg("mcb:exec", "namespace", nbt.NewString(c.Namespace))
 	c.Call("mcb:exec")
 	return c
 }
 
 func (c *Code) ExecReg(varName string) interfaces.IRCode {
 	c.CopyArg(varName, "mcb:exec", "command")
+	c.SetArg("mcb:exec", "namespace", nbt.NewString(c.Namespace))
 	c.Call("mcb:exec")
 	return c
 }

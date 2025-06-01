@@ -7,5 +7,9 @@ func log(msg str) {
 }
 
 func len(s str) int {
-	exec "execute store result storage {{.Namespace}}:data vars.RX.$(__call__) int 1 run data get storage example:data vars.s.$(__call__)";
+	exec "execute store result storage {{.Namespace}}:data vars.$RET int 1 run data get storage {{.Namespace}}:data vars.s.$(__call__)";
+}
+
+func size(arr int[]) int {
+	exec "execute store result storage {{.Namespace}}:data vars.$RET int 1 run data get storage {{.Namespace}}:data vars.arr.$(__call__)";
 }

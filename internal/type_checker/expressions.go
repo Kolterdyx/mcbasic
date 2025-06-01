@@ -9,21 +9,20 @@ import (
 )
 
 func (t *TypeChecker) VisitBinary(expr *ast.BinaryExpr) any {
-	rtype := ast.AcceptExpr[types.ValueType](expr.Right, t)
 	ltype := ast.AcceptExpr[types.ValueType](expr.Left, t)
+	rtype := ast.AcceptExpr[types.ValueType](expr.Right, t)
 	expr.SetResolvedType(types.VoidType)
 	switch expr.Operator.Type {
 	case tokens.EqualEqual, tokens.BangEqual, tokens.Greater, tokens.GreaterEqual, tokens.Less, tokens.LessEqual:
 		if ltype != rtype {
 			t.error(expr, fmt.Sprintf("cannot compare %s and %s", ltype.ToString(), rtype.ToString()))
 		}
-		return rtype
+		return ltype
 	case tokens.Plus:
 		switch ltype {
 		case types.StringType:
 			expr.SetResolvedType(types.StringType)
 		}
-		fallthrough
 	case tokens.Minus, tokens.Slash, tokens.Star, tokens.Percent:
 		switch rtype {
 		case types.IntType:
