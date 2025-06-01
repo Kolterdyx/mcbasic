@@ -133,8 +133,8 @@ func (c *Compiler) VisitDotAccess(v *ast.DotAccessExpr) any {
 
 func (c *Compiler) VisitCall(f *ast.CallExpr) any {
 	cmd := c.n()
-	ns, fn := utils.SplitFunctionName(f.GetResolvedName(), c.Namespace)
 	sym, _ := c.currentScope.Lookup(f.GetResolvedName())
+	ns, fn := utils.SplitFunctionName(sym.Name(), c.Namespace)
 	switch sym.DeclarationNode().Type() {
 	case ast.FunctionDeclarationStatement:
 		funcStmt := sym.DeclarationNode().(ast.FunctionDeclarationStmt)

@@ -24,10 +24,10 @@ func NewTable(parent *Table, scopeName string, originFile string) *Table {
 }
 
 func (s *Table) Define(symbol Symbol) error {
-	if _, exists := s.symbols[symbol.Name()]; exists {
-		return fmt.Errorf("symbol already defined: %s", symbol.Name())
+	if _, exists := s.symbols[symbol.Alias()]; exists {
+		return fmt.Errorf("symbol already defined: %s", symbol.Alias())
 	}
-	s.symbols[symbol.Name()] = symbol
+	s.symbols[symbol.Alias()] = symbol
 	return nil
 }
 

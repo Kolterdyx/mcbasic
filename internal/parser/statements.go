@@ -39,9 +39,18 @@ func (p *Parser) statement() (ast.Statement, error) {
 func (p *Parser) importStatement() (ast.Statement, error) {
 	importToken := p.previous()
 
-	symbols := make([]tokens.Token, 0)
+	symbols := make(map[string]tokens.Token)
 	for p.match(tokens.Identifier) || p.match(tokens.Star) {
-		symbols = append(symbols, p.previous())
+		symToken := p.previous()
+		alias := symToken.Lexeme
+		if p.match(tokens.As) {
+			aliasToken, err := p.consume(tokens.Identifier, "Expected alias after 'as'.")
+			if err != nil {
+				return nil, err
+			}
+			alias = aliasToken.Lexeme
+		}
+		symbols[alias] = symToken
 		if !p.match(tokens.Comma) {
 			break
 		}

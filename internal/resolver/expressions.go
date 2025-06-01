@@ -47,26 +47,17 @@ func (r *Resolver) VisitDotAccess(expr *ast.DotAccessExpr) any {
 	if !res.Ok {
 		return r.error(expr, fmt.Sprintf("could not resolve '%s'", expr.Source.ToString()))
 	}
-	if res.Symbol.Type() == symbol.ImportSymbol {
-		sym, ok := r.symbolManager.GetSymbol(res.Symbol.Name(), expr.Name.Lexeme)
-		if !ok {
-			return r.error(expr, fmt.Sprintf("could not resolve '%s' in module '%s'", expr.Name.Lexeme, res.Symbol.Name()))
-		}
-		return Result{
-			Ok:     true,
-			Symbol: sym.AsImportedFrom(res.Symbol.Name()),
-		}
-	} else {
-		valueType := res.Symbol.ValueType()
-		fieldType, ok := valueType.GetFieldType(expr.Name.Lexeme)
-		if !ok {
-			return r.error(expr, fmt.Sprintf("'%s' not defined in '%s'", expr.Name.Lexeme, res.Symbol.Name()))
-		}
-		return Result{
-			Ok:     true,
-			Symbol: symbol.NewSymbol(expr.Name.Lexeme, symbol.LiteralSymbol, expr, fieldType),
-		}
+
+	valueType := res.Symbol.ValueType()
+	fieldType, ok := valueType.GetFieldType(expr.Name.Lexeme)
+	if !ok {
+		return r.error(expr, fmt.Sprintf("'%s' not defined in '%s'", expr.Name.Lexeme, res.Symbol.Name()))
 	}
+	return Result{
+		Ok:     true,
+		Symbol: symbol.NewSymbol(expr.Name.Lexeme, symbol.LiteralSymbol, expr, fieldType),
+	}
+
 }
 
 func (r *Resolver) VisitCall(expr *ast.CallExpr) any {
@@ -84,11 +75,11 @@ func (r *Resolver) VisitCall(expr *ast.CallExpr) any {
 		return r.error(expr, fmt.Sprintf("'%s' is neither a function nor a struct.", expr.Source.ToString()))
 	}
 	symName := res.Symbol.Name()
-	sym, ok := r.table.Lookup(symName)
+	sym, ok := r.table.Lookup(res.Symbol.Alias())
 	if !ok {
 		return r.error(expr, fmt.Sprintf("%s '%s' not defined", sym.Type(), symName))
 	}
-	expr.SetResolvedName(symName)
+	expr.SetResolvedName(res.Symbol.Alias())
 	return Result{
 		Ok:     true,
 		Symbol: sym,

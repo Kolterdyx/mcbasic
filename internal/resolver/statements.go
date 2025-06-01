@@ -100,7 +100,7 @@ func (r *Resolver) VisitImport(stmt ast.ImportStmt) any {
 	if !ok {
 		return r.error(stmt, fmt.Sprintf("module %s not found", stmt.Path))
 	}
-	for _, symToken := range stmt.SymbolNames {
+	for alias, symToken := range stmt.SymbolNames {
 		symName := symToken.Lexeme
 		if symName == "*" {
 			for _, sym := range moduleTable.Symbols() {
@@ -118,7 +118,7 @@ func (r *Resolver) VisitImport(stmt ast.ImportStmt) any {
 		if !ok {
 			return r.error(stmt, fmt.Sprintf("symbol %s not found in module %s", symName, stmt.Path))
 		}
-		err := r.table.Define(sym)
+		err := r.table.Define(symbol.NewAlias(alias, sym))
 		if err != nil {
 			return r.error(stmt, fmt.Sprintf("symbol %s already defined", sym.Name()))
 		}

@@ -10,7 +10,7 @@ type ImportStmt struct {
 	interfaces.SourceLocation
 
 	Path        string
-	SymbolNames []tokens.Token
+	SymbolNames map[string]tokens.Token
 }
 
 func (i ImportStmt) Accept(visitor StatementVisitor) any {

@@ -20,6 +20,7 @@ const (
 
 type Symbol struct {
 	name            string
+	alias           string
 	stype           Type
 	declarationNode ast.Node
 	valueType       types.ValueType
@@ -28,10 +29,25 @@ type Symbol struct {
 func NewSymbol(name string, stype Type, declarationNode ast.Node, valueType types.ValueType) Symbol {
 	return Symbol{
 		name:            name,
+		alias:           name,
 		stype:           stype,
 		declarationNode: declarationNode,
 		valueType:       valueType,
 	}
+}
+
+func NewAlias(alias string, sym Symbol) Symbol {
+	return Symbol{
+		name:            sym.name,
+		alias:           alias,
+		stype:           sym.stype,
+		declarationNode: sym.declarationNode,
+		valueType:       sym.valueType,
+	}
+}
+
+func (s Symbol) Alias() string {
+	return s.alias
 }
 
 func (s Symbol) Name() string {

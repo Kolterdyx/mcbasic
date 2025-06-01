@@ -57,6 +57,7 @@ const (
 	Return
 	Import
 	From
+	As
 	Exec
 
 	IntType
@@ -85,5 +86,6 @@ var Keywords = map[string]interfaces.TokenType{
 	"struct": Struct,
 	"import": Import,
 	"from":   From,
+	"as":     As,
 	"exec":   Exec,
 }
