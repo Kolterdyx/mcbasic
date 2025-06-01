@@ -107,6 +107,7 @@ func (c *Compiler) VisitUnary(u *ast.UnaryExpr) any {
 				},
 				Right: u.Expression,
 			}
+			tmp.SetResolvedType(types.IntType)
 			cmd.Extend(ast.AcceptExpr[interfaces.IRCode](tmp, c))
 		case tokens.Bang:
 			cmd.Extend(ast.AcceptExpr[interfaces.IRCode](u.Expression, c))

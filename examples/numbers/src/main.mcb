@@ -14,6 +14,8 @@ func load() {
 	print("mul " + (x * y));
 	print("div " + (x / y));
 
+	print("pow " + pow(2.0, -10));
+
 	print("sqrt  " + sqrt(4.0));
 	print("cos   " + cos(30.0));
 	print("sin   " + sin(30.0));

@@ -26,15 +26,15 @@ func (t *TypeChecker) VisitBinary(expr *ast.BinaryExpr) any {
 		}
 		fallthrough
 	case tokens.Minus, tokens.Slash, tokens.Star, tokens.Percent:
-		switch rtype {
+		switch ltype {
 		case types.IntType:
 			if rtype != types.IntType {
-				t.error(expr, fmt.Sprintf("cannot add %s and %s", ltype.ToString(), rtype.ToString()))
+				t.error(expr, fmt.Sprintf("cannot operate %s and %s", ltype.ToString(), rtype.ToString()))
 			}
 			expr.SetResolvedType(types.IntType)
 		case types.DoubleType:
-			if ltype != types.DoubleType {
-				t.error(expr, fmt.Sprintf("cannot add %s and %s", ltype.ToString(), rtype.ToString()))
+			if rtype != types.DoubleType {
+				t.error(expr, fmt.Sprintf("cannot operate %s and %s", ltype.ToString(), rtype.ToString()))
 			}
 			expr.SetResolvedType(types.DoubleType)
 		}
