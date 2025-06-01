@@ -13,11 +13,11 @@ import (
 //go:embed version.txt
 var version string
 
-//go:embed libs
-var libs embed.FS
+//go:embed embedded
+var embedded embed.FS
 
-//go:embed headers
-var builtinHeaders embed.FS
+//go:embed stdlib
+var stdlib embed.FS
 
 func main() {
 
@@ -59,8 +59,8 @@ func main() {
 	}
 
 	ctx := context.WithValue(context.Background(), "data", &command.Data{
-		BuiltinHeaders: builtinHeaders,
-		Libs:           libs,
+		Stdlib:   stdlib,
+		Embedded: embedded,
 	})
 
 	if err := cmd.Run(ctx, os.Args); err != nil {

@@ -4,7 +4,7 @@
 *.txt
 !version.txt
 !example/*/**
-!libs/*/**
+!embedded/*/**
 !headers/*.json
 datapacks
 mcbasic

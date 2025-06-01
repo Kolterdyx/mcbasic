@@ -1,0 +1,11 @@
+func print(msg void) {
+	exec "tellraw @a {\"text\":\"" + msg + "\"}";
+}
+
+func log(msg void) {
+	exec "tellraw @a[tag=mcblog] {\"text\":\"[{{.Namespace}}] " + msg + "\"}";
+}
+
+func len(s str) int {
+	exec "execute store result storage {{.Namespace}}:data vars.RX.$(__call__) int 1 run data get storage example:data vars.s.$(__call__)";
+}

@@ -2,7 +2,6 @@ package frontend
 
 import (
 	"embed"
-	"encoding/json"
 	"fmt"
 	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/compiler"
@@ -11,88 +10,62 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/resolver"
 	"github.com/Kolterdyx/mcbasic/internal/scanner"
 	"github.com/Kolterdyx/mcbasic/internal/symbol"
-	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/type_checker"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path"
 	"strings"
+	"text/template"
 )
 
 type Frontend struct {
-	visitedFiles   map[string]bool
-	units          map[string]*CompilationUnit
-	symbolManager  *symbol.Manager
-	projectRoot    string
-	builtinHeaders embed.FS
-	builtinLibs    embed.FS
+	visitedFiles  map[string]bool
+	units         map[string]*CompilationUnit
+	symbolManager *symbol.Manager
+	projectRoot   string
+	embedded      embed.FS
+	config        interfaces.ProjectConfig
+	stdlib        map[string]string // map[path]content
 }
 
-func NewFrontend(projectRoot string, builtinHeaders embed.FS, builtinLibs embed.FS) *Frontend {
+func NewFrontend(config interfaces.ProjectConfig, projectRoot string, stdlib embed.FS, embedded embed.FS) *Frontend {
 	f := &Frontend{
-		visitedFiles:   make(map[string]bool),
-		units:          make(map[string]*CompilationUnit),
-		symbolManager:  symbol.NewManager(projectRoot),
-		projectRoot:    projectRoot,
-		builtinHeaders: builtinHeaders,
-		builtinLibs:    builtinLibs,
+		visitedFiles:  make(map[string]bool),
+		units:         make(map[string]*CompilationUnit),
+		symbolManager: symbol.NewManager(projectRoot),
+		projectRoot:   projectRoot,
+		embedded:      embedded,
+		config:        config,
+		stdlib:        make(map[string]string),
 	}
-	builtinHeaderFiles, err := builtinHeaders.ReadDir("headers")
+	loadStdlib(f, stdlib)
+	return f
+}
+
+func loadStdlib(f *Frontend, stdlib embed.FS) {
+	stdlibFiles, err := stdlib.ReadDir("stdlib")
 	if err != nil {
-		log.Fatalf("Failed to read builtin headers: %v", err)
+		log.Fatalf("Failed to read stdlib files: %v", err)
 	}
-	for _, file := range builtinHeaderFiles {
-		if !file.IsDir() && strings.HasSuffix(file.Name(), ".json") {
-			headerPath := path.Join("headers", file.Name())
-			headerFile, err := builtinHeaders.ReadFile(headerPath)
+	for _, filepath := range stdlibFiles {
+		if !filepath.IsDir() && strings.HasSuffix(filepath.Name(), ".mcb") {
+			log.Debugf("Adding stdlib %s", filepath.Name())
+			file, err := stdlib.ReadFile(path.Join("stdlib", filepath.Name()))
 			if err != nil {
-				log.Fatalf("Failed to read builtin header %s: %v", headerPath, err)
+				log.Fatalf("Failed to read stdlib file %s: %v", filepath.Name(), err)
 			}
-			var header interfaces.DatapackHeader
-			err = json.Unmarshal(headerFile, &header)
+			tmpl, err := template.New("stdlib").Parse(string(file))
 			if err != nil {
-				log.Fatalf("Failed to unmarshal builtin header %s: %v", headerPath, err)
+				log.Fatalf("Failed to parse stdlib file %s: %v", filepath.Name(), err)
 			}
-			headerSymbols := symbol.NewTable(nil, header.Namespace, headerPath)
-			headerFuncDefs := parser.GetHeaderFuncDefs(header)
-			for funcName, funcDef := range headerFuncDefs {
-				params := make([]ast.VariableDeclarationStmt, 0, len(funcDef.Parameters))
-				for _, param := range funcDef.Parameters {
-					params = append(params, ast.VariableDeclarationStmt{
-						Name: tokens.Token{
-							Lexeme:  param.Name,
-							Type:    tokens.Identifier,
-							Literal: param.Name,
-						},
-						ValueType: param.Type,
-					})
-				}
-				err := headerSymbols.Define(
-					symbol.NewSymbol(
-						funcName,
-						symbol.FunctionSymbol,
-						ast.FunctionDeclarationStmt{
-							Name: tokens.Token{
-								Lexeme:  funcName,
-								Type:    tokens.Identifier,
-								Literal: funcName,
-							},
-							Parameters: params,
-							ReturnType: funcDef.ReturnType,
-						},
-						funcDef.ReturnType,
-					),
-				)
-				if err != nil {
-					return nil
-				}
+			var content strings.Builder
+			err = tmpl.Execute(&content, f.config.Project)
+			if err != nil {
+				log.Fatalf("Failed to execute template for stdlib file %s: %v", filepath.Name(), err)
 			}
-			f.symbolManager.AddFile(header.Namespace, headerSymbols)
-			f.visitedFiles[header.Namespace] = true
-			log.Debugf("Loaded builtin header: '%s'", header.Namespace)
+			f.stdlib[filepath.Name()] = content.String()
 		}
 	}
-	return f
 }
 
 func (f *Frontend) Parse(path string) error {
@@ -182,17 +155,17 @@ func (f *Frontend) recurseOnImportedFiles(fileAst ast.Source) error {
 	return nil
 }
 
-func (f *Frontend) Compile(config interfaces.ProjectConfig) []error {
+func (f *Frontend) Compile() []error {
 	errs := make([]error, 0)
 	for _, unit := range f.units {
 		log.Debugf("Compiling %s", unit.FilePath)
-		errs = append(errs, f.compileUnit(config, unit))
+		errs = append(errs, f.compileUnit(f.config, unit))
 	}
 	return errs
 }
 
 func (f *Frontend) compileUnit(config interfaces.ProjectConfig, unit *CompilationUnit) error {
-	c := compiler.NewCompiler(config, f.builtinLibs)
+	c := compiler.NewCompiler(config, f.embedded)
 	err := c.Compile(unit.AST, unit.Symbols)
 	if err != nil {
 		return err

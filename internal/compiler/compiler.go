@@ -139,15 +139,15 @@ func (c *Compiler) compileToIR(source ast.Source) []interfaces.Function {
 }
 
 func (c *Compiler) copyEmbeddedLibs() error {
-	// c.libs is a folder. It contains multiple folders that must be copied to the datapack data folder
-	files, err := c.libs.ReadDir("libs")
+	// c.embedded is a folder. It contains multiple folders that must be copied to the datapack data folder
+	files, err := c.libs.ReadDir("embedded")
 	if err != nil {
 		return err
 	}
 	for _, file := range files {
 		if file.IsDir() {
 			// copy the folder to the datapack data folder
-			err := c.copyDirRecursive(file.Name(), "libs", path.Join(c.DatapackRoot, "data"))
+			err := c.copyDirRecursive(file.Name(), "embedded", path.Join(c.DatapackRoot, "data"))
 			if err != nil {
 				return err
 			}

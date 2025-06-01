@@ -35,7 +35,7 @@ var BuildCommand = &cli.Command{
 	},
 	Action: func(ctx context.Context, cmd *cli.Command) error {
 		data := ctx.Value("data").(*Data)
-		return Build(cmd, data.BuiltinHeaders, data.Libs)
+		return Build(cmd, data.Stdlib, data.Embedded)
 	},
 }
 
@@ -49,7 +49,7 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 	if err != nil {
 		return err
 	}
-	front := frontend.NewFrontend(absProjectRoot, builtinHeaders, libs)
+	front := frontend.NewFrontend(config, absProjectRoot, builtinHeaders, libs)
 
 	absEntrypoint, err := filepath.Abs(path.Join(projectRoot, entrypoint))
 	if err != nil {
@@ -65,7 +65,7 @@ func Build(cmd *cli.Command, builtinHeaders, libs embed.FS) error {
 		return err
 	}
 
-	errs := front.Compile(config)
+	errs := front.Compile()
 	if len(errs) > 0 {
 		for _, err := range errs {
 			if err != nil {
