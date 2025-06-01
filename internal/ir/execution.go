@@ -30,6 +30,12 @@ func (c *Code) Exec(mcCommand string) interfaces.IRCode {
 	return c
 }
 
+func (c *Code) ExecReg(varName string) interfaces.IRCode {
+	c.CopyArg(varName, "mcb:exec", "command")
+	c.Call("mcb:exec")
+	return c
+}
+
 func (c *Code) Raw(mcCommand string) interfaces.IRCode {
 	return c.addInst(Raw, mcCommand)
 }

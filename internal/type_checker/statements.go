@@ -112,12 +112,20 @@ func (t *TypeChecker) VisitReturn(stmt ast.ReturnStmt) any {
 	return vtype
 }
 
-func (t *TypeChecker) VisitSetReturnFlag(stmt ast.SetReturnFlagStmt) any {
+func (t *TypeChecker) VisitSetReturnFlag(_ ast.SetReturnFlagStmt) any {
 	// There is nothing to check here
 	return nil
 }
 
-func (t *TypeChecker) VisitImport(stmt ast.ImportStmt) any {
+func (t *TypeChecker) VisitImport(_ ast.ImportStmt) any {
 	// There is nothing to check here
 	return nil
+}
+
+func (t *TypeChecker) VisitExec(stmt ast.ExecStmt) any {
+	etype := ast.AcceptExpr[types.ValueType](stmt.Expression, t)
+	if etype != types.StringType {
+		t.error(stmt, fmt.Sprintf("exec statement requires a string, got %s", stmt.GetResolvedType().ToString()))
+	}
+	return types.VoidType
 }

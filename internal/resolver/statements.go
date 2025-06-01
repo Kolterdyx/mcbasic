@@ -110,3 +110,8 @@ func (r *Resolver) VisitImport(stmt ast.ImportStmt) any {
 	}
 	return nil
 }
+
+func (r *Resolver) VisitExec(stmt ast.ExecStmt) any {
+	stmt.Expression.Accept(r)
+	return nil
+}

@@ -56,6 +56,7 @@ const (
 	While
 	Return
 	Import
+	Exec
 
 	IntType
 	DoubleType
@@ -82,4 +83,5 @@ var Keywords = map[string]interfaces.TokenType{
 	"return": Return,
 	"struct": Struct,
 	"import": Import,
+	"exec":   Exec,
 }

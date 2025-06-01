@@ -23,6 +23,8 @@ func (p *Parser) statement() (ast.Statement, error) {
 		return p.structDeclaration()
 	case p.match(tokens.Import):
 		return p.importStatement()
+	case p.match(tokens.Exec):
+		return p.execStatement()
 	case p.match(tokens.Identifier):
 		if p.check(tokens.Equal) {
 			return p.variableAssignment()
@@ -45,6 +47,17 @@ func (p *Parser) importStatement() (ast.Statement, error) {
 		return nil, err
 	}
 	return ast.ImportStmt{Path: path.Lexeme[1 : len(path.Lexeme)-1], SourceLocation: importToken.SourceLocation}, nil
+}
+
+func (p *Parser) execStatement() (ast.Statement, error) {
+	expr, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	if _, err := p.consume(tokens.Semicolon, "Expected ';' after exec expression."); err != nil {
+		return nil, err
+	}
+	return ast.ExecStmt{Expression: expr, SourceLocation: p.previous().SourceLocation}, nil
 }
 
 func (p *Parser) expressionStatement() (ast.Statement, error) {

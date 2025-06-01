@@ -27,6 +27,7 @@ const (
 	ReturnStatement              NodeType = "ReturnStatement"
 	SetReturnFlagStatement       NodeType = "SetReturnFlagStatement"
 	ImportStatement              NodeType = "ImportStatement"
+	ExecStatement                NodeType = "ExecStatement"
 
 	IndexAccessorType NodeType = "IndexAccessorType"
 	FieldAccessorType NodeType = "FieldAccessorType"

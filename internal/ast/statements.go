@@ -14,6 +14,7 @@ type StatementVisitor interface {
 	VisitReturn(ReturnStmt) any
 	VisitSetReturnFlag(SetReturnFlagStmt) any
 	VisitImport(ImportStmt) any
+	VisitExec(ExecStmt) any
 }
 
 type Statement interface {

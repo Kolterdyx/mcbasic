@@ -30,6 +30,7 @@ type IRCode interface {
 	CallWithArgs(funcName, argPath string) IRCode
 	Branch(branchName, funcName string) IRCode
 	Exec(mcCommand string) IRCode
+	ExecReg(varName string) IRCode
 	Raw(mcCommand string) IRCode
 
 	IntAdd(x, y, to string) IRCode

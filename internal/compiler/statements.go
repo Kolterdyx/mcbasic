@@ -165,3 +165,10 @@ func (c *Compiler) VisitImport(_ ast.ImportStmt) any {
 	//TODO implement me
 	panic("implement me")
 }
+
+func (c *Compiler) VisitExec(stmt ast.ExecStmt) any {
+	cmd := c.n()
+	cmd.Extend(ast.AcceptExpr[interfaces.IRCode](stmt.Expression, c))
+	cmd.ExecReg(RX)
+	return cmd
+}
