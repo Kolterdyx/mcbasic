@@ -57,7 +57,8 @@ func (f *Frontend) Parse(filePath string) error {
 		}
 		src = src2
 	} else {
-		src2, err := os.ReadFile(path.Join(f.projectRoot, filePath))
+		filePath, _ := strings.CutSuffix(path.Join(f.projectRoot, filePath), ".mcb")
+		src2, err := os.ReadFile(filePath + ".mcb")
 		if err != nil {
 			return err
 		}
