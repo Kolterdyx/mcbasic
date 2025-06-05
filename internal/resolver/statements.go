@@ -71,7 +71,7 @@ func (r *Resolver) VisitBlock(stmt ast.BlockStmt) any {
 	return nil
 }
 
-func (r *Resolver) VisitWhile(stmt ast.WhileStmt) any {
+func (r *Resolver) VisitWhile(_ ast.WhileStmt) any {
 	return nil
 }
 
@@ -91,7 +91,7 @@ func (r *Resolver) VisitReturn(stmt ast.ReturnStmt) any {
 	return nil
 }
 
-func (r *Resolver) VisitSetReturnFlag(stmt ast.SetReturnFlagStmt) any {
+func (r *Resolver) VisitSetReturnFlag(_ ast.SetReturnFlagStmt) any {
 	return nil
 }
 
