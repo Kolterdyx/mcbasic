@@ -146,7 +146,7 @@ func (c *Compiler) VisitCall(f *ast.CallExpr) any {
 			cmd.CopyArg(RX, fn, argName)
 		}
 		if ns == c.Namespace {
-			funcName := fmt.Sprintf("%s:%s", ns, path.Join(paths.FunctionBranches, fmt.Sprintf("%s_%s", utils.FileSpecifier(funcStmt.GetSourceLocation().File), fn)))
+			funcName := fmt.Sprintf("%s:%s", ns, path.Join(paths.FunctionBranches, utils.FileSpecifier(funcStmt.GetSourceLocation().File, fn)))
 			cmd.CallWithArgs(funcName, fmt.Sprintf("%s.%s", ArgPath, fn)) // Call wrapped function
 		} else {
 			cmd.Call(fmt.Sprintf("%s:%s", ns, fn))

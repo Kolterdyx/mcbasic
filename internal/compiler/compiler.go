@@ -264,7 +264,11 @@ func (c *Compiler) writePackMcMeta() {
 
 func (c *Compiler) writeMcFunction(fullName, source string) error {
 	ns, fn := utils.SplitFunctionName(fullName, c.Namespace)
-	return os.WriteFile(path.Join(c.getFuncPath(ns), fmt.Sprintf("%s.mcfunction", fn)), []byte(c.macroLineIdentifier(source)), 0644)
+	filename := path.Join(c.getFuncPath(ns), fmt.Sprintf("%s.mcfunction", fn))
+	if err := os.MkdirAll(filepath.Dir(filename), 0755); err != nil {
+		return fmt.Errorf("error creating directory for function %s: %w", filename, err)
+	}
+	return os.WriteFile(filename, []byte(c.macroLineIdentifier(source)), 0644)
 }
 
 func (c *Compiler) writeFunctionTags() error {

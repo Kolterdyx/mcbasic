@@ -29,7 +29,7 @@ func (c *Compiler) baseFunctions() []interfaces.Function {
 	}
 	initSource.Set(fmt.Sprintf("%s.%s", VarPath, CALL), nbt.NewInt(0))
 	initSource.XLoad(CALL, CALL)
-	initSource.Call(fmt.Sprintf("%s_%s", utils.FileSpecifier(c.Config.Project.Entrypoint), "load"))
+	initSource.Call(utils.FileSpecifier(c.Config.Project.Entrypoint, "load"))
 	initSource.Ret()
 	funcs = append(
 		funcs,
