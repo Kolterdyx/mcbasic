@@ -9,7 +9,6 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/paths"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	"github.com/Kolterdyx/mcbasic/internal/utils"
-	log "github.com/sirupsen/logrus"
 	"path"
 )
 
@@ -66,7 +65,6 @@ func (c *Compiler) VisitFunctionDeclaration(stmt ast.FunctionDeclarationStmt) an
 		funcFile := path.Join(paths.FunctionBranches, utils.FileSpecifier(stmt.GetSourceLocation().File, funcName))
 		wrapperFuncFile := utils.FileSpecifier(stmt.GetSourceLocation().File, funcName)
 
-		log.Debugf("Wrapped function %s in file %s", funcName, funcFile)
 		c.compiledFunctions[funcFile] = ir.NewFunction(funcFile, cmd)
 		wrapper := c.n()
 		if wrapperArgMacroCompound.Size() > 0 {
@@ -75,7 +73,6 @@ func (c *Compiler) VisitFunctionDeclaration(stmt ast.FunctionDeclarationStmt) an
 		wrapper.
 			CallWithArgs(funcFile, fmt.Sprintf("%s.%s", ArgPath, funcFile)).
 			Ret()
-		log.Debugf("Wrapper function %s in file %s", funcName, wrapperFuncFile)
 		c.compiledFunctions[wrapperFuncFile] = ir.NewFunction(wrapperFuncFile, wrapper)
 		return wrapper
 	}

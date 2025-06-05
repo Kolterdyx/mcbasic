@@ -59,8 +59,6 @@ func IsStructType(valueType types.ValueType) bool {
 
 func FileSpecifier(file, name string) string {
 	specifier := file[:len(file)-len(filepath.Ext(file))]
-	//specifier = strings.Replace(specifier, "\\", "/", -1)
-	//specifier = strings.Replace(specifier, "/", "_", -1)
 	specifier = strings.Replace(specifier, "@", "_", -1)
 	return fmt.Sprintf("%s/%s", specifier, name)
 }
