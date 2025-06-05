@@ -6,6 +6,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	log "github.com/sirupsen/logrus"
+	"path/filepath"
 	"strings"
 )
 
@@ -54,4 +55,12 @@ func IsStructType(valueType types.ValueType) bool {
 		return true
 	}
 	return false
+}
+
+func FileSpecifier(file string) string {
+	noext := file[:len(file)-len(filepath.Ext(file))]
+	noslash := strings.Replace(noext, "\\", "/", -1)
+	noslash = strings.Replace(noslash, "/", "_", -1)
+	noat := strings.Replace(noslash, "@", "_", -1)
+	return noat
 }
