@@ -2,6 +2,8 @@ package packformat
 
 type PackFormat int
 
+// https://minecraft.wiki/w/Pack_format
+
 const (
 	V1_13_V1_14_4   PackFormat = 4
 	V1_15_V1_16_1   PackFormat = 5
