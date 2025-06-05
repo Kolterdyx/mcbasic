@@ -107,6 +107,7 @@ func (r *Resolver) VisitImport(stmt ast.ImportStmt) any {
 				if sym.Type() == symbol.ImportSymbol {
 					continue
 				}
+				// TODO: Fix duplicate symbol error when imported from the same module multiple times
 				err := r.table.Define(sym)
 				if err != nil {
 					return r.error(stmt, fmt.Sprintf("symbol %s already defined", sym.Name()))
