@@ -103,23 +103,17 @@ func (r *Resolver) VisitImport(stmt ast.ImportStmt) any {
 	for alias, symToken := range stmt.SymbolNames {
 		symName := symToken.Lexeme
 		if symName == "*" {
-			for _, sym := range moduleTable.Symbols() {
-				if sym.Type() == symbol.ImportSymbol {
-					continue
-				}
-				// TODO: Fix duplicate symbol error when imported from the same module multiple times
-				err := r.table.Define(sym)
-				if err != nil {
-					return r.error(stmt, fmt.Sprintf("symbol %s already defined", sym.Name()))
-				}
+			err := r.table.ImportTable(moduleTable)
+			if err != nil {
+				return r.error(stmt, err.Error())
 			}
-			break
+			continue
 		}
 		sym, ok := moduleTable.Lookup(symName)
 		if !ok {
 			return r.error(stmt, fmt.Sprintf("symbol %s not found in module %s", symName, stmt.Path))
 		}
-		err := r.table.Define(symbol.NewAlias(alias, sym))
+		err := r.table.ImportSymbol(symbol.NewAlias(alias, sym))
 		if err != nil {
 			return r.error(stmt, fmt.Sprintf("symbol %s already defined", sym.Name()))
 		}
