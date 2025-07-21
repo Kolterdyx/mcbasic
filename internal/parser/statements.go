@@ -264,7 +264,12 @@ func (p *Parser) functionDeclaration() (ast.Statement, error) {
 	if err != nil {
 		return nil, err
 	}
-	stmt := ast.FunctionDeclarationStmt{Name: name, Parameters: parameters, ReturnType: returnType, Body: body}
+	stmt := ast.FunctionDeclarationStmt{
+		Name:       name,
+		Parameters: parameters,
+		ReturnType: returnType,
+		Body:       body,
+	}
 
 	return stmt, nil
 }
