@@ -2,24 +2,25 @@ package symbol
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 )
 
 type Table struct {
-	symbols    map[string]Symbol
-	parent     *Table
-	children   map[string]*Table
-	scopeName  string
-	originFile string
+	symbols         map[string]Symbol
+	importedSymbols map[string]Symbol
+	parent          *Table
+	children        map[string]*Table
+	scopeName       string
+	originFile      string
 }
 
 func NewTable(parent *Table, scopeName string, originFile string) *Table {
 	return &Table{
-		symbols:    make(map[string]Symbol),
-		parent:     parent,
-		children:   make(map[string]*Table),
-		scopeName:  scopeName,
-		originFile: originFile,
+		symbols:         make(map[string]Symbol),
+		importedSymbols: make(map[string]Symbol),
+		parent:          parent,
+		children:        make(map[string]*Table),
+		scopeName:       scopeName,
+		originFile:      originFile,
 	}
 }
 
@@ -33,6 +34,9 @@ func (s *Table) Define(symbol Symbol) error {
 
 func (s *Table) Lookup(name string) (Symbol, bool) {
 	if symbol, exists := s.symbols[name]; exists {
+		return symbol, true
+	}
+	if symbol, exists := s.importedSymbols[name]; exists {
 		return symbol, true
 	}
 	if s.parent != nil {
@@ -49,12 +53,17 @@ func (s *Table) OriginFile() string {
 	return s.originFile
 }
 
+func (s *Table) ImportSymbol(sym Symbol) error {
+	if _, exists := s.importedSymbols[sym.Alias()]; exists {
+		return fmt.Errorf("symbol already defined in module %s: %s", s.ScopeName(), sym.Name())
+	}
+	s.importedSymbols[sym.Alias()] = sym
+	return nil
+}
+
 func (s *Table) ImportTable(table *Table) error {
-	log.Debugf("Importing symbols from table %s into %s", table.ScopeName(), s.ScopeName())
 	for _, symbol := range table.symbols {
-		symName := symbol.AsImportedFrom(table.ScopeName()).Name()
-		s.symbols[symName] = symbol
-		log.Debugf("Imported symbol %s from %s", symName, table.ScopeName())
+		s.importedSymbols[symbol.Alias()] = symbol
 	}
 	return nil
 }
@@ -74,6 +83,10 @@ func (s *Table) GetParent() *Table {
 	return s.parent
 }
 
-func (s *Table) Symbols() map[string]Symbol {
+func (s *Table) GetSymbols() map[string]Symbol {
 	return s.symbols
+}
+
+func (s *Table) GetImportedSymbols() map[string]Symbol {
+	return s.importedSymbols
 }

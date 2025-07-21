@@ -6,6 +6,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/tokens"
 	"github.com/Kolterdyx/mcbasic/internal/types"
 	log "github.com/sirupsen/logrus"
+	"path/filepath"
 	"strings"
 )
 
@@ -54,4 +55,10 @@ func IsStructType(valueType types.ValueType) bool {
 		return true
 	}
 	return false
+}
+
+func FileSpecifier(file, name string) string {
+	specifier := file[:len(file)-len(filepath.Ext(file))]
+	specifier = strings.Replace(specifier, "@", "_", -1)
+	return fmt.Sprintf("%s/%s", specifier, name)
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/Kolterdyx/mcbasic/internal/ast"
 	"github.com/Kolterdyx/mcbasic/internal/interfaces"
 	"github.com/Kolterdyx/mcbasic/internal/ir"
+	"github.com/Kolterdyx/mcbasic/internal/packformat"
 	"github.com/Kolterdyx/mcbasic/internal/paths"
 	"github.com/Kolterdyx/mcbasic/internal/symbol"
 	"github.com/Kolterdyx/mcbasic/internal/types"
@@ -246,17 +247,21 @@ func (c *Compiler) createDirectoryTree() error {
 }
 
 func (c *Compiler) writePackMcMeta() {
-	packMcmeta := fmt.Sprintf(`{
-	"pack": {
-		"description": "%s",
-		"pack_format": 71
-	},
-	"meta": {
-		"name": "%s",
-		"version": "%s"
+	packMcMeta := interfaces.PackMcMeta{
+		Pack: interfaces.PackMcMetaPack{
+			Description: c.Config.Project.Description,
+			PackFormat:  packformat.V1_21_5,
+		},
+		Meta: interfaces.PackMcMetaMeta{
+			Name:    c.Config.Project.Name,
+			Version: c.Config.Project.Version,
+		},
 	}
-}`, c.Config.Project.Description, c.Config.Project.Name, c.Config.Project.Version)
-	err := os.WriteFile(c.DatapackRoot+"/pack.mcmeta", []byte(packMcmeta), 0644)
+	data, err := json.Marshal(packMcMeta)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = os.WriteFile(c.DatapackRoot+"/pack.mcmeta", data, 0644)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -264,7 +269,11 @@ func (c *Compiler) writePackMcMeta() {
 
 func (c *Compiler) writeMcFunction(fullName, source string) error {
 	ns, fn := utils.SplitFunctionName(fullName, c.Namespace)
-	return os.WriteFile(path.Join(c.getFuncPath(ns), fmt.Sprintf("%s.mcfunction", fn)), []byte(c.macroLineIdentifier(source)), 0644)
+	filename := path.Join(c.getFuncPath(ns), fmt.Sprintf("%s.mcfunction", fn))
+	if err := os.MkdirAll(filepath.Dir(filename), 0755); err != nil {
+		return fmt.Errorf("error creating directory for function %s: %w", filename, err)
+	}
+	return os.WriteFile(filename, []byte(c.macroLineIdentifier(source)), 0644)
 }
 
 func (c *Compiler) writeFunctionTags() error {

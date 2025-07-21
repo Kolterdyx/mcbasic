@@ -1,9 +1,9 @@
 func print(msg str) {
-	exec "tellraw @a {\"text\":\"" + msg + "\"}";
+	exec "tellraw @a {text:\"$(msg)\"}";
 }
 
 func log(msg str) {
-	exec "tellraw @a[tag=mcblog] {\"text\":\"[{{.Namespace}}] " + msg + "\"}";
+	exec "tellraw @a[tag=mcblog] [{text:\"[\",color:green},{text:\"{{.Namespace}}\",color:gold},{text:\"]\",color:green},\" \",{text:\"$(msg)\",color:gray,italic:true}]";
 }
 
 func len(s str) int {
