@@ -54,7 +54,7 @@ func (c *Compiler) makeBranchFunction(branchName string, body ast.BlockStmt) int
 		newBody.Statements = append(newBody.Statements, stmt)
 	}
 
-	source := ast.AcceptStmt[interfaces.IRCode](ast.FunctionDeclarationStmt{
+	source := ast.AcceptStmt[interfaces.IRCode](ast.FunctionDeclarationExpr{
 		Name: tokens.Token{
 			Type:   tokens.Identifier,
 			Lexeme: branchName,

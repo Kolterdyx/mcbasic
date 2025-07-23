@@ -27,7 +27,7 @@ func (c *Compiler) VisitVariableDeclaration(stmt ast.VariableDeclarationStmt) an
 	return cmd
 }
 
-func (c *Compiler) VisitFunctionDeclaration(stmt ast.FunctionDeclarationStmt) any {
+func (c *Compiler) VisitFunctionDeclaration(stmt ast.FunctionDeclarationExpr) any {
 	cmd := c.n()
 
 	wrapperArgMacroCompound := nbt.NewCompound()

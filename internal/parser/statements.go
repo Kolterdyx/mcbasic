@@ -11,8 +11,6 @@ func (p *Parser) statement() (ast.Statement, error) {
 	switch {
 	case p.match(tokens.Let):
 		return p.letDeclaration()
-	case p.match(tokens.Func):
-		return p.functionDeclaration()
 	case p.match(tokens.While):
 		return p.whileStatement()
 	case p.match(tokens.If):
@@ -209,69 +207,6 @@ func (p *Parser) variableAssignment() (ast.Statement, error) {
 		Accessors: accessors,
 		Value:     valueExpr,
 	}, nil
-}
-
-func (p *Parser) functionDeclaration() (ast.Statement, error) {
-	name, err := p.consume(tokens.Identifier, "Expected function name.")
-	if err != nil {
-		return nil, err
-	}
-	_, err = p.consume(tokens.ParenOpen, "Expected '(' after function name.")
-	if err != nil {
-		return nil, err
-	}
-	parameters := make([]ast.VariableDeclarationStmt, 0)
-	parameterTypes := make([]types.ValueType, 0)
-	if !p.check(tokens.ParenClose) {
-		for {
-			if len(parameters) >= 255 {
-				return nil, p.error(p.peek(), "Cannot have more than 255 parameters.")
-			}
-			argName, err := p.consume(tokens.Identifier, "Expected parameter name.")
-			if err != nil {
-				return nil, err
-			}
-			argType, err := p.ParseType()
-			if err != nil {
-				return nil, err
-			}
-			parameterTypes = append(parameterTypes, argType)
-			parameters = append(parameters, ast.VariableDeclarationStmt{
-				Name:      argName,
-				ValueType: argType,
-			})
-			if !p.match(tokens.Comma) {
-				break
-			}
-		}
-	}
-	_, err = p.consume(tokens.ParenClose, "Expected ')' after parameters.")
-	if err != nil {
-		return nil, err
-	}
-	var returnType types.ValueType = types.VoidType
-	if !p.check(tokens.BraceOpen) {
-		returnType, err = p.ParseType()
-	}
-	if returnType == nil {
-		return nil, p.error(p.peek(), "Expected return type.")
-	}
-	if err != nil && !p.check(tokens.BraceOpen) {
-		return nil, err
-	}
-
-	body, err := p.block()
-	if err != nil {
-		return nil, err
-	}
-	stmt := ast.FunctionDeclarationStmt{
-		Name:       name,
-		Parameters: parameters,
-		ReturnType: returnType,
-		Body:       body,
-	}
-
-	return stmt, nil
 }
 
 func (p *Parser) structDeclaration() (ast.Statement, error) {

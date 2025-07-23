@@ -5,7 +5,6 @@ import "fmt"
 type StatementVisitor interface {
 	VisitExpression(ExpressionStmt) any
 	VisitVariableDeclaration(VariableDeclarationStmt) any
-	VisitFunctionDeclaration(FunctionDeclarationStmt) any
 	VisitVariableAssignment(VariableAssignmentStmt) any
 	VisitStructDeclaration(StructDeclarationStmt) any
 	VisitBlock(BlockStmt) any

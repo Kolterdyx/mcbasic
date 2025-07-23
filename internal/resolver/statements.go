@@ -21,7 +21,7 @@ func (r *Resolver) VisitVariableDeclaration(stmt ast.VariableDeclarationStmt) an
 	return nil
 }
 
-func (r *Resolver) VisitFunctionDeclaration(stmt ast.FunctionDeclarationStmt) any {
+func (r *Resolver) VisitFunctionDeclaration(stmt ast.FunctionDeclarationExpr) any {
 
 	err := r.table.Define(symbol.NewSymbol(stmt.Name.Lexeme, symbol.FunctionSymbol, stmt, stmt.ReturnType))
 	if err != nil {

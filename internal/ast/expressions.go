@@ -17,6 +17,7 @@ type ExpressionVisitor interface {
 	VisitLogical(l *LogicalExpr) any
 	VisitSlice(s *SliceExpr) any
 	VisitList(s *ListExpr) any
+	VisitFunctionDeclaration(f FunctionDeclarationExpr) any
 }
 
 type Expr interface {

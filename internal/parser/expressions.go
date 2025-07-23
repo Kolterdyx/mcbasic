@@ -258,6 +258,69 @@ func (p *Parser) slice(expr ast.Expr) (ast.Expr, error) {
 	return &ast.SliceExpr{StartIndex: start, EndIndex: end, TargetExpr: expr, SourceLocation: p.location()}, nil
 }
 
+func (p *Parser) functionDeclarationExpression() (ast.Expr, error) {
+	name, err := p.consume(tokens.Identifier, "Expected function name.")
+	if err != nil {
+		return nil, err
+	}
+	_, err = p.consume(tokens.ParenOpen, "Expected '(' after function name.")
+	if err != nil {
+		return nil, err
+	}
+	parameters := make([]ast.VariableDeclarationStmt, 0)
+	parameterTypes := make([]types.ValueType, 0)
+	if !p.check(tokens.ParenClose) {
+		for {
+			if len(parameters) >= 255 {
+				return nil, p.error(p.peek(), "Cannot have more than 255 parameters.")
+			}
+			argName, err := p.consume(tokens.Identifier, "Expected parameter name.")
+			if err != nil {
+				return nil, err
+			}
+			argType, err := p.ParseType()
+			if err != nil {
+				return nil, err
+			}
+			parameterTypes = append(parameterTypes, argType)
+			parameters = append(parameters, ast.VariableDeclarationStmt{
+				Name:      argName,
+				ValueType: argType,
+			})
+			if !p.match(tokens.Comma) {
+				break
+			}
+		}
+	}
+	_, err = p.consume(tokens.ParenClose, "Expected ')' after parameters.")
+	if err != nil {
+		return nil, err
+	}
+	var returnType types.ValueType = types.VoidType
+	if !p.check(tokens.BraceOpen) {
+		returnType, err = p.ParseType()
+	}
+	if returnType == nil {
+		return nil, p.error(p.peek(), "Expected return type.")
+	}
+	if err != nil && !p.check(tokens.BraceOpen) {
+		return nil, err
+	}
+
+	body, err := p.block()
+	if err != nil {
+		return nil, err
+	}
+	expr := &ast.FunctionDeclarationExpr{
+		Name:       name,
+		Parameters: parameters,
+		ReturnType: returnType,
+		Body:       body,
+	}
+
+	return expr, nil
+}
+
 func (p *Parser) primary() (ast.Expr, error) {
 	if p.match(tokens.False) {
 		return ast.NewLiteralExpr(nbt.NewInt(0), types.IntType, p.location()), nil
@@ -285,6 +348,9 @@ func (p *Parser) primary() (ast.Expr, error) {
 		} else {
 			return ast.NewLiteralExpr(nbt.NewString(p.previous().Literal), types.StringType, p.location()), nil
 		}
+	}
+	if p.match(tokens.Func) {
+		return p.functionDeclarationExpression()
 	}
 	if p.match(tokens.ParenOpen) {
 		expr, err := p.expression()

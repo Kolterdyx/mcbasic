@@ -80,7 +80,7 @@ func (t *TypeChecker) VisitCall(expr *ast.CallExpr) any {
 	sym, _ := t.table.Lookup(expr.GetResolvedName())
 	expr.SetResolvedType(sym.ValueType())
 	switch declarationNode := sym.DeclarationNode().(type) {
-	case ast.FunctionDeclarationStmt:
+	case ast.FunctionDeclarationExpr:
 		if len(expr.Arguments) != len(declarationNode.Parameters) {
 			t.error(expr, fmt.Sprintf("function %s expects %d arguments, got %d", expr.GetResolvedName(), len(declarationNode.Parameters), len(expr.Arguments)))
 			break

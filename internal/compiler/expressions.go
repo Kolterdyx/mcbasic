@@ -139,7 +139,7 @@ func (c *Compiler) VisitCall(f *ast.CallExpr) any {
 	ns, fn := utils.SplitFunctionName(sym.Name(), c.Namespace)
 	switch sym.DeclarationNode().Type() {
 	case ast.FunctionDeclarationStatement:
-		funcStmt := sym.DeclarationNode().(ast.FunctionDeclarationStmt)
+		funcStmt := sym.DeclarationNode().(ast.FunctionDeclarationExpr)
 		for j, arg := range f.Arguments {
 			cmd.Extend(ast.AcceptExpr[interfaces.IRCode](arg, c))
 			argName := funcStmt.Parameters[j].Name.Lexeme

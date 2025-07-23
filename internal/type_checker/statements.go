@@ -24,7 +24,7 @@ func (t *TypeChecker) VisitVariableDeclaration(stmt ast.VariableDeclarationStmt)
 	return sym.ValueType()
 }
 
-func (t *TypeChecker) VisitFunctionDeclaration(stmt ast.FunctionDeclarationStmt) any {
+func (t *TypeChecker) VisitFunctionDeclaration(stmt ast.FunctionDeclarationExpr) any {
 
 	prevTable := t.table
 	newTable, ok := t.table.GetChild(stmt.Name.Lexeme)
