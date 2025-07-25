@@ -55,7 +55,7 @@ func (c *Compiler) makeBranchFunction(branchName string, body ast.BlockStmt) int
 	}
 
 	source := ast.AcceptStmt[interfaces.IRCode](ast.FunctionDeclarationExpr{
-		Name: tokens.Token{
+		Name: &tokens.Token{
 			Type:   tokens.Identifier,
 			Lexeme: branchName,
 		},

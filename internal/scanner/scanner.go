@@ -150,7 +150,6 @@ func (s *Scanner) scanToken() {
 			s.error(s.row, "Unexpected character: "+string(c))
 		}
 	}
-
 }
 
 func (s *Scanner) match(expected byte) bool {

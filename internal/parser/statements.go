@@ -11,6 +11,8 @@ func (p *Parser) statement() (ast.Statement, error) {
 	switch {
 	case p.match(tokens.Let):
 		return p.letDeclaration()
+	case p.match(tokens.Func):
+		return p.functionDeclarationStatement()
 	case p.match(tokens.While):
 		return p.whileStatement()
 	case p.match(tokens.If):

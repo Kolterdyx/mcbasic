@@ -7,7 +7,7 @@ import (
 )
 
 type FunctionDeclarationExpr struct {
-	Name          tokens.Token
+	Name          *tokens.Token
 	Parameters    []VariableDeclarationStmt
 	Body          BlockStmt
 	ReturnType    types.ValueType
@@ -51,4 +51,26 @@ func (f FunctionDeclarationExpr) ToString() string {
 
 func (f FunctionDeclarationExpr) GetSourceLocation() interfaces.SourceLocation {
 	return f.Name.SourceLocation
+}
+
+func NewFunctionDeclarationStatement(
+	name string,
+	parameters []VariableDeclarationStmt,
+	body BlockStmt,
+	returnType types.ValueType,
+) VariableDeclarationStmt {
+	nameToken := tokens.Token{
+		Type:   tokens.Identifier,
+		Lexeme: name,
+	}
+	return VariableDeclarationStmt{
+		Name: nameToken,
+		Initializer: &FunctionDeclarationExpr{
+			Name:       &nameToken,
+			Parameters: parameters,
+			ReturnType: returnType,
+			Body:       body,
+		},
+		ValueType: types.NewFunctionType(name),
+	}
 }

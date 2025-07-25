@@ -52,3 +52,60 @@ func (p *Parser) Parse() (ast.Source, []error) {
 
 	return source, p.errors
 }
+
+func (p *Parser) functionDeclarationStatement() (ast.Statement, error) {
+	name, err := p.consume(tokens.Identifier, "Expected function name.")
+	if err != nil {
+		return nil, err
+	}
+	_, err = p.consume(tokens.ParenOpen, "Expected '(' after function name.")
+	if err != nil {
+		return nil, err
+	}
+	parameters := make([]ast.VariableDeclarationStmt, 0)
+	parameterTypes := make([]types.ValueType, 0)
+	if !p.check(tokens.ParenClose) {
+		for {
+			if len(parameters) >= 255 {
+				return nil, p.error(p.peek(), "Cannot have more than 255 parameters.")
+			}
+			argName, err := p.consume(tokens.Identifier, "Expected parameter name.")
+			if err != nil {
+				return nil, err
+			}
+			argType, err := p.ParseType()
+			if err != nil {
+				return nil, err
+			}
+			parameterTypes = append(parameterTypes, argType)
+			parameters = append(parameters, ast.VariableDeclarationStmt{
+				Name:      argName,
+				ValueType: argType,
+			})
+			if !p.match(tokens.Comma) {
+				break
+			}
+		}
+	}
+	_, err = p.consume(tokens.ParenClose, "Expected ')' after parameters.")
+	if err != nil {
+		return nil, err
+	}
+	var returnType types.ValueType = types.VoidType
+	if !p.check(tokens.BraceOpen) {
+		returnType, err = p.ParseType()
+	}
+	if returnType == nil {
+		return nil, p.error(p.peek(), "Expected return type.")
+	}
+	if err != nil && !p.check(tokens.BraceOpen) {
+		return nil, err
+	}
+
+	body, err := p.block()
+	if err != nil {
+		return nil, err
+	}
+
+	return ast.NewFunctionDeclarationStatement(name.Lexeme, parameters, body, returnType), nil
+}

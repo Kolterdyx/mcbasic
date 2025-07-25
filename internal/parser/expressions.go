@@ -259,11 +259,12 @@ func (p *Parser) slice(expr ast.Expr) (ast.Expr, error) {
 }
 
 func (p *Parser) functionDeclarationExpression() (ast.Expr, error) {
-	name, err := p.consume(tokens.Identifier, "Expected function name.")
-	if err != nil {
-		return nil, err
-	}
-	_, err = p.consume(tokens.ParenOpen, "Expected '(' after function name.")
+	/*
+		(arg type, arg type) type {
+
+		}
+	*/
+	_, err := p.consume(tokens.ParenOpen, "Expected '(' after 'func'.")
 	if err != nil {
 		return nil, err
 	}
@@ -293,9 +294,6 @@ func (p *Parser) functionDeclarationExpression() (ast.Expr, error) {
 		}
 	}
 	_, err = p.consume(tokens.ParenClose, "Expected ')' after parameters.")
-	if err != nil {
-		return nil, err
-	}
 	var returnType types.ValueType = types.VoidType
 	if !p.check(tokens.BraceOpen) {
 		returnType, err = p.ParseType()
@@ -311,14 +309,11 @@ func (p *Parser) functionDeclarationExpression() (ast.Expr, error) {
 	if err != nil {
 		return nil, err
 	}
-	expr := &ast.FunctionDeclarationExpr{
-		Name:       name,
+	return &ast.FunctionDeclarationExpr{
 		Parameters: parameters,
 		ReturnType: returnType,
 		Body:       body,
-	}
-
-	return expr, nil
+	}, nil
 }
 
 func (p *Parser) primary() (ast.Expr, error) {
