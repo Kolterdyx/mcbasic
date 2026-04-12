@@ -1,0 +1,12 @@
+{
+  "name": "Go Code Monkey Sandbox",
+  "dockerComposeFile": "./docker-compose.yaml",
+  "service": "monkey",
+  "workspaceFolder": "/workspace",
+  "remoteUser": "agent",
+  "customizations": {
+    "jetbrains": {
+      "backend": "GoLand"
+    }
+  },
+}
