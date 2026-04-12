@@ -1,0 +1,23 @@
+{
+  "name": "Go Agent Sandbox",
+  "build": {
+    "dockerfile": "../.agent-sandbox/Dockerfile",
+    "args": {
+      "USER_UID": "1001",
+      "USER_GID": "1001"
+    }
+  },
+  "remoteUser": "agent",
+  "runArgs": [
+    "--cap-drop=ALL",
+    "--security-opt=no-new-privileges"
+  ],
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+  ],
+  "customizations": {
+    "jetbrains": {
+      "backend": "GoLand"
+    }
+  }
+}

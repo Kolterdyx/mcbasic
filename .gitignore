@@ -6,6 +6,7 @@
 !example/*/**
 !embedded/*/**
 !headers/*.json
+!.devcontainers/**/*
 datapacks
 mcbasic
 .idea

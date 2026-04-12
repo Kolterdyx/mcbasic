@@ -1,0 +1,59 @@
+services:
+  monkey:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER_UID: 1001
+        USER_GID: 1001
+    container_name: agent_sandbox
+    # command: /bin/sh -c "while sleep 1000; do :; done"
+    volumes:
+      # We mount the Satellite Repo worktree here
+      - ../:/workspace:z
+      # Separate volume for Go cache to keep the agent's junk off your host
+      - go_cache:/home/agent/go/pkg
+    environment:
+      - GO111MODULE=on
+      - DB_HOST=db
+    # Security: Drop all capabilities, then add only what's needed for Go
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    networks:
+      - agent-net
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_PASSWORD: agent_only_password
+    networks:
+      - agent-net
+  
+  valkey:
+    image: valkey/valkey:latest
+    environment:
+      - VALKEY_API_KEY=your_valkey_api_key_here
+    networks:
+      - agent-net
+
+  # localstack:
+  #   image: localstack/localstack:latest
+  #   environment:
+  #     - SERVICES=s3,sqs,lambda
+  #     - DEFAULT_REGION=eu-south-2
+  #   ports:
+  #     - "4566:4566" # LocalStack edge port
+  #   networks:
+  #     - agent-net
+
+volumes:
+  go_cache:
+
+networks:
+  agent-net:
+    driver: bridge
+    internal: true # KEEP AS TRUE TO STOP INTERNET ACCESS
