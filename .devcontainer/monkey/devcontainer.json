@@ -4,9 +4,7 @@
   "service": "monkey",
   "workspaceFolder": "/workspace",
   "remoteUser": "agent",
-  "customizations": {
-    "jetbrains": {
-      "backend": "GoLand"
-    }
-  },
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+  ],
 }
